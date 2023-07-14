@@ -1,0 +1,3086 @@
+Initial State:
+The kitchen has a fridge. The fridge has an apple and an orange. The kitchen also has a sink. The sink has a spoon and a plate. The kitchen also has an overhead light. The light turns on and off. It is currently on. 
+
+The living room has a window. The window has blinds that can open and close. They are currently open. The living room also has a TV. The TV is currently off. The living room also has a shelf. The shelf has 10 levels. The 2nd level of the shelf has a knife. The 10th level of the shelf has a book called "Alchemist". The living room also has a table. The table has a bowl and a purple pen. The living room also has an overhead light. The light turns on and off. It is currently off. 
+
+John's bedroom has a TV. The TV is currently on and is playing Cartoon Network. John's bedroom also has a table. The table has a white pen and a book called "Of Mice and Men". John's bedroom also has a window. The window has blinds that can open and close. They are currently open. John's bedroom also has a shelf. The shelf has 5 levels. The 4th level of the shelf has a red pen. The 5th level of the shelf has a book called "Fahrenheit 451". John's bedroom also has an overhead light. The light turns on and off. It is currently on. 
+
+Jane's bedroom has a TV. The TV is currently off. Jane's bedroom also has a table. The table has a fork. Jane's bedroom also has a window. The window has blinds that can open and close. They are currently closed. Jane's bedroom also has a shelf. The shelf has 6 levels. Jane's bedroom also has an overhead light. The light turns on and off. It is currently off. 
+
+
+Time: 0
+State change: I picked up the plate in the sink in the kitchen.
+
+Time: 1
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 2
+State change: I placed the plate I was holding on the 5th level of the shelf in Jane's bedroom.
+
+Time: 3
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 4
+State change: I closed the blinds of the window in the living room.
+
+Time: 5
+State change: I picked up the orange inside the fridge in the kitchen.
+
+Time: 6
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 7
+State change: I turned off the TV in John's bedroom.
+
+Time: 8
+State change: I opened the blinds of the window in the living room.
+
+Time: 9
+State change: I placed the orange I was holding on the 7th level of the shelf in the living room.
+
+Time: 10
+State change: I picked up the "Alchemist" book on the 10th level of the shelf in the living room.
+
+Time: 11
+State change: I closed the blinds of the window in the living room.
+
+Time: 12
+State change: I turned off the overhead light in the kitchen.
+
+Time: 13
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 14
+State change: I turned on the overhead light in the kitchen.
+
+Time: 15
+State change: I placed the "Alchemist" book I was holding on the table in the living room.
+
+Time: 16
+State change: I picked up the plate on the 5th level of the shelf in Jane's bedroom.
+
+Time: 17
+State change: I turned on the TV in Jane's bedroom and set it to ESPN.
+
+Time: 18
+State change: I opened the blinds of the window in the living room.
+
+Time: 19
+State change: I turned off the overhead light in the kitchen.
+
+Time: 20
+State change: I placed the plate I was holding in the sink in the kitchen.
+
+Time: 21
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 22
+State change: I turned on the TV in the living room and set it to ESPN.
+
+Time: 23
+State change: I turned on the overhead light in the kitchen.
+
+Time: 24
+State change: I closed the blinds of the window in the living room.
+
+Time: 25
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 26
+State change: I placed the apple I was holding on the 1st level of the shelf in the living room.
+
+Time: 27
+State change: I picked up the apple on the 1st level of the shelf in the living room.
+
+Time: 28
+State change: I opened the blinds of the window in the living room.
+
+Time: 29
+State change: I placed the apple I was holding on the table in John's bedroom.
+
+Time: 30
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 31
+State change: I picked up the red pen on the 4th level of the shelf in John's bedroom.
+
+Time: 32
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 33
+State change: I placed the red pen I was holding on the 3rd level of the shelf in the living room.
+
+Time: 34
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 35
+State change: I picked up the plate in the sink in the kitchen.
+
+Time: 36
+State change: I placed the plate I was holding in the sink in the kitchen.
+
+Time: 37
+State change: I picked up the red pen on the 3rd level of the shelf in the living room.
+
+Time: 38
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 39
+State change: I turned on the TV in John's bedroom and set it to CNN.
+
+Time: 40
+State change: I turned off the overhead light in the kitchen.
+
+Time: 41
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 42
+State change: I placed the red pen I was holding on the 1st level of the shelf in Jane's bedroom.
+
+Time: 43
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 44
+State change: I picked up the purple pen on the table in the living room.
+
+Time: 45
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 46
+State change: I placed the purple pen I was holding on the table in John's bedroom.
+
+Time: 47
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 48
+State change: I picked up the apple on the table in John's bedroom.
+
+Time: 49
+State change: I turned on the TV in Jane's bedroom and set it to NBC.
+
+Time: 50
+State change: I switched the channel of the TV in the living room to NBC.
+
+Time: 51
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 52
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 53
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 54
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 55
+State change: I placed the apple I was holding on the 2nd level of the shelf in the living room.
+
+Time: 56
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 57
+State change: I picked up the bowl on the table in the living room.
+
+Time: 58
+State change: I placed the bowl I was holding on the table in Jane's bedroom.
+
+Time: 59
+State change: I turned off the TV in John's bedroom.
+
+Time: 60
+State change: I closed the blinds of the window in the living room.
+
+Time: 61
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 62
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 63
+State change: I turned on the TV in Jane's bedroom and set it to Fox News.
+
+Time: 64
+State change: I switched the channel of the TV in the living room to NBC.
+
+Time: 65
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 66
+State change: I picked up the apple on the 2nd level of the shelf in the living room.
+
+Time: 67
+State change: I placed the apple I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 68
+State change: I picked up the orange on the 7th level of the shelf in the living room.
+
+Time: 69
+State change: I placed the orange I was holding on the table in Jane's bedroom.
+
+Time: 70
+State change: I turned on the overhead light in the living room.
+
+Time: 71
+State change: I picked up the "Alchemist" book on the table in the living room.
+
+Time: 72
+State change: I turned on the overhead light in the kitchen.
+
+Time: 73
+State change: I turned off the overhead light in the kitchen.
+
+Time: 74
+State change: I placed the "Alchemist" book I was holding on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 75
+State change: I picked up the spoon in the sink in the kitchen.
+
+Time: 76
+State change: I placed the spoon I was holding on the table in Jane's bedroom.
+
+Time: 77
+State change: I turned on the overhead light in the kitchen.
+
+Time: 78
+State change: I picked up the "Of Mice and Men" book on the table in John's bedroom.
+
+Time: 79
+State change: I turned off the overhead light in the kitchen.
+
+Time: 80
+State change: I turned off the overhead light in the living room.
+
+Time: 81
+State change: I placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 82
+State change: I picked up the fork on the table in Jane's bedroom.
+
+Time: 83
+State change: I turned on the TV in John's bedroom and set it to Fox News.
+
+Time: 84
+State change: I placed the fork I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 85
+State change: I picked up the red pen on the 1st level of the shelf in Jane's bedroom.
+
+Time: 86
+State change: I placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.
+
+Time: 87
+State change: I picked up the apple on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 88
+State change: I turned on the overhead light in the kitchen.
+
+Time: 89
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 90
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 91
+State change: I picked up the spoon on the table in Jane's bedroom.
+
+Time: 92
+State change: I placed the spoon I was holding in the sink in the kitchen.
+
+Time: 93
+State change: I turned off the overhead light in the kitchen.
+
+Time: 94
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 95
+State change: I opened the blinds of the window in the living room.
+
+Time: 96
+State change: I turned on the overhead light in the kitchen.
+
+Time: 97
+State change: I picked up the red pen on the 2nd level of the shelf in John's bedroom.
+
+Time: 98
+State change: I turned on the overhead light in the living room.
+
+Time: 99
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 100
+
+
+Query: Is the TV in John's bedroom on or off? If it's on, what channel is it playing?
+True answer: The TV is on and is playing Fox News.
+
+
+['date: 1\n\nI picked up the plate in the sink in the kitchen.', "date: 2\n\nI turned off the overhead light in John's bedroom.", "date: 3\n\nI placed the plate I was holding on the 5th level of the shelf in Jane's bedroom.", "date: 4\n\nI turned on the overhead light in John's bedroom.", 'date: 5\n\nI closed the blinds of the window in the living room.', 'date: 6\n\nI picked up the orange inside the fridge in the kitchen.', "date: 7\n\nI opened the blinds of the window in Jane's bedroom.", "date: 8\n\nI turned off the TV in John's bedroom.", 'date: 9\n\nI opened the blinds of the window in the living room.', 'date: 10\n\nI placed the orange I was holding on the 7th level of the shelf in the living room.', 'date: 11\n\nI picked up the "Alchemist" book on the 10th level of the shelf in the living room.', 'date: 12\n\nI closed the blinds of the window in the living room.', 'date: 13\n\nI turned off the overhead light in the kitchen.', "date: 14\n\nI turned on the overhead light in Jane's bedroom.", 'date: 15\n\nI turned on the overhead light in the kitchen.', 'date: 16\n\nI placed the "Alchemist" book I was holding on the table in the living room.', "date: 17\n\nI picked up the plate on the 5th level of the shelf in Jane's bedroom.", "date: 18\n\nI turned on the TV in Jane's bedroom and set it to ESPN.", 'date: 19\n\nI opened the blinds of the window in the living room.', 'date: 20\n\nI turned off the overhead light in the kitchen.', 'date: 21\n\nI placed the plate I was holding in the sink in the kitchen.', 'date: 22\n\nI picked up the apple inside the fridge in the kitchen.', 'date: 23\n\nI turned on the TV in the living room and set it to ESPN.', 'date: 24\n\nI turned on the overhead light in the kitchen.', 'date: 25\n\nI closed the blinds of the window in the living room.', "date: 26\n\nI closed the blinds of the window in John's bedroom.", 'date: 27\n\nI placed the apple I was holding on the 1st level of the shelf in the living room.', 'date: 28\n\nI picked up the apple on the 1st level of the shelf in the living room.', 'date: 29\n\nI opened the blinds of the window in the living room.', "date: 30\n\nI placed the apple I was holding on the table in John's bedroom.", "date: 31\n\nI turned off the overhead light in Jane's bedroom.", "date: 32\n\nI picked up the red pen on the 4th level of the shelf in John's bedroom.", "date: 33\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 34\n\nI placed the red pen I was holding on the 3rd level of the shelf in the living room.', "date: 35\n\nI turned off the overhead light in John's bedroom.", 'date: 36\n\nI picked up the plate in the sink in the kitchen.', 'date: 37\n\nI placed the plate I was holding in the sink in the kitchen.', 'date: 38\n\nI picked up the red pen on the 3rd level of the shelf in the living room.', "date: 39\n\nI turned off the TV in Jane's bedroom.", "date: 40\n\nI turned on the TV in John's bedroom and set it to CNN.", 'date: 41\n\nI turned off the overhead light in the kitchen.', "date: 42\n\nI turned on the overhead light in John's bedroom.", "date: 43\n\nI placed the red pen I was holding on the 1st level of the shelf in Jane's bedroom.", "date: 44\n\nI turned off the overhead light in John's bedroom.", 'date: 45\n\nI picked up the purple pen on the table in the living room.', "date: 46\n\nI turned on the overhead light in John's bedroom.", "date: 47\n\nI placed the purple pen I was holding on the table in John's bedroom.", "date: 48\n\nI opened the blinds of the window in Jane's bedroom.", "date: 49\n\nI picked up the apple on the table in John's bedroom.", "date: 50\n\nI turned on the TV in Jane's bedroom and set it to NBC.", 'date: 51\n\nI switched the channel of the TV in the living room to NBC.', "date: 52\n\nI opened the blinds of the window in John's bedroom.", "date: 53\n\nI turned on the overhead light in Jane's bedroom.", "date: 54\n\nI turned off the overhead light in Jane's bedroom.", "date: 55\n\nI turned off the overhead light in John's bedroom.", 'date: 56\n\nI placed the apple I was holding on the 2nd level of the shelf in the living room.', "date: 57\n\nI turned on the overhead light in Jane's bedroom.", 'date: 58\n\nI picked up the bowl on the table in the living room.', "date: 59\n\nI placed the bowl I was holding on the table in Jane's bedroom.", "date: 60\n\nI turned off the TV in John's bedroom.", 'date: 61\n\nI closed the blinds of the window in the living room.', "date: 62\n\nI closed the blinds of the window in John's bedroom.", "date: 63\n\nI turned off the TV in Jane's bedroom.", "date: 64\n\nI turned on the TV in Jane's bedroom and set it to Fox News.", 'date: 65\n\nI switched the channel of the TV in the living room to NBC.', "date: 66\n\nI turned on the overhead light in John's bedroom.", 'date: 67\n\nI picked up the apple on the 2nd level of the shelf in the living room.', "date: 68\n\nI placed the apple I was holding on the 3rd level of the shelf in Jane's bedroom.", 'date: 69\n\nI picked up the orange on the 7th level of the shelf in the living room.', "date: 70\n\nI placed the orange I was holding on the table in Jane's bedroom.", 'date: 71\n\nI turned on the overhead light in the living room.', 'date: 72\n\nI picked up the "Alchemist" book on the table in the living room.', 'date: 73\n\nI turned on the overhead light in the kitchen.', 'date: 74\n\nI turned off the overhead light in the kitchen.', 'date: 75\n\nI placed the "Alchemist" book I was holding on the 2nd level of the shelf in Jane\'s bedroom.', 'date: 76\n\nI picked up the spoon in the sink in the kitchen.', "date: 77\n\nI placed the spoon I was holding on the table in Jane's bedroom.", 'date: 78\n\nI turned on the overhead light in the kitchen.', 'date: 79\n\nI picked up the "Of Mice and Men" book on the table in John\'s bedroom.', 'date: 80\n\nI turned off the overhead light in the kitchen.', 'date: 81\n\nI turned off the overhead light in the living room.', 'date: 82\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', "date: 83\n\nI picked up the fork on the table in Jane's bedroom.", "date: 84\n\nI turned on the TV in John's bedroom and set it to Fox News.", "date: 85\n\nI placed the fork I was holding on the 4th level of the shelf in John's bedroom.", "date: 86\n\nI picked up the red pen on the 1st level of the shelf in Jane's bedroom.", "date: 87\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 88\n\nI picked up the apple on the 3rd level of the shelf in Jane's bedroom.", 'date: 89\n\nI turned on the overhead light in the kitchen.', 'date: 90\n\nI placed the apple I was holding inside the fridge in the kitchen.', "date: 91\n\nI closed the blinds of the window in Jane's bedroom.", "date: 92\n\nI picked up the spoon on the table in Jane's bedroom.", 'date: 93\n\nI placed the spoon I was holding in the sink in the kitchen.', 'date: 94\n\nI turned off the overhead light in the kitchen.', "date: 95\n\nI turned off the overhead light in Jane's bedroom.", 'date: 96\n\nI opened the blinds of the window in the living room.', 'date: 97\n\nI turned on the overhead light in the kitchen.', "date: 98\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", 'date: 99\n\nI turned on the overhead light in the living room.', "date: 100\n\nI turned on the overhead light in Jane's bedroom."]
+Predicted answer: The TV in John's bedroom is on and it is playing Fox News.
+Similarity: 0.9078674745615115
+
+Time: 101
+State change: I turned off the overhead light in the kitchen.
+
+Time: 102
+State change: I placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.
+
+Time: 103
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 104
+State change: I picked up the bowl on the table in Jane's bedroom.
+
+Time: 105
+State change: I placed the bowl I was holding in the sink in the kitchen.
+
+Time: 106
+State change: I picked up the spoon in the sink in the kitchen.
+
+Time: 107
+State change: I placed the spoon I was holding on the 1st level of the shelf in Jane's bedroom.
+
+Time: 108
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 109
+State change: I picked up the knife on the 2nd level of the shelf in the living room.
+
+Time: 110
+State change: I placed the knife I was holding on the 2nd level of the shelf in John's bedroom.
+
+Time: 111
+State change: I picked up the knife on the 2nd level of the shelf in John's bedroom.
+
+Time: 112
+State change: I placed the knife I was holding on the 8th level of the shelf in the living room.
+
+Time: 113
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 114
+State change: I closed the blinds of the window in the living room.
+
+Time: 115
+State change: I picked up the "Alchemist" book on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 116
+State change: I placed the "Alchemist" book I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 117
+State change: I picked up the purple pen on the table in John's bedroom.
+
+Time: 118
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 119
+State change: I turned on the overhead light in the kitchen.
+
+Time: 120
+State change: I placed the purple pen I was holding on the table in the living room.
+
+Time: 121
+State change: I turned off the overhead light in the kitchen.
+
+Time: 122
+State change: I picked up the "Alchemist" book on the 6th level of the shelf in Jane's bedroom.
+
+Time: 123
+State change: I turned on the overhead light in the kitchen.
+
+Time: 124
+State change: I turned off the overhead light in the kitchen.
+
+Time: 125
+State change: I switched the channel of the TV in the living room to the Discovery Channel.
+
+Time: 126
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 127
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 128
+State change: I switched the channel of the TV in Jane's bedroom to Cartoon Network.
+
+Time: 129
+State change: I placed the "Alchemist" book I was holding on the table in the living room.
+
+Time: 130
+State change: I turned off the TV in John's bedroom.
+
+Time: 131
+State change: I turned off the overhead light in the living room.
+
+Time: 132
+State change: I turned on the overhead light in the living room.
+
+Time: 133
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 134
+State change: I picked up the "Of Mice and Men" book on the 3rd level of the shelf in John's bedroom.
+
+Time: 135
+State change: I turned on the overhead light in the kitchen.
+
+Time: 136
+State change: I turned off the overhead light in the kitchen.
+
+Time: 137
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 138
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 139
+State change: I turned on the overhead light in the kitchen.
+
+Time: 140
+State change: I turned off the overhead light in the kitchen.
+
+Time: 141
+State change: I opened the blinds of the window in the living room.
+
+Time: 142
+State change: I placed the "Of Mice and Men" book I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 143
+State change: I picked up the red pen on the 2nd level of the shelf in John's bedroom.
+
+Time: 144
+State change: I placed the red pen I was holding on the 6th level of the shelf in the living room.
+
+Time: 145
+State change: I picked up the bowl in the sink in the kitchen.
+
+Time: 146
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 147
+State change: I turned off the overhead light in the living room.
+
+Time: 148
+State change: I turned on the TV in Jane's bedroom and set it to ESPN.
+
+Time: 149
+State change: I switched the channel of the TV in Jane's bedroom to the Discovery Channel.
+
+Time: 150
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 151
+State change: I placed the bowl I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 152
+State change: I picked up the red pen on the 6th level of the shelf in the living room.
+
+Time: 153
+State change: I turned on the overhead light in the kitchen.
+
+Time: 154
+State change: I turned off the overhead light in the kitchen.
+
+Time: 155
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 156
+State change: I placed the red pen I was holding on the 6th level of the shelf in the living room.
+
+Time: 157
+State change: I turned on the overhead light in the living room.
+
+Time: 158
+State change: I picked up the "Of Mice and Men" book on the 4th level of the shelf in John's bedroom.
+
+Time: 159
+State change: I placed the "Of Mice and Men" book I was holding on the table in Jane's bedroom.
+
+Time: 160
+State change: I picked up the "Fahrenheit 451" book on the 5th level of the shelf in John's bedroom.
+
+Time: 161
+State change: I placed the "Fahrenheit 451" book I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 162
+State change: I picked up the spoon on the 1st level of the shelf in Jane's bedroom.
+
+Time: 163
+State change: I placed the spoon I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 164
+State change: I turned on the overhead light in the kitchen.
+
+Time: 165
+State change: I turned on the TV in Jane's bedroom and set it to the Discovery Channel.
+
+Time: 166
+State change: I picked up the "Of Mice and Men" book on the table in Jane's bedroom.
+
+Time: 167
+State change: I turned off the overhead light in the kitchen.
+
+Time: 168
+State change: I turned on the overhead light in the kitchen.
+
+Time: 169
+State change: I placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 170
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 171
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 172
+State change: I turned off the TV in the living room.
+
+Time: 173
+State change: I placed the apple I was holding on the table in Jane's bedroom.
+
+Time: 174
+State change: I turned on the TV in Jane's bedroom and set it to the Discovery Channel.
+
+Time: 175
+State change: I picked up the spoon on the 5th level of the shelf in John's bedroom.
+
+Time: 176
+State change: I turned off the overhead light in the kitchen.
+
+Time: 177
+State change: I turned off the overhead light in the living room.
+
+Time: 178
+State change: I placed the spoon I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 179
+State change: I picked up the "Of Mice and Men" book on the 3rd level of the shelf in John's bedroom.
+
+Time: 180
+State change: I turned on the overhead light in the kitchen.
+
+Time: 181
+State change: I turned off the overhead light in the kitchen.
+
+Time: 182
+State change: I turned on the overhead light in the living room.
+
+Time: 183
+State change: I closed the blinds of the window in the living room.
+
+Time: 184
+State change: I turned on the TV in the living room and set it to Cartoon Network.
+
+Time: 185
+State change: I turned on the overhead light in the kitchen.
+
+Time: 186
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 187
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 188
+State change: I turned off the overhead light in the kitchen.
+
+Time: 189
+State change: I turned on the overhead light in the kitchen.
+
+Time: 190
+State change: I placed the "Of Mice and Men" book I was holding on the table in the living room.
+
+Time: 191
+State change: I picked up the knife on the 8th level of the shelf in the living room.
+
+Time: 192
+State change: I opened the blinds of the window in the living room.
+
+Time: 193
+State change: I placed the knife I was holding on the table in John's bedroom.
+
+Time: 194
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 195
+State change: I picked up the red pen on the 6th level of the shelf in the living room.
+
+Time: 196
+State change: I placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.
+
+Time: 197
+State change: I turned off the overhead light in the living room.
+
+Time: 198
+State change: I turned off the overhead light in the kitchen.
+
+Time: 199
+State change: I picked up the spoon on the 4th level of the shelf in Jane's bedroom.
+
+Time: 200
+State change: I placed the spoon I was holding on the 9th level of the shelf in the living room.
+
+Time: 201
+Query: Where is the red pen?
+True answer: The red pen is on the 2nd level of the shelf in John's bedroom.
+['date: 1\n\nI picked up the plate in the sink in the kitchen.', "date: 3\n\nI placed the plate I was holding on the 5th level of the shelf in Jane's bedroom.", 'date: 6\n\nI picked up the orange inside the fridge in the kitchen.', "date: 7\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 10\n\nI placed the orange I was holding on the 7th level of the shelf in the living room.', 'date: 11\n\nI picked up the "Alchemist" book on the 10th level of the shelf in the living room.', "date: 14\n\nI turned on the overhead light in Jane's bedroom.", 'date: 16\n\nI placed the "Alchemist" book I was holding on the table in the living room.', "date: 17\n\nI picked up the plate on the 5th level of the shelf in Jane's bedroom.", 'date: 21\n\nI placed the plate I was holding in the sink in the kitchen.', 'date: 22\n\nI picked up the apple inside the fridge in the kitchen.', 'date: 27\n\nI placed the apple I was holding on the 1st level of the shelf in the living room.', 'date: 28\n\nI picked up the apple on the 1st level of the shelf in the living room.', "date: 30\n\nI placed the apple I was holding on the table in John's bedroom.", "date: 31\n\nI turned off the overhead light in Jane's bedroom.", "date: 32\n\nI picked up the red pen on the 4th level of the shelf in John's bedroom.", "date: 33\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 34\n\nI placed the red pen I was holding on the 3rd level of the shelf in the living room.', 'date: 36\n\nI picked up the plate in the sink in the kitchen.', 'date: 37\n\nI placed the plate I was holding in the sink in the kitchen.', 'date: 38\n\nI picked up the red pen on the 3rd level of the shelf in the living room.', "date: 43\n\nI placed the red pen I was holding on the 1st level of the shelf in Jane's bedroom.", 'date: 45\n\nI picked up the purple pen on the table in the living room.', "date: 47\n\nI placed the purple pen I was holding on the table in John's bedroom.", "date: 48\n\nI opened the blinds of the window in Jane's bedroom.", "date: 49\n\nI picked up the apple on the table in John's bedroom.", "date: 53\n\nI turned on the overhead light in Jane's bedroom.", "date: 54\n\nI turned off the overhead light in Jane's bedroom.", 'date: 56\n\nI placed the apple I was holding on the 2nd level of the shelf in the living room.', 'date: 58\n\nI picked up the bowl on the table in the living room.', "date: 59\n\nI placed the bowl I was holding on the table in Jane's bedroom.", 'date: 67\n\nI picked up the apple on the 2nd level of the shelf in the living room.', "date: 68\n\nI placed the apple I was holding on the 3rd level of the shelf in Jane's bedroom.", 'date: 69\n\nI picked up the orange on the 7th level of the shelf in the living room.', "date: 70\n\nI placed the orange I was holding on the table in Jane's bedroom.", 'date: 72\n\nI picked up the "Alchemist" book on the table in the living room.', 'date: 75\n\nI placed the "Alchemist" book I was holding on the 2nd level of the shelf in Jane\'s bedroom.', 'date: 76\n\nI picked up the spoon in the sink in the kitchen.', "date: 77\n\nI placed the spoon I was holding on the table in Jane's bedroom.", 'date: 79\n\nI picked up the "Of Mice and Men" book on the table in John\'s bedroom.', 'date: 82\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', "date: 83\n\nI picked up the fork on the table in Jane's bedroom.", "date: 85\n\nI placed the fork I was holding on the 4th level of the shelf in John's bedroom.", "date: 86\n\nI picked up the red pen on the 1st level of the shelf in Jane's bedroom.", "date: 87\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 88\n\nI picked up the apple on the 3rd level of the shelf in Jane's bedroom.", 'date: 90\n\nI placed the apple I was holding inside the fridge in the kitchen.', "date: 92\n\nI picked up the spoon on the table in Jane's bedroom.", 'date: 93\n\nI placed the spoon I was holding in the sink in the kitchen.', "date: 98\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", "date: 102\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 104\n\nI picked up the bowl on the table in Jane's bedroom.", 'date: 105\n\nI placed the bowl I was holding in the sink in the kitchen.', 'date: 106\n\nI picked up the spoon in the sink in the kitchen.', "date: 107\n\nI placed the spoon I was holding on the 1st level of the shelf in Jane's bedroom.", "date: 108\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 109\n\nI picked up the knife on the 2nd level of the shelf in the living room.', "date: 110\n\nI placed the knife I was holding on the 2nd level of the shelf in John's bedroom.", "date: 111\n\nI picked up the knife on the 2nd level of the shelf in John's bedroom.", 'date: 112\n\nI placed the knife I was holding on the 8th level of the shelf in the living room.', 'date: 115\n\nI picked up the "Alchemist" book on the 2nd level of the shelf in Jane\'s bedroom.', 'date: 116\n\nI placed the "Alchemist" book I was holding on the 6th level of the shelf in Jane\'s bedroom.', "date: 117\n\nI picked up the purple pen on the table in John's bedroom.", "date: 118\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 120\n\nI placed the purple pen I was holding on the table in the living room.', 'date: 122\n\nI picked up the "Alchemist" book on the 6th level of the shelf in Jane\'s bedroom.', 'date: 129\n\nI placed the "Alchemist" book I was holding on the table in the living room.', 'date: 134\n\nI picked up the "Of Mice and Men" book on the 3rd level of the shelf in John\'s bedroom.', 'date: 142\n\nI placed the "Of Mice and Men" book I was holding on the 4th level of the shelf in John\'s bedroom.', "date: 143\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", 'date: 144\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', 'date: 145\n\nI picked up the bowl in the sink in the kitchen.', "date: 146\n\nI closed the blinds of the window in Jane's bedroom.", "date: 150\n\nI opened the blinds of the window in Jane's bedroom.", "date: 151\n\nI placed the bowl I was holding on the 1st level of the shelf in John's bedroom.", 'date: 152\n\nI picked up the red pen on the 6th level of the shelf in the living room.', "date: 155\n\nI turned off the TV in Jane's bedroom.", 'date: 156\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', 'date: 158\n\nI picked up the "Of Mice and Men" book on the 4th level of the shelf in John\'s bedroom.', 'date: 159\n\nI placed the "Of Mice and Men" book I was holding on the table in Jane\'s bedroom.', 'date: 160\n\nI picked up the "Fahrenheit 451" book on the 5th level of the shelf in John\'s bedroom.', 'date: 161\n\nI placed the "Fahrenheit 451" book I was holding on the 1st level of the shelf in John\'s bedroom.', "date: 162\n\nI picked up the spoon on the 1st level of the shelf in Jane's bedroom.", "date: 163\n\nI placed the spoon I was holding on the 5th level of the shelf in John's bedroom.", 'date: 166\n\nI picked up the "Of Mice and Men" book on the table in Jane\'s bedroom.', 'date: 169\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', 'date: 171\n\nI picked up the apple inside the fridge in the kitchen.', "date: 173\n\nI placed the apple I was holding on the table in Jane's bedroom.", "date: 175\n\nI picked up the spoon on the 5th level of the shelf in John's bedroom.", "date: 178\n\nI placed the spoon I was holding on the 4th level of the shelf in Jane's bedroom.", 'date: 179\n\nI picked up the "Of Mice and Men" book on the 3rd level of the shelf in John\'s bedroom.', "date: 187\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 190\n\nI placed the "Of Mice and Men" book I was holding on the table in the living room.', 'date: 191\n\nI picked up the knife on the 8th level of the shelf in the living room.', "date: 193\n\nI placed the knife I was holding on the table in John's bedroom.", "date: 194\n\nI turned off the overhead light in Jane's bedroom.", 'date: 195\n\nI picked up the red pen on the 6th level of the shelf in the living room.', "date: 196\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 199\n\nI picked up the spoon on the 4th level of the shelf in Jane's bedroom.", 'date: 200\n\nI placed the spoon I was holding on the 9th level of the shelf in the living room.']
+Predicted answer: The red pen is on the 2nd level of the shelf in John's bedroom.
+Similarity: 1.0
+
+Time: 202
+State change: I turned on the TV in John's bedroom and set it to Cartoon Network.
+
+Time: 203
+State change: I turned on the overhead light in the kitchen.
+
+Time: 204
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 205
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 206
+State change: I picked up the "Fahrenheit 451" book on the 1st level of the shelf in John's bedroom.
+
+Time: 207
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 208
+State change: I closed the blinds of the window in the living room.
+
+Time: 209
+State change: I placed the "Fahrenheit 451" book I was holding on the table in the living room.
+
+Time: 210
+State change: I turned off the overhead light in the kitchen.
+
+Time: 211
+State change: I picked up the orange on the table in Jane's bedroom.
+
+Time: 212
+State change: I placed the orange I was holding on the table in the living room.
+
+Time: 213
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 214
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 215
+State change: I picked up the bowl on the 1st level of the shelf in John's bedroom.
+
+Time: 216
+State change: I turned on the overhead light in the kitchen.
+
+Time: 217
+State change: I turned off the overhead light in the kitchen.
+
+Time: 218
+State change: I placed the bowl I was holding on the table in the living room.
+
+Time: 219
+State change: I picked up the spoon on the 9th level of the shelf in the living room.
+
+Time: 220
+State change: I placed the spoon I was holding on the table in Jane's bedroom.
+
+Time: 221
+State change: I opened the blinds of the window in the living room.
+
+Time: 222
+State change: I switched the channel of the TV in the living room to ESPN.
+
+Time: 223
+State change: I turned on the overhead light in the kitchen.
+
+Time: 224
+State change: I picked up the white pen on the table in John's bedroom.
+
+Time: 225
+State change: I turned off the overhead light in the kitchen.
+
+Time: 226
+State change: I turned on the overhead light in the living room.
+
+Time: 227
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 228
+State change: I placed the white pen I was holding on the table in the living room.
+
+Time: 229
+State change: I turned on the overhead light in the kitchen.
+
+Time: 230
+State change: I picked up the white pen on the table in the living room.
+
+Time: 231
+State change: I placed the white pen I was holding on the table in Jane's bedroom.
+
+Time: 232
+State change: I turned off the overhead light in the kitchen.
+
+Time: 233
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 234
+State change: I switched the channel of the TV in John's bedroom to Cartoon Network.
+
+Time: 235
+State change: I picked up the "Fahrenheit 451" book on the table in the living room.
+
+Time: 236
+State change: I turned on the overhead light in the kitchen.
+
+Time: 237
+State change: I placed the "Fahrenheit 451" book I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 238
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 239
+State change: I picked up the knife on the table in John's bedroom.
+
+Time: 240
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 241
+State change: I placed the knife I was holding on the 2nd level of the shelf in John's bedroom.
+
+Time: 242
+State change: I picked up the white pen on the table in Jane's bedroom.
+
+Time: 243
+State change: I turned on the TV in Jane's bedroom and set it to CNN.
+
+Time: 244
+State change: I placed the white pen I was holding on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 245
+State change: I turned off the overhead light in the kitchen.
+
+Time: 246
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 247
+State change: I picked up the "Of Mice and Men" book on the table in the living room.
+
+Time: 248
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 249
+State change: I turned on the overhead light in the kitchen.
+
+Time: 250
+State change: I placed the "Of Mice and Men" book I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 251
+State change: I picked up the purple pen on the table in the living room.
+
+Time: 252
+State change: I placed the purple pen I was holding on the 3rd level of the shelf in the living room.
+
+Time: 253
+State change: I picked up the plate in the sink in the kitchen.
+
+Time: 254
+State change: I turned off the overhead light in the kitchen.
+
+Time: 255
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 256
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 257
+State change: I switched the channel of the TV in Jane's bedroom to Cartoon Network.
+
+Time: 258
+State change: I turned off the overhead light in the living room.
+
+Time: 259
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 260
+State change: I turned on the overhead light in the kitchen.
+
+Time: 261
+State change: I placed the plate I was holding in the sink in the kitchen.
+
+Time: 262
+State change: I turned off the TV in the living room.
+
+Time: 263
+State change: I picked up the "Of Mice and Men" book on the 1st level of the shelf in John's bedroom.
+
+Time: 264
+State change: I turned on the TV in the living room and set it to Fox News.
+
+Time: 265
+State change: I closed the blinds of the window in the living room.
+
+Time: 266
+State change: I opened the blinds of the window in the living room.
+
+Time: 267
+State change: I placed the "Of Mice and Men" book I was holding on the 9th level of the shelf in the living room.
+
+Time: 268
+State change: I picked up the "Of Mice and Men" book on the 9th level of the shelf in the living room.
+
+Time: 269
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 270
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 271
+State change: I switched the channel of the TV in Jane's bedroom to the Discovery Channel.
+
+Time: 272
+State change: I turned on the overhead light in the living room.
+
+Time: 273
+State change: I turned off the overhead light in the kitchen.
+
+Time: 274
+State change: I turned on the overhead light in the kitchen.
+
+Time: 275
+State change: I switched the channel of the TV in the living room to ESPN.
+
+Time: 276
+State change: I turned off the overhead light in the kitchen.
+
+Time: 277
+State change: I closed the blinds of the window in the living room.
+
+Time: 278
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 279
+State change: I turned on the overhead light in the kitchen.
+
+Time: 280
+State change: I placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 281
+State change: I turned off the TV in the living room.
+
+Time: 282
+State change: I turned off the overhead light in the living room.
+
+Time: 283
+State change: I picked up the red pen on the 2nd level of the shelf in John's bedroom.
+
+Time: 284
+State change: I placed the red pen I was holding on the table in John's bedroom.
+
+Time: 285
+State change: I picked up the plate in the sink in the kitchen.
+
+Time: 286
+State change: I turned on the overhead light in the living room.
+
+Time: 287
+State change: I placed the plate I was holding on the table in John's bedroom.
+
+Time: 288
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 289
+State change: I turned on the TV in the living room and set it to CNN.
+
+Time: 290
+State change: I picked up the orange on the table in the living room.
+
+Time: 291
+State change: I turned off the overhead light in the kitchen.
+
+Time: 292
+State change: I placed the orange I was holding on the table in Jane's bedroom.
+
+Time: 293
+State change: I picked up the "Alchemist" book on the table in the living room.
+
+Time: 294
+State change: I placed the "Alchemist" book I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 295
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 296
+State change: I picked up the knife on the 2nd level of the shelf in John's bedroom.
+
+Time: 297
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 298
+State change: I turned on the overhead light in the kitchen.
+
+Time: 299
+State change: I picked up the red pen on the table in John's bedroom.
+
+Time: 300
+State change: I placed the red pen I was holding on the table in the living room.
+
+Time: 301
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 302
+Query: Where is the "Alchemist" book?
+True answer: The "Alchemist" book is on the 4th level of the shelf in John's bedroom.
+["date: 3\n\nI placed the plate I was holding on the 5th level of the shelf in Jane's bedroom.", 'date: 10\n\nI placed the orange I was holding on the 7th level of the shelf in the living room.', 'date: 11\n\nI picked up the "Alchemist" book on the 10th level of the shelf in the living room.', 'date: 16\n\nI placed the "Alchemist" book I was holding on the table in the living room.', "date: 17\n\nI picked up the plate on the 5th level of the shelf in Jane's bedroom.", 'date: 27\n\nI placed the apple I was holding on the 1st level of the shelf in the living room.', 'date: 28\n\nI picked up the apple on the 1st level of the shelf in the living room.', "date: 32\n\nI picked up the red pen on the 4th level of the shelf in John's bedroom.", 'date: 34\n\nI placed the red pen I was holding on the 3rd level of the shelf in the living room.', 'date: 38\n\nI picked up the red pen on the 3rd level of the shelf in the living room.', "date: 43\n\nI placed the red pen I was holding on the 1st level of the shelf in Jane's bedroom.", 'date: 45\n\nI picked up the purple pen on the table in the living room.', "date: 47\n\nI placed the purple pen I was holding on the table in John's bedroom.", 'date: 56\n\nI placed the apple I was holding on the 2nd level of the shelf in the living room.', "date: 59\n\nI placed the bowl I was holding on the table in Jane's bedroom.", 'date: 67\n\nI picked up the apple on the 2nd level of the shelf in the living room.', "date: 68\n\nI placed the apple I was holding on the 3rd level of the shelf in Jane's bedroom.", 'date: 69\n\nI picked up the orange on the 7th level of the shelf in the living room.', 'date: 72\n\nI picked up the "Alchemist" book on the table in the living room.', 'date: 75\n\nI placed the "Alchemist" book I was holding on the 2nd level of the shelf in Jane\'s bedroom.', "date: 77\n\nI placed the spoon I was holding on the table in Jane's bedroom.", 'date: 79\n\nI picked up the "Of Mice and Men" book on the table in John\'s bedroom.', 'date: 82\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', "date: 85\n\nI placed the fork I was holding on the 4th level of the shelf in John's bedroom.", "date: 86\n\nI picked up the red pen on the 1st level of the shelf in Jane's bedroom.", "date: 87\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 88\n\nI picked up the apple on the 3rd level of the shelf in Jane's bedroom.", "date: 92\n\nI picked up the spoon on the table in Jane's bedroom.", "date: 98\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", "date: 102\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 104\n\nI picked up the bowl on the table in Jane's bedroom.", "date: 107\n\nI placed the spoon I was holding on the 1st level of the shelf in Jane's bedroom.", 'date: 109\n\nI picked up the knife on the 2nd level of the shelf in the living room.', "date: 110\n\nI placed the knife I was holding on the 2nd level of the shelf in John's bedroom.", "date: 111\n\nI picked up the knife on the 2nd level of the shelf in John's bedroom.", 'date: 112\n\nI placed the knife I was holding on the 8th level of the shelf in the living room.', 'date: 115\n\nI picked up the "Alchemist" book on the 2nd level of the shelf in Jane\'s bedroom.', 'date: 116\n\nI placed the "Alchemist" book I was holding on the 6th level of the shelf in Jane\'s bedroom.', "date: 117\n\nI picked up the purple pen on the table in John's bedroom.", 'date: 120\n\nI placed the purple pen I was holding on the table in the living room.', 'date: 122\n\nI picked up the "Alchemist" book on the 6th level of the shelf in Jane\'s bedroom.', 'date: 129\n\nI placed the "Alchemist" book I was holding on the table in the living room.', 'date: 134\n\nI picked up the "Of Mice and Men" book on the 3rd level of the shelf in John\'s bedroom.', 'date: 142\n\nI placed the "Of Mice and Men" book I was holding on the 4th level of the shelf in John\'s bedroom.', "date: 143\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", 'date: 144\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', "date: 151\n\nI placed the bowl I was holding on the 1st level of the shelf in John's bedroom.", 'date: 152\n\nI picked up the red pen on the 6th level of the shelf in the living room.', 'date: 156\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', 'date: 158\n\nI picked up the "Of Mice and Men" book on the 4th level of the shelf in John\'s bedroom.', 'date: 159\n\nI placed the "Of Mice and Men" book I was holding on the table in Jane\'s bedroom.', 'date: 160\n\nI picked up the "Fahrenheit 451" book on the 5th level of the shelf in John\'s bedroom.', 'date: 161\n\nI placed the "Fahrenheit 451" book I was holding on the 1st level of the shelf in John\'s bedroom.', "date: 162\n\nI picked up the spoon on the 1st level of the shelf in Jane's bedroom.", "date: 163\n\nI placed the spoon I was holding on the 5th level of the shelf in John's bedroom.", 'date: 166\n\nI picked up the "Of Mice and Men" book on the table in Jane\'s bedroom.', 'date: 169\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', 'date: 171\n\nI picked up the apple inside the fridge in the kitchen.', "date: 173\n\nI placed the apple I was holding on the table in Jane's bedroom.", "date: 175\n\nI picked up the spoon on the 5th level of the shelf in John's bedroom.", "date: 178\n\nI placed the spoon I was holding on the 4th level of the shelf in Jane's bedroom.", 'date: 179\n\nI picked up the "Of Mice and Men" book on the 3rd level of the shelf in John\'s bedroom.', 'date: 190\n\nI placed the "Of Mice and Men" book I was holding on the table in the living room.', 'date: 191\n\nI picked up the knife on the 8th level of the shelf in the living room.', 'date: 195\n\nI picked up the red pen on the 6th level of the shelf in the living room.', "date: 196\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 199\n\nI picked up the spoon on the 4th level of the shelf in Jane's bedroom.", 'date: 200\n\nI placed the spoon I was holding on the 9th level of the shelf in the living room.', 'date: 205\n\nI picked up the "Fahrenheit 451" book on the 1st level of the shelf in John\'s bedroom.', 'date: 208\n\nI placed the "Fahrenheit 451" book I was holding on the table in the living room.', "date: 210\n\nI picked up the orange on the table in Jane's bedroom.", "date: 214\n\nI picked up the bowl on the 1st level of the shelf in John's bedroom.", 'date: 218\n\nI picked up the spoon on the 9th level of the shelf in the living room.', "date: 219\n\nI placed the spoon I was holding on the table in Jane's bedroom.", "date: 223\n\nI picked up the white pen on the table in John's bedroom.", 'date: 227\n\nI placed the white pen I was holding on the table in the living room.', 'date: 229\n\nI picked up the white pen on the table in the living room.', "date: 230\n\nI placed the white pen I was holding on the table in Jane's bedroom.", 'date: 234\n\nI picked up the "Fahrenheit 451" book on the table in the living room.', 'date: 236\n\nI placed the "Fahrenheit 451" book I was holding on the 5th level of the shelf in John\'s bedroom.', "date: 240\n\nI placed the knife I was holding on the 2nd level of the shelf in John's bedroom.", "date: 241\n\nI picked up the white pen on the table in Jane's bedroom.", "date: 243\n\nI placed the white pen I was holding on the 2nd level of the shelf in Jane's bedroom.", 'date: 246\n\nI picked up the "Of Mice and Men" book on the table in the living room.', 'date: 249\n\nI placed the "Of Mice and Men" book I was holding on the 1st level of the shelf in John\'s bedroom.', 'date: 250\n\nI picked up the purple pen on the table in the living room.', 'date: 251\n\nI placed the purple pen I was holding on the 3rd level of the shelf in the living room.', 'date: 262\n\nI picked up the "Of Mice and Men" book on the 1st level of the shelf in John\'s bedroom.', 'date: 266\n\nI placed the "Of Mice and Men" book I was holding on the 9th level of the shelf in the living room.', 'date: 267\n\nI picked up the "Of Mice and Men" book on the 9th level of the shelf in the living room.', 'date: 279\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', "date: 282\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", "date: 283\n\nI placed the red pen I was holding on the table in John's bedroom.", "date: 286\n\nI placed the plate I was holding on the table in John's bedroom.", "date: 291\n\nI placed the orange I was holding on the table in Jane's bedroom.", 'date: 292\n\nI picked up the "Alchemist" book on the table in the living room.', 'date: 293\n\nI placed the "Alchemist" book I was holding on the 4th level of the shelf in John\'s bedroom.', "date: 295\n\nI picked up the knife on the 2nd level of the shelf in John's bedroom.", "date: 298\n\nI picked up the red pen on the table in John's bedroom.", 'date: 299\n\nI placed the red pen I was holding on the table in the living room.']
+Predicted answer: The "Alchemist" book is on the 4th level of the shelf in John's bedroom.
+Similarity: 1.0
+
+Time: 303
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 304
+State change: I opened the blinds of the window in the living room.
+
+Time: 305
+State change: I picked up the bowl on the table in the living room.
+
+Time: 306
+State change: I placed the bowl I was holding on the table in Jane's bedroom.
+
+Time: 307
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 308
+State change: I picked up the spoon on the table in Jane's bedroom.
+
+Time: 309
+State change: I turned off the TV in John's bedroom.
+
+Time: 310
+State change: I turned off the overhead light in the kitchen.
+
+Time: 311
+State change: I turned off the TV in the living room.
+
+Time: 312
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 313
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 314
+State change: I turned on the TV in the living room and set it to Cartoon Network.
+
+Time: 315
+State change: I placed the spoon I was holding in the sink in the kitchen.
+
+Time: 316
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 317
+State change: I turned on the overhead light in the kitchen.
+
+Time: 318
+State change: I turned off the overhead light in the kitchen.
+
+Time: 319
+State change: I picked up the plate on the table in John's bedroom.
+
+Time: 320
+State change: I placed the plate I was holding on the table in the living room.
+
+Time: 321
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 322
+State change: I turned on the overhead light in the kitchen.
+
+Time: 323
+State change: I picked up the "Of Mice and Men" book on the 3rd level of the shelf in John's bedroom.
+
+Time: 324
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 325
+State change: I closed the blinds of the window in the living room.
+
+Time: 326
+State change: I placed the "Of Mice and Men" book I was holding on the 5th level of the shelf in Jane's bedroom.
+
+Time: 327
+State change: I turned off the overhead light in the kitchen.
+
+Time: 328
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 329
+State change: I picked up the "Alchemist" book on the 4th level of the shelf in John's bedroom.
+
+Time: 330
+State change: I turned off the overhead light in the living room.
+
+Time: 331
+State change: I placed the "Alchemist" book I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 332
+State change: I picked up the fork on the 4th level of the shelf in John's bedroom.
+
+Time: 333
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 334
+State change: I placed the fork I was holding in the sink in the kitchen.
+
+Time: 335
+State change: I picked up the apple on the table in Jane's bedroom.
+
+Time: 336
+State change: I turned on the overhead light in the kitchen.
+
+Time: 337
+State change: I turned on the overhead light in the living room.
+
+Time: 338
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 339
+State change: I placed the apple I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 340
+State change: I picked up the apple on the 6th level of the shelf in Jane's bedroom.
+
+Time: 341
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 342
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 343
+State change: I switched the channel of the TV in the living room to CNN.
+
+Time: 344
+State change: I opened the blinds of the window in the living room.
+
+Time: 345
+State change: I placed the apple I was holding on the table in John's bedroom.
+
+Time: 346
+State change: I turned off the overhead light in the kitchen.
+
+Time: 347
+State change: I turned on the TV in Jane's bedroom and set it to CNN.
+
+Time: 348
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 349
+State change: I turned on the overhead light in the kitchen.
+
+Time: 350
+State change: I turned off the overhead light in the kitchen.
+
+Time: 351
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 352
+State change: I picked up the spoon in the sink in the kitchen.
+
+Time: 353
+State change: I placed the spoon I was holding on the table in the living room.
+
+Time: 354
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 355
+State change: I turned off the TV in John's bedroom.
+
+Time: 356
+State change: I picked up the "Of Mice and Men" book on the 5th level of the shelf in Jane's bedroom.
+
+Time: 357
+State change: I placed the "Of Mice and Men" book I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 358
+State change: I picked up the white pen on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 359
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 360
+State change: I turned on the overhead light in the kitchen.
+
+Time: 361
+State change: I closed the blinds of the window in the living room.
+
+Time: 362
+State change: I placed the white pen I was holding on the table in the living room.
+
+Time: 363
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 364
+State change: I picked up the spoon on the table in the living room.
+
+Time: 365
+State change: I turned on the TV in John's bedroom and set it to Cartoon Network.
+
+Time: 366
+State change: I placed the spoon I was holding on the 5th level of the shelf in the living room.
+
+Time: 367
+State change: I picked up the white pen on the table in the living room.
+
+Time: 368
+State change: I placed the white pen I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 369
+State change: I picked up the "Of Mice and Men" book on the 1st level of the shelf in John's bedroom.
+
+Time: 370
+State change: I turned off the overhead light in the kitchen.
+
+Time: 371
+State change: I turned off the TV in John's bedroom.
+
+Time: 372
+State change: I opened the blinds of the window in the living room.
+
+Time: 373
+State change: I switched the channel of the TV in the living room to Cartoon Network.
+
+Time: 374
+State change: I placed the "Of Mice and Men" book I was holding on the table in the living room.
+
+Time: 375
+State change: I picked up the apple on the table in John's bedroom.
+
+Time: 376
+State change: I turned on the overhead light in the kitchen.
+
+Time: 377
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 378
+State change: I turned off the TV in the living room.
+
+Time: 379
+State change: I closed the blinds of the window in the living room.
+
+Time: 380
+State change: I opened the blinds of the window in the living room.
+
+Time: 381
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 382
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 383
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 384
+State change: I turned off the overhead light in the kitchen.
+
+Time: 385
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 386
+State change: I turned on the overhead light in the kitchen.
+
+Time: 387
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 388
+State change: I turned off the overhead light in the kitchen.
+
+Time: 389
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 390
+State change: I picked up the "Fahrenheit 451" book on the 5th level of the shelf in John's bedroom.
+
+Time: 391
+State change: I turned on the overhead light in the kitchen.
+
+Time: 392
+State change: I placed the "Fahrenheit 451" book I was holding on the table in John's bedroom.
+
+Time: 393
+State change: I turned on the TV in Jane's bedroom and set it to ESPN.
+
+Time: 394
+State change: I switched the channel of the TV in John's bedroom to CNN.
+
+Time: 395
+State change: I picked up the fork in the sink in the kitchen.
+
+Time: 396
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 397
+State change: I turned off the overhead light in the kitchen.
+
+Time: 398
+State change: I closed the blinds of the window in the living room.
+
+Time: 399
+State change: I placed the fork I was holding on the table in Jane's bedroom.
+
+Time: 400
+State change: I picked up the red pen on the table in the living room.
+
+Time: 401
+State change: I turned on the overhead light in the kitchen.
+
+Time: 402
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 403
+Query: Where is the apple?
+True answer: The apple is inside the fridge in the kitchen.
+["date: 3\n\nI placed the plate I was holding on the 5th level of the shelf in Jane's bedroom.", 'date: 6\n\nI picked up the orange inside the fridge in the kitchen.', 'date: 10\n\nI placed the orange I was holding on the 7th level of the shelf in the living room.', 'date: 11\n\nI picked up the "Alchemist" book on the 10th level of the shelf in the living room.', "date: 17\n\nI picked up the plate on the 5th level of the shelf in Jane's bedroom.", 'date: 22\n\nI picked up the apple inside the fridge in the kitchen.', 'date: 27\n\nI placed the apple I was holding on the 1st level of the shelf in the living room.', 'date: 28\n\nI picked up the apple on the 1st level of the shelf in the living room.', "date: 30\n\nI placed the apple I was holding on the table in John's bedroom.", "date: 32\n\nI picked up the red pen on the 4th level of the shelf in John's bedroom.", 'date: 34\n\nI placed the red pen I was holding on the 3rd level of the shelf in the living room.', 'date: 38\n\nI picked up the red pen on the 3rd level of the shelf in the living room.', "date: 43\n\nI placed the red pen I was holding on the 1st level of the shelf in Jane's bedroom.", 'date: 45\n\nI picked up the purple pen on the table in the living room.', "date: 49\n\nI picked up the apple on the table in John's bedroom.", 'date: 56\n\nI placed the apple I was holding on the 2nd level of the shelf in the living room.', 'date: 67\n\nI picked up the apple on the 2nd level of the shelf in the living room.', "date: 68\n\nI placed the apple I was holding on the 3rd level of the shelf in Jane's bedroom.", 'date: 69\n\nI picked up the orange on the 7th level of the shelf in the living room.', "date: 70\n\nI placed the orange I was holding on the table in Jane's bedroom.", "date: 83\n\nI picked up the fork on the table in Jane's bedroom.", "date: 85\n\nI placed the fork I was holding on the 4th level of the shelf in John's bedroom.", "date: 86\n\nI picked up the red pen on the 1st level of the shelf in Jane's bedroom.", "date: 87\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 88\n\nI picked up the apple on the 3rd level of the shelf in Jane's bedroom.", 'date: 90\n\nI placed the apple I was holding inside the fridge in the kitchen.', "date: 98\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", "date: 102\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 104\n\nI picked up the bowl on the table in Jane's bedroom.", 'date: 105\n\nI placed the bowl I was holding in the sink in the kitchen.', 'date: 106\n\nI picked up the spoon in the sink in the kitchen.', "date: 107\n\nI placed the spoon I was holding on the 1st level of the shelf in Jane's bedroom.", 'date: 109\n\nI picked up the knife on the 2nd level of the shelf in the living room.', "date: 110\n\nI placed the knife I was holding on the 2nd level of the shelf in John's bedroom.", "date: 111\n\nI picked up the knife on the 2nd level of the shelf in John's bedroom.", 'date: 112\n\nI placed the knife I was holding on the 8th level of the shelf in the living room.', 'date: 120\n\nI placed the purple pen I was holding on the table in the living room.', "date: 143\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", 'date: 144\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', 'date: 145\n\nI picked up the bowl in the sink in the kitchen.', "date: 151\n\nI placed the bowl I was holding on the 1st level of the shelf in John's bedroom.", 'date: 152\n\nI picked up the red pen on the 6th level of the shelf in the living room.', 'date: 156\n\nI placed the red pen I was holding on the 6th level of the shelf in the living room.', 'date: 159\n\nI placed the "Of Mice and Men" book I was holding on the table in Jane\'s bedroom.', "date: 162\n\nI picked up the spoon on the 1st level of the shelf in Jane's bedroom.", "date: 163\n\nI placed the spoon I was holding on the 5th level of the shelf in John's bedroom.", 'date: 171\n\nI picked up the apple inside the fridge in the kitchen.', "date: 173\n\nI placed the apple I was holding on the table in Jane's bedroom.", "date: 178\n\nI placed the spoon I was holding on the 4th level of the shelf in Jane's bedroom.", 'date: 191\n\nI picked up the knife on the 8th level of the shelf in the living room.', 'date: 195\n\nI picked up the red pen on the 6th level of the shelf in the living room.', "date: 196\n\nI placed the red pen I was holding on the 2nd level of the shelf in John's bedroom.", "date: 199\n\nI picked up the spoon on the 4th level of the shelf in Jane's bedroom.", 'date: 200\n\nI placed the spoon I was holding on the 9th level of the shelf in the living room.', "date: 210\n\nI picked up the orange on the table in Jane's bedroom.", 'date: 211\n\nI placed the orange I was holding on the table in the living room.', "date: 214\n\nI picked up the bowl on the 1st level of the shelf in John's bedroom.", 'date: 217\n\nI placed the bowl I was holding on the table in the living room.', 'date: 218\n\nI picked up the spoon on the 9th level of the shelf in the living room.', 'date: 229\n\nI picked up the white pen on the table in the living room.', "date: 230\n\nI placed the white pen I was holding on the table in Jane's bedroom.", "date: 240\n\nI placed the knife I was holding on the 2nd level of the shelf in John's bedroom.", "date: 241\n\nI picked up the white pen on the table in Jane's bedroom.", "date: 243\n\nI placed the white pen I was holding on the 2nd level of the shelf in Jane's bedroom.", 'date: 249\n\nI placed the "Of Mice and Men" book I was holding on the 1st level of the shelf in John\'s bedroom.', 'date: 250\n\nI picked up the purple pen on the table in the living room.', 'date: 251\n\nI placed the purple pen I was holding on the 3rd level of the shelf in the living room.', 'date: 252\n\nI picked up the plate in the sink in the kitchen.', 'date: 266\n\nI placed the "Of Mice and Men" book I was holding on the 9th level of the shelf in the living room.', 'date: 279\n\nI placed the "Of Mice and Men" book I was holding on the 3rd level of the shelf in John\'s bedroom.', "date: 282\n\nI picked up the red pen on the 2nd level of the shelf in John's bedroom.", 'date: 289\n\nI picked up the orange on the table in the living room.', "date: 291\n\nI placed the orange I was holding on the table in Jane's bedroom.", 'date: 296\n\nI placed the knife I was holding in the sink in the kitchen.', 'date: 299\n\nI placed the red pen I was holding on the table in the living room.', 'date: 300\n\nI picked up the knife in the sink in the kitchen.', "date: 304\n\nI placed the bowl I was holding on the table in Jane's bedroom.", "date: 306\n\nI picked up the spoon on the table in Jane's bedroom.", 'date: 321\n\nI picked up the "Of Mice and Men" book on the 3rd level of the shelf in John\'s bedroom.', 'date: 324\n\nI placed the "Of Mice and Men" book I was holding on the 5th level of the shelf in Jane\'s bedroom.', "date: 330\n\nI picked up the fork on the 4th level of the shelf in John's bedroom.", 'date: 332\n\nI placed the fork I was holding in the sink in the kitchen.', "date: 333\n\nI picked up the apple on the table in Jane's bedroom.", "date: 337\n\nI placed the apple I was holding on the 6th level of the shelf in Jane's bedroom.", "date: 338\n\nI picked up the apple on the 6th level of the shelf in Jane's bedroom.", 'date: 339\n\nI placed the apple I was holding inside the fridge in the kitchen.', 'date: 340\n\nI picked up the apple inside the fridge in the kitchen.', "date: 343\n\nI placed the apple I was holding on the table in John's bedroom.", 'date: 350\n\nI picked up the spoon in the sink in the kitchen.', 'date: 354\n\nI picked up the "Of Mice and Men" book on the 5th level of the shelf in Jane\'s bedroom.', 'date: 355\n\nI placed the "Of Mice and Men" book I was holding on the 1st level of the shelf in John\'s bedroom.', "date: 356\n\nI picked up the white pen on the 2nd level of the shelf in Jane's bedroom.", 'date: 360\n\nI placed the white pen I was holding on the table in the living room.', 'date: 364\n\nI placed the spoon I was holding on the 5th level of the shelf in the living room.', "date: 373\n\nI picked up the apple on the table in John's bedroom.", 'date: 375\n\nI placed the apple I was holding inside the fridge in the kitchen.', 'date: 380\n\nI picked up the apple inside the fridge in the kitchen.', 'date: 385\n\nI placed the apple I was holding inside the fridge in the kitchen.', "date: 397\n\nI placed the fork I was holding on the table in Jane's bedroom.", 'date: 398\n\nI picked up the red pen on the table in the living room.']
+Predicted answer: The apple is inside the fridge in the kitchen.
+Similarity: 1.0
+
+Time: 404
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 405
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 406
+State change: I placed the red pen I was holding on the 1st level of the shelf in John's bedroom.
+
+Time: 407
+State change: I turned off the overhead light in the living room.
+
+Time: 408
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 409
+State change: I turned off the overhead light in the kitchen.
+
+Time: 410
+State change: I picked up the orange on the table in Jane's bedroom.
+
+Time: 411
+State change: I placed the orange I was holding on the 8th level of the shelf in the living room.
+
+Time: 412
+State change: I picked up the spoon on the 5th level of the shelf in the living room.
+
+Time: 413
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 414
+State change: I turned on the overhead light in the living room.
+
+Time: 415
+State change: I turned off the TV in John's bedroom.
+
+Time: 416
+State change: I opened the blinds of the window in the living room.
+
+Time: 417
+State change: I turned on the overhead light in the kitchen.
+
+Time: 418
+State change: I placed the spoon I was holding in the sink in the kitchen.
+
+Time: 419
+State change: I picked up the fork on the table in Jane's bedroom.
+
+Time: 420
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 421
+State change: I turned off the overhead light in the kitchen.
+
+Time: 422
+State change: I turned on the overhead light in the kitchen.
+
+Time: 423
+State change: I turned on the TV in the living room and set it to CNN.
+
+Time: 424
+State change: I turned on the TV in John's bedroom and set it to CNN.
+
+Time: 425
+State change: I placed the fork I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 426
+State change: I picked up the "Of Mice and Men" book on the table in the living room.
+
+Time: 427
+State change: I switched the channel of the TV in the living room to Cartoon Network.
+
+Time: 428
+State change: I placed the "Of Mice and Men" book I was holding on the table in John's bedroom.
+
+Time: 429
+State change: I picked up the "Alchemist" book on the 1st level of the shelf in John's bedroom.
+
+Time: 430
+State change: I closed the blinds of the window in the living room.
+
+Time: 431
+State change: I placed the "Alchemist" book I was holding on the table in John's bedroom.
+
+Time: 432
+State change: I turned off the TV in John's bedroom.
+
+Time: 433
+State change: I turned off the TV in the living room.
+
+Time: 434
+State change: I picked up the fork on the 6th level of the shelf in Jane's bedroom.
+
+Time: 435
+State change: I placed the fork I was holding on the table in the living room.
+
+Time: 436
+State change: I picked up the white pen on the 6th level of the shelf in Jane's bedroom.
+
+Time: 437
+State change: I placed the white pen I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 438
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 439
+State change: I turned off the overhead light in the kitchen.
+
+Time: 440
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 441
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 442
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 443
+State change: I turned on the TV in Jane's bedroom and set it to ESPN.
+
+Time: 444
+State change: I opened the blinds of the window in the living room.
+
+Time: 445
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 446
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 447
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 448
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 449
+State change: I placed the knife I was holding on the table in Jane's bedroom.
+
+Time: 450
+State change: I closed the blinds of the window in the living room.
+
+Time: 451
+State change: I picked up the bowl on the table in Jane's bedroom.
+
+Time: 452
+State change: I opened the blinds of the window in the living room.
+
+Time: 453
+State change: I placed the bowl I was holding on the table in the living room.
+
+Time: 454
+State change: I picked up the "Fahrenheit 451" book on the table in John's bedroom.
+
+Time: 455
+State change: I placed the "Fahrenheit 451" book I was holding on the table in John's bedroom.
+
+Time: 456
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 457
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 458
+State change: I picked up the knife on the table in Jane's bedroom.
+
+Time: 459
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 460
+State change: I picked up the "Of Mice and Men" book on the table in John's bedroom.
+
+Time: 461
+State change: I placed the "Of Mice and Men" book I was holding on the 5th level of the shelf in Jane's bedroom.
+
+Time: 462
+State change: I picked up the "Fahrenheit 451" book on the table in John's bedroom.
+
+Time: 463
+State change: I placed the "Fahrenheit 451" book I was holding on the 4th level of the shelf in the living room.
+
+Time: 464
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 465
+State change: I turned on the overhead light in the kitchen.
+
+Time: 466
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 467
+State change: I turned off the overhead light in the kitchen.
+
+Time: 468
+State change: I switched the channel of the TV in Jane's bedroom to CNN.
+
+Time: 469
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 470
+State change: I picked up the plate on the table in the living room.
+
+Time: 471
+State change: I switched the channel of the TV in Jane's bedroom to Fox News.
+
+Time: 472
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 473
+State change: I placed the plate I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 474
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 475
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 476
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 477
+State change: I picked up the "Alchemist" book on the table in John's bedroom.
+
+Time: 478
+State change: I turned off the TV in John's bedroom.
+
+Time: 479
+State change: I turned on the overhead light in the kitchen.
+
+Time: 480
+State change: I placed the "Alchemist" book I was holding on the table in Jane's bedroom.
+
+Time: 481
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 482
+State change: I picked up the spoon in the sink in the kitchen.
+
+Time: 483
+State change: I placed the spoon I was holding on the table in the living room.
+
+Time: 484
+State change: I picked up the "Alchemist" book on the table in Jane's bedroom.
+
+Time: 485
+State change: I closed the blinds of the window in the living room.
+
+Time: 486
+State change: I turned off the overhead light in the kitchen.
+
+Time: 487
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 488
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 489
+State change: I placed the "Alchemist" book I was holding on the table in the living room.
+
+Time: 490
+State change: I picked up the "Alchemist" book on the table in the living room.
+
+Time: 491
+State change: I placed the "Alchemist" book I was holding on the table in the living room.
+
+Time: 492
+State change: I turned on the TV in John's bedroom and set it to CNN.
+
+Time: 493
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 494
+State change: I switched the channel of the TV in John's bedroom to CNN.
+
+Time: 495
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 496
+State change: I turned on the TV in the living room and set it to NBC.
+
+Time: 497
+State change: I picked up the "Fahrenheit 451" book on the 4th level of the shelf in the living room.
+
+Time: 498
+State change: I placed the "Fahrenheit 451" book I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 499
+State change: I turned on the TV in Jane's bedroom and set it to NBC.
+
+Time: 500
+State change: I picked up the "Of Mice and Men" book on the 5th level of the shelf in Jane's bedroom.
+
+Time: 501
+State change: I opened the blinds of the window in the living room.
+
+Time: 502
+State change: I placed the "Of Mice and Men" book I was holding on the table in John's bedroom.
+
+Time: 503
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 504
+Query: Is the overhead light in the living room on or off?
+True answer: The light is on.
+["date: 4\n\nI turned on the overhead light in John's bedroom.", "date: 14\n\nI turned on the overhead light in Jane's bedroom.", 'date: 15\n\nI turned on the overhead light in the kitchen.', 'date: 20\n\nI turned off the overhead light in the kitchen.', 'date: 24\n\nI turned on the overhead light in the kitchen.', 'date: 41\n\nI turned off the overhead light in the kitchen.', "date: 42\n\nI turned on the overhead light in John's bedroom.", "date: 46\n\nI turned on the overhead light in John's bedroom.", "date: 53\n\nI turned on the overhead light in Jane's bedroom.", "date: 57\n\nI turned on the overhead light in Jane's bedroom.", "date: 66\n\nI turned on the overhead light in John's bedroom.", 'date: 71\n\nI turned on the overhead light in the living room.', 'date: 73\n\nI turned on the overhead light in the kitchen.', 'date: 74\n\nI turned off the overhead light in the kitchen.', 'date: 78\n\nI turned on the overhead light in the kitchen.', 'date: 80\n\nI turned off the overhead light in the kitchen.', 'date: 81\n\nI turned off the overhead light in the living room.', 'date: 89\n\nI turned on the overhead light in the kitchen.', 'date: 97\n\nI turned on the overhead light in the kitchen.', 'date: 99\n\nI turned on the overhead light in the living room.', "date: 100\n\nI turned on the overhead light in Jane's bedroom.", 'date: 119\n\nI turned on the overhead light in the kitchen.', 'date: 123\n\nI turned on the overhead light in the kitchen.', 'date: 124\n\nI turned off the overhead light in the kitchen.', "date: 127\n\nI turned on the overhead light in John's bedroom.", 'date: 131\n\nI turned off the overhead light in the living room.', 'date: 132\n\nI turned on the overhead light in the living room.', 'date: 135\n\nI turned on the overhead light in the kitchen.', 'date: 139\n\nI turned on the overhead light in the kitchen.', 'date: 140\n\nI turned off the overhead light in the kitchen.', 'date: 147\n\nI turned off the overhead light in the living room.', 'date: 153\n\nI turned on the overhead light in the kitchen.', 'date: 157\n\nI turned on the overhead light in the living room.', 'date: 164\n\nI turned on the overhead light in the kitchen.', 'date: 167\n\nI turned off the overhead light in the kitchen.', 'date: 168\n\nI turned on the overhead light in the kitchen.', 'date: 176\n\nI turned off the overhead light in the kitchen.', 'date: 177\n\nI turned off the overhead light in the living room.', 'date: 180\n\nI turned on the overhead light in the kitchen.', 'date: 182\n\nI turned on the overhead light in the living room.', 'date: 185\n\nI turned on the overhead light in the kitchen.', "date: 186\n\nI turned on the overhead light in John's bedroom.", 'date: 189\n\nI turned on the overhead light in the kitchen.', 'date: 197\n\nI turned off the overhead light in the living room.', 'date: 198\n\nI turned off the overhead light in the kitchen.', 'date: 202\n\nI turned on the overhead light in the kitchen.', "date: 206\n\nI turned on the overhead light in Jane's bedroom.", 'date: 209\n\nI turned off the overhead light in the kitchen.', "date: 212\n\nI turned on the overhead light in John's bedroom.", 'date: 215\n\nI turned on the overhead light in the kitchen.', 'date: 216\n\nI turned off the overhead light in the kitchen.', 'date: 222\n\nI turned on the overhead light in the kitchen.', 'date: 224\n\nI turned off the overhead light in the kitchen.', 'date: 225\n\nI turned on the overhead light in the living room.', 'date: 228\n\nI turned on the overhead light in the kitchen.', "date: 232\n\nI turned on the overhead light in John's bedroom.", 'date: 235\n\nI turned on the overhead light in the kitchen.', 'date: 244\n\nI turned off the overhead light in the kitchen.', 'date: 248\n\nI turned on the overhead light in the kitchen.', "date: 255\n\nI turned on the overhead light in John's bedroom.", 'date: 257\n\nI turned off the overhead light in the living room.', 'date: 259\n\nI turned on the overhead light in the kitchen.', 'date: 271\n\nI turned on the overhead light in the living room.', 'date: 272\n\nI turned off the overhead light in the kitchen.', 'date: 273\n\nI turned on the overhead light in the kitchen.', 'date: 275\n\nI turned off the overhead light in the kitchen.', 'date: 278\n\nI turned on the overhead light in the kitchen.', 'date: 281\n\nI turned off the overhead light in the living room.', 'date: 285\n\nI turned on the overhead light in the living room.', 'date: 290\n\nI turned off the overhead light in the kitchen.', "date: 294\n\nI turned on the overhead light in Jane's bedroom.", 'date: 297\n\nI turned on the overhead light in the kitchen.', 'date: 315\n\nI turned on the overhead light in the kitchen.', "date: 319\n\nI turned on the overhead light in John's bedroom.", 'date: 320\n\nI turned on the overhead light in the kitchen.', 'date: 328\n\nI turned off the overhead light in the living room.', "date: 331\n\nI turned on the overhead light in Jane's bedroom.", 'date: 334\n\nI turned on the overhead light in the kitchen.', 'date: 335\n\nI turned on the overhead light in the living room.', 'date: 344\n\nI turned off the overhead light in the kitchen.', 'date: 347\n\nI turned on the overhead light in the kitchen.', 'date: 348\n\nI turned off the overhead light in the kitchen.', 'date: 358\n\nI turned on the overhead light in the kitchen.', 'date: 374\n\nI turned on the overhead light in the kitchen.', 'date: 384\n\nI turned on the overhead light in the kitchen.', 'date: 389\n\nI turned on the overhead light in the kitchen.', 'date: 399\n\nI turned on the overhead light in the kitchen.', "date: 401\n\nI turned on the overhead light in Jane's bedroom.", "date: 402\n\nI turned on the overhead light in John's bedroom.", 'date: 404\n\nI turned off the overhead light in the living room.', 'date: 411\n\nI turned on the overhead light in the living room.', 'date: 414\n\nI turned on the overhead light in the kitchen.', 'date: 418\n\nI turned off the overhead light in the kitchen.', 'date: 419\n\nI turned on the overhead light in the kitchen.', "date: 445\n\nI turned on the overhead light in Jane's bedroom.", 'date: 462\n\nI turned on the overhead light in the kitchen.', 'date: 464\n\nI turned off the overhead light in the kitchen.', 'date: 476\n\nI turned on the overhead light in the kitchen.', "date: 485\n\nI turned on the overhead light in Jane's bedroom.", "date: 492\n\nI turned on the overhead light in John's bedroom."]
+Predicted answer: The overhead light in the living room is off.
+Similarity: 0.7405342091158653
+
+Time: 505
+State change: I picked up the orange on the 8th level of the shelf in the living room.
+
+Time: 506
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 507
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 508
+State change: I placed the orange I was holding inside the fridge in the kitchen.
+
+Time: 509
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 510
+State change: I switched the channel of the TV in Jane's bedroom to the Discovery Channel.
+
+Time: 511
+State change: I picked up the purple pen on the 3rd level of the shelf in the living room.
+
+Time: 512
+State change: I placed the purple pen I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 513
+State change: I picked up the "Alchemist" book on the table in the living room.
+
+Time: 514
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 515
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 516
+State change: I placed the "Alchemist" book I was holding on the table in the living room.
+
+Time: 517
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 518
+State change: I turned off the TV in John's bedroom.
+
+Time: 519
+State change: I turned on the overhead light in the kitchen.
+
+Time: 520
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 521
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 522
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 523
+State change: I picked up the fork on the table in the living room.
+
+Time: 524
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 525
+State change: I placed the fork I was holding on the table in John's bedroom.
+
+Time: 526
+State change: I picked up the white pen on the 5th level of the shelf in John's bedroom.
+
+Time: 527
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 528
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 529
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 530
+State change: I turned off the overhead light in the kitchen.
+
+Time: 531
+State change: I placed the white pen I was holding on the 8th level of the shelf in the living room.
+
+Time: 532
+State change: I turned on the overhead light in the kitchen.
+
+Time: 533
+State change: I picked up the "Of Mice and Men" book on the table in John's bedroom.
+
+Time: 534
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 535
+State change: I turned off the overhead light in the kitchen.
+
+Time: 536
+State change: I switched the channel of the TV in Jane's bedroom to CNN.
+
+Time: 537
+State change: I turned on the overhead light in the kitchen.
+
+Time: 538
+State change: I turned off the overhead light in the kitchen.
+
+Time: 539
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 540
+State change: I turned on the overhead light in the kitchen.
+
+Time: 541
+State change: I switched the channel of the TV in John's bedroom to the Discovery Channel.
+
+Time: 542
+State change: I turned off the overhead light in the kitchen.
+
+Time: 543
+State change: I placed the "Of Mice and Men" book I was holding on the table in Jane's bedroom.
+
+Time: 544
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 545
+State change: I turned off the TV in John's bedroom.
+
+Time: 546
+State change: I turned on the TV in John's bedroom and set it to CNN.
+
+Time: 547
+State change: I turned off the overhead light in the living room.
+
+Time: 548
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 549
+State change: I placed the knife I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 550
+State change: I picked up the "Fahrenheit 451" book on the 5th level of the shelf in John's bedroom.
+
+Time: 551
+State change: I turned on the overhead light in the kitchen.
+
+Time: 552
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 553
+State change: I placed the "Fahrenheit 451" book I was holding on the table in Jane's bedroom.
+
+Time: 554
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 555
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 556
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 557
+State change: I placed the apple I was holding on the table in the living room.
+
+Time: 558
+State change: I picked up the bowl on the table in the living room.
+
+Time: 559
+State change: I placed the bowl I was holding on the table in John's bedroom.
+
+Time: 560
+State change: I picked up the plate on the 3rd level of the shelf in John's bedroom.
+
+Time: 561
+State change: I turned off the overhead light in the kitchen.
+
+Time: 562
+State change: I placed the plate I was holding on the table in the living room.
+
+Time: 563
+State change: I turned on the overhead light in the kitchen.
+
+Time: 564
+State change: I picked up the red pen on the 1st level of the shelf in John's bedroom.
+
+Time: 565
+State change: I switched the channel of the TV in the living room to the Discovery Channel.
+
+Time: 566
+State change: I turned on the overhead light in the living room.
+
+Time: 567
+State change: I turned off the overhead light in the kitchen.
+
+Time: 568
+State change: I turned on the overhead light in the kitchen.
+
+Time: 569
+State change: I switched the channel of the TV in Jane's bedroom to CNN.
+
+Time: 570
+State change: I placed the red pen I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 571
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 572
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 573
+State change: I picked up the apple on the table in the living room.
+
+Time: 574
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 575
+State change: I placed the apple I was holding on the table in Jane's bedroom.
+
+Time: 576
+State change: I picked up the "Fahrenheit 451" book on the table in Jane's bedroom.
+
+Time: 577
+State change: I turned off the overhead light in the living room.
+
+Time: 578
+State change: I switched the channel of the TV in the living room to the Discovery Channel.
+
+Time: 579
+State change: I turned on the overhead light in the living room.
+
+Time: 580
+State change: I turned off the TV in the living room.
+
+Time: 581
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 582
+State change: I placed the "Fahrenheit 451" book I was holding on the table in the living room.
+
+Time: 583
+State change: I picked up the "Alchemist" book on the table in the living room.
+
+Time: 584
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 585
+State change: I turned off the TV in John's bedroom.
+
+Time: 586
+State change: I placed the "Alchemist" book I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 587
+State change: I picked up the knife on the 6th level of the shelf in Jane's bedroom.
+
+Time: 588
+State change: I placed the knife I was holding on the table in the living room.
+
+Time: 589
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 590
+State change: I turned off the overhead light in the kitchen.
+
+Time: 591
+State change: I turned on the overhead light in the kitchen.
+
+Time: 592
+State change: I picked up the red pen on the 3rd level of the shelf in John's bedroom.
+
+Time: 593
+State change: I placed the red pen I was holding on the 4th level of the shelf in the living room.
+
+Time: 594
+State change: I picked up the plate on the table in the living room.
+
+Time: 595
+State change: I turned on the TV in the living room and set it to the Discovery Channel.
+
+Time: 596
+State change: I placed the plate I was holding in the sink in the kitchen.
+
+Time: 597
+State change: I picked up the red pen on the 4th level of the shelf in the living room.
+
+Time: 598
+State change: I placed the red pen I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 599
+State change: I switched the channel of the TV in the living room to Fox News.
+
+Time: 600
+State change: I turned off the overhead light in the living room.
+
+Time: 601
+State change: I closed the blinds of the window in the living room.
+
+Time: 602
+State change: I picked up the bowl on the table in John's bedroom.
+
+Time: 603
+State change: I turned on the TV in John's bedroom and set it to ESPN.
+
+Time: 604
+State change: I opened the blinds of the window in the living room.
+
+Time: 605
+Query: Where is the purple pen?
+True answer: The purple pen is on the 3rd level of the shelf in John's bedroom.
+Predicted answer: The purple pen is on the 3rd level of the shelf in John's bedroom.
+
+
+
+Similarity: 1.0
+
+Time: 606
+State change: I closed the blinds of the window in the living room.
+
+Time: 607
+State change: I turned off the overhead light in the kitchen.
+
+Time: 608
+State change: I turned off the TV in John's bedroom.
+
+Time: 609
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 610
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 611
+State change: I opened the blinds of the window in the living room.
+
+Time: 612
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 613
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 614
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 615
+State change: I closed the blinds of the window in the living room.
+
+Time: 616
+State change: I turned on the TV in Jane's bedroom and set it to NBC.
+
+Time: 617
+State change: I placed the bowl I was holding in the sink in the kitchen.
+
+Time: 618
+State change: I picked up the bowl in the sink in the kitchen.
+
+Time: 619
+State change: I turned on the TV in John's bedroom and set it to Cartoon Network.
+
+Time: 620
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 621
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 622
+State change: I switched the channel of the TV in John's bedroom to ESPN.
+
+Time: 623
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 624
+State change: I placed the bowl I was holding on the 10th level of the shelf in the living room.
+
+Time: 625
+State change: I picked up the fork on the table in John's bedroom.
+
+Time: 626
+State change: I placed the fork I was holding on the table in Jane's bedroom.
+
+Time: 627
+State change: I picked up the orange inside the fridge in the kitchen.
+
+Time: 628
+State change: I placed the orange I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 629
+State change: I turned on the overhead light in the kitchen.
+
+Time: 630
+State change: I turned off the overhead light in the kitchen.
+
+Time: 631
+State change: I turned on the overhead light in the kitchen.
+
+Time: 632
+State change: I picked up the purple pen on the 3rd level of the shelf in John's bedroom.
+
+Time: 633
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 634
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 635
+State change: I placed the purple pen I was holding on the table in John's bedroom.
+
+Time: 636
+State change: I picked up the spoon on the table in the living room.
+
+Time: 637
+State change: I turned off the TV in the living room.
+
+Time: 638
+State change: I switched the channel of the TV in John's bedroom to Cartoon Network.
+
+Time: 639
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 640
+State change: I switched the channel of the TV in Jane's bedroom to CNN.
+
+Time: 641
+State change: I placed the spoon I was holding on the table in the living room.
+
+Time: 642
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 643
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 644
+State change: I turned off the TV in John's bedroom.
+
+Time: 645
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 646
+State change: I picked up the knife on the table in the living room.
+
+Time: 647
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 648
+State change: I picked up the red pen on the 3rd level of the shelf in John's bedroom.
+
+Time: 649
+State change: I opened the blinds of the window in the living room.
+
+Time: 650
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 651
+State change: I turned on the TV in the living room and set it to Fox News.
+
+Time: 652
+State change: I turned on the TV in John's bedroom and set it to ESPN.
+
+Time: 653
+State change: I placed the red pen I was holding on the table in John's bedroom.
+
+Time: 654
+State change: I turned off the overhead light in the kitchen.
+
+Time: 655
+State change: I turned on the overhead light in the kitchen.
+
+Time: 656
+State change: I picked up the orange on the 4th level of the shelf in John's bedroom.
+
+Time: 657
+State change: I switched the channel of the TV in the living room to Cartoon Network.
+
+Time: 658
+State change: I placed the orange I was holding inside the fridge in the kitchen.
+
+Time: 659
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 660
+State change: I turned off the overhead light in the kitchen.
+
+Time: 661
+State change: I picked up the "Of Mice and Men" book on the table in Jane's bedroom.
+
+Time: 662
+State change: I placed the "Of Mice and Men" book I was holding on the table in Jane's bedroom.
+
+Time: 663
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 664
+State change: I placed the knife I was holding on the 8th level of the shelf in the living room.
+
+Time: 665
+State change: I turned on the overhead light in the kitchen.
+
+Time: 666
+State change: I picked up the apple on the table in Jane's bedroom.
+
+Time: 667
+State change: I turned on the overhead light in the living room.
+
+Time: 668
+State change: I turned off the overhead light in the kitchen.
+
+Time: 669
+State change: I turned off the overhead light in the living room.
+
+Time: 670
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 671
+State change: I picked up the knife on the 8th level of the shelf in the living room.
+
+Time: 672
+State change: I turned on the overhead light in the kitchen.
+
+Time: 673
+State change: I turned off the TV in John's bedroom.
+
+Time: 674
+State change: I turned off the overhead light in the kitchen.
+
+Time: 675
+State change: I turned off the TV in the living room.
+
+Time: 676
+State change: I placed the knife I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 677
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 678
+State change: I picked up the "Alchemist" book on the 3rd level of the shelf in John's bedroom.
+
+Time: 679
+State change: I placed the "Alchemist" book I was holding on the table in John's bedroom.
+
+Time: 680
+State change: I closed the blinds of the window in the living room.
+
+Time: 681
+State change: I picked up the fork on the table in Jane's bedroom.
+
+Time: 682
+State change: I placed the fork I was holding on the table in Jane's bedroom.
+
+Time: 683
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 684
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 685
+State change: I picked up the "Of Mice and Men" book on the table in Jane's bedroom.
+
+Time: 686
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 687
+State change: I placed the "Of Mice and Men" book I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 688
+State change: I picked up the "Fahrenheit 451" book on the table in the living room.
+
+Time: 689
+State change: I turned on the overhead light in the living room.
+
+Time: 690
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 691
+State change: I placed the "Fahrenheit 451" book I was holding on the table in the living room.
+
+Time: 692
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 693
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 694
+State change: I picked up the orange inside the fridge in the kitchen.
+
+Time: 695
+State change: I opened the blinds of the window in the living room.
+
+Time: 696
+State change: I placed the orange I was holding on the table in John's bedroom.
+
+Time: 697
+State change: I picked up the fork on the table in Jane's bedroom.
+
+Time: 698
+State change: I closed the blinds of the window in the living room.
+
+Time: 699
+State change: I placed the fork I was holding in the sink in the kitchen.
+
+Time: 700
+State change: I turned on the TV in the living room and set it to Cartoon Network.
+
+Time: 701
+State change: I opened the blinds of the window in the living room.
+
+Time: 702
+State change: I switched the channel of the TV in Jane's bedroom to the Discovery Channel.
+
+Time: 703
+State change: I turned on the overhead light in the kitchen.
+
+Time: 704
+State change: I switched the channel of the TV in Jane's bedroom to NBC.
+
+Time: 705
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 706
+Query: Is the overhead light in Jane's bedroom on or off?
+True answer: The light is on.
+["date: 2\n\nI turned off the overhead light in John's bedroom.", "date: 4\n\nI turned on the overhead light in John's bedroom.", "date: 14\n\nI turned on the overhead light in Jane's bedroom.", "date: 31\n\nI turned off the overhead light in Jane's bedroom.", "date: 35\n\nI turned off the overhead light in John's bedroom.", "date: 42\n\nI turned on the overhead light in John's bedroom.", "date: 44\n\nI turned off the overhead light in John's bedroom.", "date: 46\n\nI turned on the overhead light in John's bedroom.", "date: 53\n\nI turned on the overhead light in Jane's bedroom.", "date: 54\n\nI turned off the overhead light in Jane's bedroom.", "date: 55\n\nI turned off the overhead light in John's bedroom.", "date: 57\n\nI turned on the overhead light in Jane's bedroom.", "date: 66\n\nI turned on the overhead light in John's bedroom.", 'date: 71\n\nI turned on the overhead light in the living room.', 'date: 89\n\nI turned on the overhead light in the kitchen.', "date: 95\n\nI turned off the overhead light in Jane's bedroom.", 'date: 97\n\nI turned on the overhead light in the kitchen.', 'date: 99\n\nI turned on the overhead light in the living room.', "date: 100\n\nI turned on the overhead light in Jane's bedroom.", "date: 103\n\nI turned off the overhead light in John's bedroom.", 'date: 119\n\nI turned on the overhead light in the kitchen.', 'date: 123\n\nI turned on the overhead light in the kitchen.', "date: 127\n\nI turned on the overhead light in John's bedroom.", 'date: 132\n\nI turned on the overhead light in the living room.', "date: 133\n\nI turned off the TV in Jane's bedroom.", 'date: 135\n\nI turned on the overhead light in the kitchen.', "date: 138\n\nI turned off the overhead light in John's bedroom.", 'date: 139\n\nI turned on the overhead light in the kitchen.', 'date: 157\n\nI turned on the overhead light in the living room.', 'date: 164\n\nI turned on the overhead light in the kitchen.', 'date: 180\n\nI turned on the overhead light in the kitchen.', 'date: 182\n\nI turned on the overhead light in the living room.', 'date: 185\n\nI turned on the overhead light in the kitchen.', "date: 186\n\nI turned on the overhead light in John's bedroom.", 'date: 189\n\nI turned on the overhead light in the kitchen.', "date: 194\n\nI turned off the overhead light in Jane's bedroom.", 'date: 197\n\nI turned off the overhead light in the living room.', 'date: 202\n\nI turned on the overhead light in the kitchen.', "date: 204\n\nI turned off the overhead light in John's bedroom.", "date: 206\n\nI turned on the overhead light in Jane's bedroom.", "date: 212\n\nI turned on the overhead light in John's bedroom.", "date: 213\n\nI turned off the overhead light in John's bedroom.", 'date: 222\n\nI turned on the overhead light in the kitchen.', 'date: 225\n\nI turned on the overhead light in the living room.', "date: 232\n\nI turned on the overhead light in John's bedroom.", "date: 239\n\nI turned off the overhead light in John's bedroom.", "date: 245\n\nI turned off the overhead light in Jane's bedroom.", 'date: 248\n\nI turned on the overhead light in the kitchen.', "date: 255\n\nI turned on the overhead light in John's bedroom.", "date: 258\n\nI turned off the overhead light in John's bedroom.", 'date: 259\n\nI turned on the overhead light in the kitchen.', 'date: 271\n\nI turned on the overhead light in the living room.', 'date: 285\n\nI turned on the overhead light in the living room.', "date: 294\n\nI turned on the overhead light in Jane's bedroom.", 'date: 297\n\nI turned on the overhead light in the kitchen.', "date: 310\n\nI turned off the overhead light in Jane's bedroom.", "date: 319\n\nI turned on the overhead light in John's bedroom.", "date: 331\n\nI turned on the overhead light in Jane's bedroom.", "date: 336\n\nI turned off the overhead light in John's bedroom.", "date: 346\n\nI turned off the overhead light in Jane's bedroom.", 'date: 389\n\nI turned on the overhead light in the kitchen.', "date: 401\n\nI turned on the overhead light in Jane's bedroom.", "date: 402\n\nI turned on the overhead light in John's bedroom.", 'date: 411\n\nI turned on the overhead light in the living room.', "date: 417\n\nI turned off the overhead light in Jane's bedroom.", "date: 439\n\nI turned off the overhead light in John's bedroom.", "date: 445\n\nI turned on the overhead light in Jane's bedroom.", 'date: 462\n\nI turned on the overhead light in the kitchen.', "date: 469\n\nI turned off the overhead light in Jane's bedroom.", "date: 478\n\nI turned off the TV in Jane's bedroom.", "date: 485\n\nI turned on the overhead light in Jane's bedroom.", "date: 492\n\nI turned on the overhead light in John's bedroom.", "date: 500\n\nI turned off the overhead light in John's bedroom.", "date: 503\n\nI turned off the overhead light in Jane's bedroom.", "date: 505\n\nI turned on the overhead light in Jane's bedroom.", "date: 510\n\nI turned on the overhead light in John's bedroom.", "date: 525\n\nI turned off the overhead light in John's bedroom.", "date: 530\n\nI turned off the overhead light in Jane's bedroom.", "date: 535\n\nI turned on the overhead light in John's bedroom.", "date: 540\n\nI turned on the overhead light in Jane's bedroom.", 'date: 547\n\nI turned on the overhead light in the kitchen.', "date: 548\n\nI turned off the overhead light in Jane's bedroom.", 'date: 562\n\nI turned on the overhead light in the living room.', 'date: 564\n\nI turned on the overhead light in the kitchen.', "date: 568\n\nI turned on the overhead light in Jane's bedroom.", "date: 570\n\nI turned off the overhead light in John's bedroom.", 'date: 575\n\nI turned on the overhead light in the living room.', "date: 585\n\nI turned off the overhead light in Jane's bedroom.", "date: 604\n\nI turned on the overhead light in Jane's bedroom.", "date: 609\n\nI turned on the overhead light in John's bedroom.", "date: 615\n\nI turned off the overhead light in Jane's bedroom.", "date: 618\n\nI turned off the overhead light in John's bedroom.", "date: 628\n\nI turned on the overhead light in John's bedroom.", "date: 654\n\nI turned off the overhead light in John's bedroom.", 'date: 662\n\nI turned on the overhead light in the living room.', 'date: 667\n\nI turned on the overhead light in the kitchen.', "date: 672\n\nI turned on the overhead light in John's bedroom.", "date: 681\n\nI turned on the overhead light in Jane's bedroom.", 'date: 684\n\nI turned on the overhead light in the living room.', "date: 685\n\nI turned off the overhead light in John's bedroom."]
+Predicted answer: The overhead light in Jane's bedroom is off.
+Similarity: 0.682713957804818
+
+Time: 707
+State change: I picked up the purple pen on the table in John's bedroom.
+
+Time: 708
+State change: I closed the blinds of the window in the living room.
+
+Time: 709
+State change: I turned off the overhead light in the kitchen.
+
+Time: 710
+State change: I placed the purple pen I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 711
+State change: I switched the channel of the TV in the living room to ESPN.
+
+Time: 712
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 713
+State change: I picked up the bowl on the 10th level of the shelf in the living room.
+
+Time: 714
+State change: I turned off the overhead light in the living room.
+
+Time: 715
+State change: I placed the bowl I was holding on the table in the living room.
+
+Time: 716
+State change: I picked up the fork in the sink in the kitchen.
+
+Time: 717
+State change: I opened the blinds of the window in the living room.
+
+Time: 718
+State change: I turned on the overhead light in the living room.
+
+Time: 719
+State change: I switched the channel of the TV in Jane's bedroom to Cartoon Network.
+
+Time: 720
+State change: I turned off the overhead light in the living room.
+
+Time: 721
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 722
+State change: I placed the fork I was holding on the table in John's bedroom.
+
+Time: 723
+State change: I turned on the overhead light in the kitchen.
+
+Time: 724
+State change: I turned off the overhead light in the kitchen.
+
+Time: 725
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 726
+State change: I picked up the white pen on the 8th level of the shelf in the living room.
+
+Time: 727
+State change: I placed the white pen I was holding on the table in John's bedroom.
+
+Time: 728
+State change: I turned on the overhead light in the living room.
+
+Time: 729
+State change: I picked up the knife on the 4th level of the shelf in Jane's bedroom.
+
+Time: 730
+State change: I placed the knife I was holding on the 10th level of the shelf in the living room.
+
+Time: 731
+State change: I picked up the knife on the 10th level of the shelf in the living room.
+
+Time: 732
+State change: I placed the knife I was holding on the table in John's bedroom.
+
+Time: 733
+State change: I turned on the overhead light in the kitchen.
+
+Time: 734
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 735
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 736
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 737
+State change: I placed the apple I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 738
+State change: I picked up the "Fahrenheit 451" book on the table in the living room.
+
+Time: 739
+State change: I turned off the overhead light in the kitchen.
+
+Time: 740
+State change: I turned on the overhead light in the kitchen.
+
+Time: 741
+State change: I closed the blinds of the window in the living room.
+
+Time: 742
+State change: I turned off the overhead light in the kitchen.
+
+Time: 743
+State change: I opened the blinds of the window in the living room.
+
+Time: 744
+State change: I turned on the TV in Jane's bedroom and set it to CNN.
+
+Time: 745
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 746
+State change: I turned on the overhead light in the kitchen.
+
+Time: 747
+State change: I switched the channel of the TV in John's bedroom to CNN.
+
+Time: 748
+State change: I turned off the overhead light in the kitchen.
+
+Time: 749
+State change: I placed the "Fahrenheit 451" book I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 750
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 751
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 752
+State change: I picked up the plate in the sink in the kitchen.
+
+Time: 753
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 754
+State change: I placed the plate I was holding on the 5th level of the shelf in John's bedroom.
+
+Time: 755
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 756
+State change: I picked up the plate on the 5th level of the shelf in John's bedroom.
+
+Time: 757
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 758
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 759
+State change: I placed the plate I was holding on the table in Jane's bedroom.
+
+Time: 760
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 761
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 762
+State change: I picked up the "Fahrenheit 451" book on the 4th level of the shelf in John's bedroom.
+
+Time: 763
+State change: I placed the "Fahrenheit 451" book I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 764
+State change: I picked up the "Of Mice and Men" book on the 4th level of the shelf in Jane's bedroom.
+
+Time: 765
+State change: I turned on the overhead light in the kitchen.
+
+Time: 766
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 767
+State change: I placed the "Of Mice and Men" book I was holding on the table in John's bedroom.
+
+Time: 768
+State change: I picked up the fork on the table in John's bedroom.
+
+Time: 769
+State change: I placed the fork I was holding on the table in Jane's bedroom.
+
+Time: 770
+State change: I picked up the purple pen on the 5th level of the shelf in John's bedroom.
+
+Time: 771
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 772
+State change: I placed the purple pen I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 773
+State change: I picked up the purple pen on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 774
+State change: I turned off the overhead light in the kitchen.
+
+Time: 775
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 776
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 777
+State change: I turned off the TV in the living room.
+
+Time: 778
+State change: I turned on the TV in the living room and set it to NBC.
+
+Time: 779
+State change: I turned off the overhead light in the living room.
+
+Time: 780
+State change: I placed the purple pen I was holding on the table in John's bedroom.
+
+Time: 781
+State change: I picked up the white pen on the table in John's bedroom.
+
+Time: 782
+State change: I placed the white pen I was holding on the 1st level of the shelf in Jane's bedroom.
+
+Time: 783
+State change: I picked up the "Fahrenheit 451" book on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 784
+State change: I turned off the TV in the living room.
+
+Time: 785
+State change: I turned on the overhead light in the kitchen.
+
+Time: 786
+State change: I switched the channel of the TV in John's bedroom to Cartoon Network.
+
+Time: 787
+State change: I placed the "Fahrenheit 451" book I was holding on the table in the living room.
+
+Time: 788
+State change: I picked up the white pen on the 1st level of the shelf in Jane's bedroom.
+
+Time: 789
+State change: I switched the channel of the TV in Jane's bedroom to NBC.
+
+Time: 790
+State change: I placed the white pen I was holding on the table in the living room.
+
+Time: 791
+State change: I turned off the overhead light in the kitchen.
+
+Time: 792
+State change: I picked up the orange on the table in John's bedroom.
+
+Time: 793
+State change: I placed the orange I was holding on the table in John's bedroom.
+
+Time: 794
+State change: I turned on the overhead light in the kitchen.
+
+Time: 795
+State change: I picked up the plate on the table in Jane's bedroom.
+
+Time: 796
+State change: I placed the plate I was holding on the table in John's bedroom.
+
+Time: 797
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 798
+State change: I picked up the plate on the table in John's bedroom.
+
+Time: 799
+State change: I turned off the overhead light in the kitchen.
+
+Time: 800
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 801
+State change: I turned on the TV in the living room and set it to Cartoon Network.
+
+Time: 802
+State change: I placed the plate I was holding on the 4th level of the shelf in the living room.
+
+Time: 803
+State change: I picked up the knife on the table in John's bedroom.
+
+Time: 804
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 805
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 806
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 807
+Query: Are the blinds of the window in Jane's bedroom open or closed?
+True answer: The window blinds are closed.
+['date: 5\n\nI closed the blinds of the window in the living room.', "date: 7\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 9\n\nI opened the blinds of the window in the living room.', 'date: 12\n\nI closed the blinds of the window in the living room.', 'date: 19\n\nI opened the blinds of the window in the living room.', 'date: 25\n\nI closed the blinds of the window in the living room.', "date: 26\n\nI closed the blinds of the window in John's bedroom.", 'date: 29\n\nI opened the blinds of the window in the living room.', "date: 33\n\nI closed the blinds of the window in Jane's bedroom.", "date: 48\n\nI opened the blinds of the window in Jane's bedroom.", "date: 52\n\nI opened the blinds of the window in John's bedroom.", 'date: 61\n\nI closed the blinds of the window in the living room.', "date: 62\n\nI closed the blinds of the window in John's bedroom.", "date: 91\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 96\n\nI opened the blinds of the window in the living room.', "date: 108\n\nI opened the blinds of the window in Jane's bedroom.", "date: 113\n\nI opened the blinds of the window in John's bedroom.", 'date: 114\n\nI closed the blinds of the window in the living room.', "date: 118\n\nI closed the blinds of the window in Jane's bedroom.", "date: 126\n\nI opened the blinds of the window in Jane's bedroom.", "date: 137\n\nI closed the blinds of the window in John's bedroom.", 'date: 141\n\nI opened the blinds of the window in the living room.', "date: 146\n\nI closed the blinds of the window in Jane's bedroom.", "date: 150\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 183\n\nI closed the blinds of the window in the living room.', "date: 187\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 192\n\nI opened the blinds of the window in the living room.', 'date: 207\n\nI closed the blinds of the window in the living room.', 'date: 220\n\nI opened the blinds of the window in the living room.', "date: 226\n\nI opened the blinds of the window in John's bedroom.", "date: 237\n\nI opened the blinds of the window in Jane's bedroom.", "date: 247\n\nI closed the blinds of the window in John's bedroom.", "date: 254\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 264\n\nI closed the blinds of the window in the living room.', 'date: 265\n\nI opened the blinds of the window in the living room.', "date: 268\n\nI opened the blinds of the window in Jane's bedroom.", "date: 269\n\nI opened the blinds of the window in John's bedroom.", 'date: 276\n\nI closed the blinds of the window in the living room.', "date: 277\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 302\n\nI opened the blinds of the window in the living room.', "date: 305\n\nI closed the blinds of the window in John's bedroom.", "date: 314\n\nI opened the blinds of the window in John's bedroom.", "date: 322\n\nI closed the blinds of the window in John's bedroom.", "date: 326\n\nI opened the blinds of the window in John's bedroom.", 'date: 342\n\nI opened the blinds of the window in the living room.', "date: 349\n\nI closed the blinds of the window in John's bedroom.", "date: 352\n\nI opened the blinds of the window in John's bedroom.", "date: 357\n\nI closed the blinds of the window in John's bedroom.", "date: 361\n\nI opened the blinds of the window in Jane's bedroom.", "date: 381\n\nI opened the blinds of the window in John's bedroom.", "date: 387\n\nI closed the blinds of the window in John's bedroom.", "date: 394\n\nI opened the blinds of the window in John's bedroom.", 'date: 396\n\nI closed the blinds of the window in the living room.', "date: 405\n\nI closed the blinds of the window in John's bedroom.", "date: 410\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 413\n\nI opened the blinds of the window in the living room.', "date: 437\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 441\n\nI opened the blinds of the window in the living room.', "date: 461\n\nI opened the blinds of the window in John's bedroom.", "date: 463\n\nI closed the blinds of the window in Jane's bedroom.", "date: 466\n\nI closed the blinds of the window in John's bedroom.", "date: 484\n\nI opened the blinds of the window in John's bedroom.", "date: 490\n\nI opened the blinds of the window in Jane's bedroom.", "date: 502\n\nI closed the blinds of the window in John's bedroom.", "date: 511\n\nI opened the blinds of the window in John's bedroom.", "date: 520\n\nI closed the blinds of the window in John's bedroom.", "date: 524\n\nI closed the blinds of the window in Jane's bedroom.", "date: 551\n\nI opened the blinds of the window in John's bedroom.", "date: 552\n\nI opened the blinds of the window in Jane's bedroom.", "date: 567\n\nI closed the blinds of the window in Jane's bedroom.", "date: 580\n\nI opened the blinds of the window in Jane's bedroom.", "date: 605\n\nI closed the blinds of the window in Jane's bedroom.", "date: 607\n\nI closed the blinds of the window in John's bedroom.", "date: 608\n\nI opened the blinds of the window in John's bedroom.", "date: 616\n\nI closed the blinds of the window in John's bedroom.", "date: 629\n\nI opened the blinds of the window in John's bedroom.", "date: 634\n\nI closed the blinds of the window in John's bedroom.", "date: 637\n\nI opened the blinds of the window in Jane's bedroom.", "date: 638\n\nI closed the blinds of the window in Jane's bedroom.", "date: 640\n\nI opened the blinds of the window in John's bedroom.", "date: 645\n\nI closed the blinds of the window in John's bedroom.", 'date: 675\n\nI closed the blinds of the window in the living room.', "date: 678\n\nI opened the blinds of the window in Jane's bedroom.", "date: 679\n\nI opened the blinds of the window in John's bedroom.", "date: 687\n\nI closed the blinds of the window in John's bedroom.", "date: 688\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 690\n\nI opened the blinds of the window in the living room.', 'date: 696\n\nI opened the blinds of the window in the living room.', "date: 700\n\nI opened the blinds of the window in Jane's bedroom.", "date: 715\n\nI opened the blinds of the window in John's bedroom.", "date: 728\n\nI closed the blinds of the window in John's bedroom.", "date: 739\n\nI closed the blinds of the window in Jane's bedroom.", "date: 747\n\nI opened the blinds of the window in Jane's bedroom.", "date: 749\n\nI closed the blinds of the window in Jane's bedroom.", "date: 751\n\nI opened the blinds of the window in John's bedroom.", "date: 752\n\nI opened the blinds of the window in Jane's bedroom.", "date: 755\n\nI closed the blinds of the window in John's bedroom.", "date: 770\n\nI closed the blinds of the window in Jane's bedroom.", "date: 794\n\nI opened the blinds of the window in Jane's bedroom.", "date: 800\n\nI closed the blinds of the window in Jane's bedroom."]
+Predicted answer: The blinds of the window in Jane's bedroom are closed.
+Similarity: 0.8613703007055502
+
+Time: 808
+State change: I closed the blinds of the window in the living room.
+
+Time: 809
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 810
+State change: I placed the knife I was holding on the table in the living room.
+
+Time: 811
+State change: I picked up the bowl on the table in the living room.
+
+Time: 812
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 813
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 814
+State change: I placed the bowl I was holding on the 1st level of the shelf in the living room.
+
+Time: 815
+State change: I turned on the overhead light in the kitchen.
+
+Time: 816
+State change: I turned off the TV in John's bedroom.
+
+Time: 817
+State change: I picked up the "Fahrenheit 451" book on the table in the living room.
+
+Time: 818
+State change: I placed the "Fahrenheit 451" book I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 819
+State change: I turned on the overhead light in the living room.
+
+Time: 820
+State change: I picked up the "Of Mice and Men" book on the table in John's bedroom.
+
+Time: 821
+State change: I placed the "Of Mice and Men" book I was holding on the table in Jane's bedroom.
+
+Time: 822
+State change: I picked up the purple pen on the table in John's bedroom.
+
+Time: 823
+State change: I turned off the overhead light in the living room.
+
+Time: 824
+State change: I placed the purple pen I was holding on the table in the living room.
+
+Time: 825
+State change: I picked up the plate on the 4th level of the shelf in the living room.
+
+Time: 826
+State change: I turned off the overhead light in the kitchen.
+
+Time: 827
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 828
+State change: I placed the plate I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 829
+State change: I picked up the apple on the 5th level of the shelf in John's bedroom.
+
+Time: 830
+State change: I turned on the TV in Jane's bedroom and set it to the Discovery Channel.
+
+Time: 831
+State change: I placed the apple I was holding on the table in John's bedroom.
+
+Time: 832
+State change: I picked up the "Fahrenheit 451" book on the 4th level of the shelf in Jane's bedroom.
+
+Time: 833
+State change: I turned on the overhead light in the kitchen.
+
+Time: 834
+State change: I turned off the overhead light in the kitchen.
+
+Time: 835
+State change: I placed the "Fahrenheit 451" book I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 836
+State change: I turned on the overhead light in the kitchen.
+
+Time: 837
+State change: I picked up the red pen on the table in John's bedroom.
+
+Time: 838
+State change: I turned off the overhead light in the kitchen.
+
+Time: 839
+State change: I turned on the overhead light in the kitchen.
+
+Time: 840
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 841
+State change: I placed the red pen I was holding on the table in Jane's bedroom.
+
+Time: 842
+State change: I turned off the overhead light in the kitchen.
+
+Time: 843
+State change: I turned on the overhead light in the living room.
+
+Time: 844
+State change: I picked up the knife on the table in the living room.
+
+Time: 845
+State change: I placed the knife I was holding on the table in Jane's bedroom.
+
+Time: 846
+State change: I picked up the knife on the table in Jane's bedroom.
+
+Time: 847
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 848
+State change: I placed the knife I was holding on the 7th level of the shelf in the living room.
+
+Time: 849
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 850
+State change: I picked up the white pen on the table in the living room.
+
+Time: 851
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 852
+State change: I switched the channel of the TV in the living room to NBC.
+
+Time: 853
+State change: I turned on the overhead light in the kitchen.
+
+Time: 854
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 855
+State change: I turned off the overhead light in the living room.
+
+Time: 856
+State change: I placed the white pen I was holding on the table in John's bedroom.
+
+Time: 857
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 858
+State change: I picked up the knife on the 7th level of the shelf in the living room.
+
+Time: 859
+State change: I placed the knife I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 860
+State change: I picked up the purple pen on the table in the living room.
+
+Time: 861
+State change: I turned on the TV in John's bedroom and set it to Fox News.
+
+Time: 862
+State change: I placed the purple pen I was holding on the table in the living room.
+
+Time: 863
+State change: I turned off the TV in John's bedroom.
+
+Time: 864
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 865
+State change: I turned off the overhead light in the kitchen.
+
+Time: 866
+State change: I picked up the bowl on the 1st level of the shelf in the living room.
+
+Time: 867
+State change: I placed the bowl I was holding in the sink in the kitchen.
+
+Time: 868
+State change: I switched the channel of the TV in the living room to ESPN.
+
+Time: 869
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 870
+State change: I switched the channel of the TV in the living room to Cartoon Network.
+
+Time: 871
+State change: I turned on the overhead light in the kitchen.
+
+Time: 872
+State change: I turned off the overhead light in the kitchen.
+
+Time: 873
+State change: I turned on the TV in Jane's bedroom and set it to ESPN.
+
+Time: 874
+State change: I picked up the knife on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 875
+State change: I turned on the overhead light in the kitchen.
+
+Time: 876
+State change: I turned off the overhead light in the kitchen.
+
+Time: 877
+State change: I opened the blinds of the window in the living room.
+
+Time: 878
+State change: I turned on the overhead light in the kitchen.
+
+Time: 879
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 880
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 881
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 882
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 883
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 884
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 885
+State change: I turned off the overhead light in the kitchen.
+
+Time: 886
+State change: I turned on the overhead light in the kitchen.
+
+Time: 887
+State change: I picked up the "Alchemist" book on the table in John's bedroom.
+
+Time: 888
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 889
+State change: I closed the blinds of the window in the living room.
+
+Time: 890
+State change: I placed the "Alchemist" book I was holding on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 891
+State change: I picked up the "Fahrenheit 451" book on the 4th level of the shelf in Jane's bedroom.
+
+Time: 892
+State change: I placed the "Fahrenheit 451" book I was holding on the 9th level of the shelf in the living room.
+
+Time: 893
+State change: I picked up the orange on the table in John's bedroom.
+
+Time: 894
+State change: I placed the orange I was holding on the table in Jane's bedroom.
+
+Time: 895
+State change: I picked up the "Fahrenheit 451" book on the 9th level of the shelf in the living room.
+
+Time: 896
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 897
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 898
+State change: I placed the "Fahrenheit 451" book I was holding on the 3rd level of the shelf in John's bedroom.
+
+Time: 899
+State change: I picked up the "Alchemist" book on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 900
+State change: I turned off the overhead light in the kitchen.
+
+Time: 901
+State change: I placed the "Alchemist" book I was holding on the table in Jane's bedroom.
+
+Time: 902
+State change: I picked up the fork on the table in Jane's bedroom.
+
+Time: 903
+State change: I placed the fork I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 904
+State change: I turned on the TV in Jane's bedroom and set it to Cartoon Network.
+
+Time: 905
+State change: I picked up the white pen on the table in John's bedroom.
+
+Time: 906
+State change: I turned on the overhead light in the kitchen.
+
+Time: 907
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 908
+Query: Is the overhead light in Jane's bedroom on or off?
+True answer: The light is on.
+["date: 2\n\nI turned off the overhead light in John's bedroom.", "date: 4\n\nI turned on the overhead light in John's bedroom.", "date: 14\n\nI turned on the overhead light in Jane's bedroom.", "date: 31\n\nI turned off the overhead light in Jane's bedroom.", "date: 35\n\nI turned off the overhead light in John's bedroom.", "date: 42\n\nI turned on the overhead light in John's bedroom.", "date: 44\n\nI turned off the overhead light in John's bedroom.", "date: 46\n\nI turned on the overhead light in John's bedroom.", "date: 53\n\nI turned on the overhead light in Jane's bedroom.", "date: 54\n\nI turned off the overhead light in Jane's bedroom.", "date: 55\n\nI turned off the overhead light in John's bedroom.", "date: 57\n\nI turned on the overhead light in Jane's bedroom.", "date: 66\n\nI turned on the overhead light in John's bedroom.", 'date: 71\n\nI turned on the overhead light in the living room.', 'date: 89\n\nI turned on the overhead light in the kitchen.', "date: 95\n\nI turned off the overhead light in Jane's bedroom.", 'date: 97\n\nI turned on the overhead light in the kitchen.', 'date: 99\n\nI turned on the overhead light in the living room.', "date: 100\n\nI turned on the overhead light in Jane's bedroom.", "date: 103\n\nI turned off the overhead light in John's bedroom.", 'date: 119\n\nI turned on the overhead light in the kitchen.', 'date: 123\n\nI turned on the overhead light in the kitchen.', "date: 127\n\nI turned on the overhead light in John's bedroom.", 'date: 132\n\nI turned on the overhead light in the living room.', "date: 138\n\nI turned off the overhead light in John's bedroom.", 'date: 139\n\nI turned on the overhead light in the kitchen.', 'date: 157\n\nI turned on the overhead light in the living room.', 'date: 164\n\nI turned on the overhead light in the kitchen.', 'date: 182\n\nI turned on the overhead light in the living room.', 'date: 185\n\nI turned on the overhead light in the kitchen.', "date: 186\n\nI turned on the overhead light in John's bedroom.", 'date: 189\n\nI turned on the overhead light in the kitchen.', "date: 194\n\nI turned off the overhead light in Jane's bedroom.", "date: 204\n\nI turned off the overhead light in John's bedroom.", "date: 206\n\nI turned on the overhead light in Jane's bedroom.", "date: 212\n\nI turned on the overhead light in John's bedroom.", "date: 213\n\nI turned off the overhead light in John's bedroom.", "date: 232\n\nI turned on the overhead light in John's bedroom.", "date: 239\n\nI turned off the overhead light in John's bedroom.", "date: 245\n\nI turned off the overhead light in Jane's bedroom.", "date: 255\n\nI turned on the overhead light in John's bedroom.", "date: 258\n\nI turned off the overhead light in John's bedroom.", 'date: 271\n\nI turned on the overhead light in the living room.', 'date: 285\n\nI turned on the overhead light in the living room.', "date: 294\n\nI turned on the overhead light in Jane's bedroom.", "date: 310\n\nI turned off the overhead light in Jane's bedroom.", "date: 319\n\nI turned on the overhead light in John's bedroom.", "date: 331\n\nI turned on the overhead light in Jane's bedroom.", "date: 336\n\nI turned off the overhead light in John's bedroom.", "date: 346\n\nI turned off the overhead light in Jane's bedroom.", "date: 401\n\nI turned on the overhead light in Jane's bedroom.", "date: 402\n\nI turned on the overhead light in John's bedroom.", "date: 417\n\nI turned off the overhead light in Jane's bedroom.", "date: 439\n\nI turned off the overhead light in John's bedroom.", "date: 445\n\nI turned on the overhead light in Jane's bedroom.", "date: 469\n\nI turned off the overhead light in Jane's bedroom.", "date: 485\n\nI turned on the overhead light in Jane's bedroom.", "date: 492\n\nI turned on the overhead light in John's bedroom.", "date: 500\n\nI turned off the overhead light in John's bedroom.", "date: 503\n\nI turned off the overhead light in Jane's bedroom.", "date: 505\n\nI turned on the overhead light in Jane's bedroom.", "date: 510\n\nI turned on the overhead light in John's bedroom.", "date: 525\n\nI turned off the overhead light in John's bedroom.", "date: 530\n\nI turned off the overhead light in Jane's bedroom.", "date: 535\n\nI turned on the overhead light in John's bedroom.", "date: 540\n\nI turned on the overhead light in Jane's bedroom.", 'date: 547\n\nI turned on the overhead light in the kitchen.', "date: 548\n\nI turned off the overhead light in Jane's bedroom.", 'date: 562\n\nI turned on the overhead light in the living room.', "date: 568\n\nI turned on the overhead light in Jane's bedroom.", "date: 570\n\nI turned off the overhead light in John's bedroom.", "date: 585\n\nI turned off the overhead light in Jane's bedroom.", "date: 604\n\nI turned on the overhead light in Jane's bedroom.", "date: 609\n\nI turned on the overhead light in John's bedroom.", "date: 615\n\nI turned off the overhead light in Jane's bedroom.", "date: 618\n\nI turned off the overhead light in John's bedroom.", "date: 628\n\nI turned on the overhead light in John's bedroom.", "date: 654\n\nI turned off the overhead light in John's bedroom.", "date: 672\n\nI turned on the overhead light in John's bedroom.", "date: 681\n\nI turned on the overhead light in Jane's bedroom.", "date: 685\n\nI turned off the overhead light in John's bedroom.", "date: 706\n\nI turned on the overhead light in John's bedroom.", "date: 744\n\nI turned off the overhead light in John's bedroom.", "date: 745\n\nI turned off the overhead light in Jane's bedroom.", "date: 754\n\nI turned on the overhead light in Jane's bedroom.", "date: 760\n\nI turned on the overhead light in John's bedroom.", "date: 765\n\nI turned off the overhead light in Jane's bedroom.", "date: 769\n\nI turned off the overhead light in John's bedroom.", "date: 791\n\nI turned on the overhead light in John's bedroom.", "date: 798\n\nI turned on the overhead light in Jane's bedroom.", "date: 799\n\nI turned off the overhead light in Jane's bedroom.", "date: 805\n\nI turned off the overhead light in John's bedroom.", 'date: 812\n\nI turned on the overhead light in the living room.', "date: 842\n\nI turned on the overhead light in John's bedroom.", "date: 857\n\nI turned on the overhead light in Jane's bedroom.", "date: 862\n\nI turned off the overhead light in John's bedroom.", "date: 874\n\nI turned off the overhead light in Jane's bedroom.", "date: 875\n\nI turned on the overhead light in Jane's bedroom.", "date: 876\n\nI turned off the overhead light in Jane's bedroom.", "date: 890\n\nI turned on the overhead light in Jane's bedroom."]
+Predicted answer: The overhead light in Jane's bedroom is off.
+Similarity: 0.682713957804818
+
+Time: 909
+State change: I turned off the overhead light in the kitchen.
+
+Time: 910
+State change: I turned on the overhead light in the kitchen.
+
+Time: 911
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 912
+State change: I closed the blinds of the window in Jane's bedroom.
+
+Time: 913
+State change: I placed the white pen I was holding on the 6th level of the shelf in Jane's bedroom.
+
+Time: 914
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 915
+State change: I switched the channel of the TV in the living room to Cartoon Network.
+
+Time: 916
+State change: I picked up the bowl in the sink in the kitchen.
+
+Time: 917
+State change: I turned off the overhead light in the kitchen.
+
+Time: 918
+State change: I placed the bowl I was holding in the sink in the kitchen.
+
+Time: 919
+State change: I turned on the overhead light in the kitchen.
+
+Time: 920
+State change: I turned off the overhead light in the kitchen.
+
+Time: 921
+State change: I picked up the knife in the sink in the kitchen.
+
+Time: 922
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 923
+State change: I placed the knife I was holding in the sink in the kitchen.
+
+Time: 924
+State change: I picked up the fork on the 6th level of the shelf in Jane's bedroom.
+
+Time: 925
+State change: I placed the fork I was holding in the sink in the kitchen.
+
+Time: 926
+State change: I turned on the overhead light in the kitchen.
+
+Time: 927
+State change: I picked up the orange on the table in Jane's bedroom.
+
+Time: 928
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 929
+State change: I turned on the overhead light in the living room.
+
+Time: 930
+State change: I turned off the overhead light in the kitchen.
+
+Time: 931
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 932
+State change: I turned off the overhead light in the living room.
+
+Time: 933
+State change: I placed the orange I was holding on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 934
+State change: I opened the blinds of the window in the living room.
+
+Time: 935
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 936
+State change: I turned on the overhead light in the kitchen.
+
+Time: 937
+State change: I turned off the overhead light in the kitchen.
+
+Time: 938
+State change: I picked up the orange on the 2nd level of the shelf in Jane's bedroom.
+
+Time: 939
+State change: I placed the orange I was holding on the 10th level of the shelf in the living room.
+
+Time: 940
+State change: I turned on the TV in Jane's bedroom and set it to Cartoon Network.
+
+Time: 941
+State change: I turned on the overhead light in the kitchen.
+
+Time: 942
+State change: I picked up the apple on the table in John's bedroom.
+
+Time: 943
+State change: I turned off the TV in the living room.
+
+Time: 944
+State change: I turned off the overhead light in the kitchen.
+
+Time: 945
+State change: I turned on the overhead light in the kitchen.
+
+Time: 946
+State change: I turned off the overhead light in the kitchen.
+
+Time: 947
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 948
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 949
+State change: I turned on the overhead light in the living room.
+
+Time: 950
+State change: I picked up the apple inside the fridge in the kitchen.
+
+Time: 951
+State change: I turned on the TV in the living room and set it to NBC.
+
+Time: 952
+State change: I turned off the TV in John's bedroom.
+
+Time: 953
+State change: I placed the apple I was holding inside the fridge in the kitchen.
+
+Time: 954
+State change: I picked up the white pen on the 6th level of the shelf in Jane's bedroom.
+
+Time: 955
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 956
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 957
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 958
+State change: I turned on the overhead light in the kitchen.
+
+Time: 959
+State change: I turned off the TV in Jane's bedroom.
+
+Time: 960
+State change: I turned off the overhead light in the kitchen.
+
+Time: 961
+State change: I placed the white pen I was holding on the 9th level of the shelf in the living room.
+
+Time: 962
+State change: I picked up the fork in the sink in the kitchen.
+
+Time: 963
+State change: I placed the fork I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 964
+State change: I switched the channel of the TV in the living room to ESPN.
+
+Time: 965
+State change: I turned off the overhead light in the living room.
+
+Time: 966
+State change: I picked up the red pen on the table in Jane's bedroom.
+
+Time: 967
+State change: I turned on the overhead light in the kitchen.
+
+Time: 968
+State change: I placed the red pen I was holding on the 4th level of the shelf in Jane's bedroom.
+
+Time: 969
+State change: I turned off the overhead light in the kitchen.
+
+Time: 970
+State change: I picked up the plate on the 3rd level of the shelf in Jane's bedroom.
+
+Time: 971
+State change: I placed the plate I was holding on the 4th level of the shelf in John's bedroom.
+
+Time: 972
+State change: I picked up the white pen on the 9th level of the shelf in the living room.
+
+Time: 973
+State change: I turned on the overhead light in the kitchen.
+
+Time: 974
+State change: I closed the blinds of the window in the living room.
+
+Time: 975
+State change: I turned on the TV in Jane's bedroom and set it to NBC.
+
+Time: 976
+State change: I placed the white pen I was holding on the table in Jane's bedroom.
+
+Time: 977
+State change: I turned off the TV in John's bedroom.
+
+Time: 978
+State change: I picked up the "Of Mice and Men" book on the table in Jane's bedroom.
+
+Time: 979
+State change: I placed the "Of Mice and Men" book I was holding on the table in the living room.
+
+Time: 980
+State change: I picked up the "Alchemist" book on the table in Jane's bedroom.
+
+Time: 981
+State change: I placed the "Alchemist" book I was holding on the table in Jane's bedroom.
+
+Time: 982
+State change: I turned on the overhead light in the living room.
+
+Time: 983
+State change: I turned on the TV in John's bedroom and set it to Cartoon Network.
+
+Time: 984
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 985
+State change: I picked up the orange on the 10th level of the shelf in the living room.
+
+Time: 986
+State change: I opened the blinds of the window in Jane's bedroom.
+
+Time: 987
+State change: I placed the orange I was holding on the table in Jane's bedroom.
+
+Time: 988
+State change: I picked up the spoon on the table in the living room.
+
+Time: 989
+State change: I turned off the overhead light in the kitchen.
+
+Time: 990
+State change: I opened the blinds of the window in John's bedroom.
+
+Time: 991
+State change: I turned off the TV in John's bedroom.
+
+Time: 992
+State change: I turned on the overhead light in Jane's bedroom.
+
+Time: 993
+State change: I placed the spoon I was holding on the table in John's bedroom.
+
+Time: 994
+State change: I picked up the orange on the table in Jane's bedroom.
+
+Time: 995
+State change: I turned on the overhead light in John's bedroom.
+
+Time: 996
+State change: I turned on the TV in John's bedroom and set it to the Discovery Channel.
+
+Time: 997
+State change: I placed the orange I was holding inside the fridge in the kitchen.
+
+Time: 998
+State change: I picked up the "Of Mice and Men" book on the table in the living room.
+
+Time: 999
+State change: I turned off the TV in the living room.
+
+Time: 1000
+State change: I turned on the overhead light in the kitchen.
+
+Time: 1001
+State change: I closed the blinds of the window in John's bedroom.
+
+Time: 1002
+State change: I turned off the overhead light in the living room.
+
+Time: 1003
+State change: I turned off the overhead light in John's bedroom.
+
+Time: 1004
+State change: I switched the channel of the TV in Jane's bedroom to ESPN.
+
+Time: 1005
+State change: I placed the "Of Mice and Men" book I was holding on the table in the living room.
+
+Time: 1006
+State change: I turned on the TV in the living room and set it to ESPN.
+
+Time: 1007
+State change: I picked up the purple pen on the table in the living room.
+
+Time: 1008
+State change: I turned off the overhead light in Jane's bedroom.
+
+Time: 1009
+Query: Are the blinds of the window in John's bedroom open or closed?
+True answer: The window blinds are closed.
+["date: 7\n\nI opened the blinds of the window in Jane's bedroom.", 'date: 9\n\nI opened the blinds of the window in the living room.', 'date: 19\n\nI opened the blinds of the window in the living room.', "date: 26\n\nI closed the blinds of the window in John's bedroom.", "date: 33\n\nI closed the blinds of the window in Jane's bedroom.", "date: 48\n\nI opened the blinds of the window in Jane's bedroom.", "date: 52\n\nI opened the blinds of the window in John's bedroom.", "date: 62\n\nI closed the blinds of the window in John's bedroom.", "date: 91\n\nI closed the blinds of the window in Jane's bedroom.", "date: 108\n\nI opened the blinds of the window in Jane's bedroom.", "date: 113\n\nI opened the blinds of the window in John's bedroom.", "date: 118\n\nI closed the blinds of the window in Jane's bedroom.", "date: 126\n\nI opened the blinds of the window in Jane's bedroom.", "date: 137\n\nI closed the blinds of the window in John's bedroom.", 'date: 141\n\nI opened the blinds of the window in the living room.', "date: 146\n\nI closed the blinds of the window in Jane's bedroom.", "date: 150\n\nI opened the blinds of the window in Jane's bedroom.", "date: 187\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 192\n\nI opened the blinds of the window in the living room.', 'date: 220\n\nI opened the blinds of the window in the living room.', "date: 226\n\nI opened the blinds of the window in John's bedroom.", "date: 237\n\nI opened the blinds of the window in Jane's bedroom.", "date: 247\n\nI closed the blinds of the window in John's bedroom.", "date: 254\n\nI closed the blinds of the window in Jane's bedroom.", "date: 268\n\nI opened the blinds of the window in Jane's bedroom.", "date: 269\n\nI opened the blinds of the window in John's bedroom.", 'date: 276\n\nI closed the blinds of the window in the living room.', "date: 277\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 302\n\nI opened the blinds of the window in the living room.', "date: 305\n\nI closed the blinds of the window in John's bedroom.", "date: 314\n\nI opened the blinds of the window in John's bedroom.", "date: 322\n\nI closed the blinds of the window in John's bedroom.", "date: 326\n\nI opened the blinds of the window in John's bedroom.", "date: 349\n\nI closed the blinds of the window in John's bedroom.", "date: 352\n\nI opened the blinds of the window in John's bedroom.", "date: 357\n\nI closed the blinds of the window in John's bedroom.", "date: 361\n\nI opened the blinds of the window in Jane's bedroom.", "date: 381\n\nI opened the blinds of the window in John's bedroom.", "date: 387\n\nI closed the blinds of the window in John's bedroom.", "date: 394\n\nI opened the blinds of the window in John's bedroom.", "date: 405\n\nI closed the blinds of the window in John's bedroom.", "date: 410\n\nI closed the blinds of the window in Jane's bedroom.", 'date: 413\n\nI opened the blinds of the window in the living room.', "date: 437\n\nI opened the blinds of the window in Jane's bedroom.", "date: 461\n\nI opened the blinds of the window in John's bedroom.", "date: 463\n\nI closed the blinds of the window in Jane's bedroom.", "date: 466\n\nI closed the blinds of the window in John's bedroom.", "date: 484\n\nI opened the blinds of the window in John's bedroom.", "date: 490\n\nI opened the blinds of the window in Jane's bedroom.", "date: 502\n\nI closed the blinds of the window in John's bedroom.", "date: 511\n\nI opened the blinds of the window in John's bedroom.", "date: 520\n\nI closed the blinds of the window in John's bedroom.", "date: 524\n\nI closed the blinds of the window in Jane's bedroom.", "date: 551\n\nI opened the blinds of the window in John's bedroom.", "date: 552\n\nI opened the blinds of the window in Jane's bedroom.", "date: 567\n\nI closed the blinds of the window in Jane's bedroom.", "date: 580\n\nI opened the blinds of the window in Jane's bedroom.", "date: 605\n\nI closed the blinds of the window in Jane's bedroom.", "date: 607\n\nI closed the blinds of the window in John's bedroom.", "date: 608\n\nI opened the blinds of the window in John's bedroom.", "date: 616\n\nI closed the blinds of the window in John's bedroom.", "date: 629\n\nI opened the blinds of the window in John's bedroom.", "date: 634\n\nI closed the blinds of the window in John's bedroom.", "date: 637\n\nI opened the blinds of the window in Jane's bedroom.", "date: 638\n\nI closed the blinds of the window in Jane's bedroom.", "date: 640\n\nI opened the blinds of the window in John's bedroom.", "date: 645\n\nI closed the blinds of the window in John's bedroom.", "date: 678\n\nI opened the blinds of the window in Jane's bedroom.", "date: 679\n\nI opened the blinds of the window in John's bedroom.", "date: 687\n\nI closed the blinds of the window in John's bedroom.", "date: 688\n\nI closed the blinds of the window in Jane's bedroom.", "date: 700\n\nI opened the blinds of the window in Jane's bedroom.", "date: 715\n\nI opened the blinds of the window in John's bedroom.", "date: 728\n\nI closed the blinds of the window in John's bedroom.", "date: 739\n\nI closed the blinds of the window in Jane's bedroom.", "date: 747\n\nI opened the blinds of the window in Jane's bedroom.", "date: 749\n\nI closed the blinds of the window in Jane's bedroom.", "date: 751\n\nI opened the blinds of the window in John's bedroom.", "date: 752\n\nI opened the blinds of the window in Jane's bedroom.", "date: 755\n\nI closed the blinds of the window in John's bedroom.", "date: 770\n\nI closed the blinds of the window in Jane's bedroom.", "date: 794\n\nI opened the blinds of the window in Jane's bedroom.", "date: 800\n\nI closed the blinds of the window in Jane's bedroom.", "date: 802\n\nI opened the blinds of the window in Jane's bedroom.", "date: 820\n\nI closed the blinds of the window in Jane's bedroom.", "date: 840\n\nI opened the blinds of the window in John's bedroom.", "date: 844\n\nI closed the blinds of the window in John's bedroom.", "date: 847\n\nI opened the blinds of the window in Jane's bedroom.", "date: 850\n\nI closed the blinds of the window in Jane's bedroom.", "date: 873\n\nI opened the blinds of the window in Jane's bedroom.", "date: 881\n\nI opened the blinds of the window in John's bedroom.", "date: 889\n\nI closed the blinds of the window in Jane's bedroom.", "date: 900\n\nI opened the blinds of the window in Jane's bedroom.", "date: 904\n\nI closed the blinds of the window in Jane's bedroom.", "date: 906\n\nI closed the blinds of the window in John's bedroom.", "date: 914\n\nI opened the blinds of the window in John's bedroom.", "date: 948\n\nI closed the blinds of the window in John's bedroom.", "date: 978\n\nI opened the blinds of the window in Jane's bedroom.", "date: 982\n\nI opened the blinds of the window in John's bedroom.", "date: 993\n\nI closed the blinds of the window in John's bedroom."]
+Predicted answer: The blinds of the window in John's bedroom are closed.
+Similarity: 0.8638883899306617
+

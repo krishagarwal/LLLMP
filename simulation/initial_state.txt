@@ -1,0 +1,8 @@
+The kitchen has a fridge. The fridge has an apple and an orange. The kitchen also has a sink. The sink has a spoon and a plate. The kitchen also has an overhead light. The light turns on and off. It is currently on. 
+
+The living room has a window. The window has blinds that can open and close. They are currently open. The living room also has a TV. The TV is currently off. The living room also has a shelf. The shelf has 10 levels. The 2nd level of the shelf has a knife. The 10th level of the shelf has a book called "Alchemist". The living room also has a table. The table has a bowl and a purple pen. The living room also has an overhead light. The light turns on and off. It is currently off. 
+
+John's bedroom has a TV. The TV is currently on and is playing Cartoon Network. John's bedroom also has a table. The table has a white pen and a book called "Of Mice and Men". John's bedroom also has a window. The window has blinds that can open and close. They are currently open. John's bedroom also has a shelf. The shelf has 5 levels. The 4th level of the shelf has a red pen. The 5th level of the shelf has a book called "Fahrenheit 451". John's bedroom also has an overhead light. The light turns on and off. It is currently on. 
+
+Jane's bedroom has a TV. The TV is currently off. Jane's bedroom also has a table. The table has a fork. Jane's bedroom also has a window. The window has blinds that can open and close. They are currently closed. Jane's bedroom also has a shelf. The shelf has 6 levels. Jane's bedroom also has an overhead light. The light turns on and off. It is currently off. 
+
