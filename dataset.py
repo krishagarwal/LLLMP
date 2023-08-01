@@ -93,12 +93,13 @@ class StationaryItem(RoomItem):
 		return [self.parent.get_in_room_predicate(self.parent.pddl_name, self.pddl_name)]
 
 class MovableItem(RoomItem, Queryable):
-	def __init__(self, name: str, pddl_name: str, shortened_name: str) -> None:
+	def __init__(self, name: str, pddl_name: str, shortened_name: str, use_default_article: bool = True) -> None:
 		super().__init__(name, pddl_name)
 		self.shortened_name = shortened_name
 		self.container: Container | None = None
 		self.relative_location: str | None = None
 		self.extra_location_info: dict[Any, Any] = {}
+		self.use_default_article = use_default_article
 	
 	def generate_query_answer(self) -> tuple[str, str]:
 		query = f"Where is the {self.shortened_name}?"
@@ -112,7 +113,7 @@ class MovableItem(RoomItem, Queryable):
 		if person.item is not None:
 			return None
 		assert self.container is not None
-		action = f"I picked up the {self.shortened_name} {self.relative_location} the {self.container.get_full_name_with_room()}."
+		action = "I picked up {}{} {} the {}.".format("the " if self.use_default_article else "", self.shortened_name, self.relative_location, self.container.get_full_name_with_room())
 		person.item = self
 		self.container = None
 		self.relative_location = None
@@ -272,15 +273,55 @@ class Container(StationaryItem):
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		return [cls.get_place_action(), cls.get_remove_action()]
 
-class InteractableItem(StationaryItem, Queryable):
+class InteractableItem(RoomItem, Queryable):
 	@abstractmethod
 	def get_special_init_conditions(self, person: Person) -> list[str]:
 		pass
 
+class StationaryInteractable(StationaryItem, InteractableItem):
 	def get_init_conditions(self, person: Person) -> list[str]:
-		return super().get_init_conditions(person) + self.get_special_init_conditions(person)
+		return StationaryItem.get_init_conditions(self, person) + self.get_special_init_conditions(person)
 
-class InteractableContainer(Container, InteractableItem):
+class MovableInteractable(MovableItem, InteractableItem):
+	@abstractmethod
+	def generate_interactable_qa(self) -> tuple[str, str]:
+		pass
+
+	def generate_query_answer(self) -> tuple[str, str]:
+		return self.generate_interactable_qa() if random.choice([True, False]) else MovableItem.generate_query_answer(self)
+	
+	@abstractmethod
+	def interact(self, person: Person) -> str | None:
+		pass
+
+	@staticmethod
+	@abstractmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		pass
+
+	@staticmethod
+	@abstractmethod
+	def get_pddl_domain_actions() -> list[Action]:
+		pass
+
+	def perform_action(self, person: Person) -> str | None:
+		while True:
+			action = self.interact(person) if random.choice([True, False]) else MovableItem.perform_action(self, person)
+			if action is not None:
+				return action
+
+	def get_init_conditions(self, person: Person) -> list[str]:
+		return MovableItem.get_init_conditions(self, person) + self.get_special_init_conditions(person)
+
+# class InteractableItem(StationaryItem, Queryable):
+# 	@abstractmethod
+# 	def get_special_init_conditions(self, person: Person) -> list[str]:
+# 		pass
+
+# 	def get_init_conditions(self, person: Person) -> list[str]:
+# 		return super().get_init_conditions(person) + self.get_special_init_conditions(person)
+
+class InteractableContainer(Container, StationaryInteractable):
 	@abstractmethod
 	def interact(self, person: Person) -> str | None:
 		pass
@@ -352,9 +393,10 @@ class Shelf(Container):
 	@staticmethod
 	def get_level_name(level: int) -> str:
 		return "level-" + str(level)
+	
 	LEVEL_OBJECTS: list[str] = []
 	for i in range(MAX_LEVELS):
-		LEVEL_OBJECTS.append(get_level_name(i + 1) + " - " + LEVEL_TYPE)
+		LEVEL_OBJECTS.append(get_level_name.__func__(i + 1) + " - " + LEVEL_TYPE)
 
 	def __init__(self, parent: Room, levels: int) -> None:
 		super().__init__("shelf", parent)
@@ -489,7 +531,8 @@ class Sink(InteractableContainer):
 		return Sink("sink", parent, random.choice([True, False]))
 
 class Book(MovableItem):
-	available_titles = ["Lord of the Rings", "Harry Potter", "Alchemist", "Great Gatsby", "Romeo & Juliet", "Of Mice and Men", "Adventures of Huckleberry Finn", "Fahrenheit 451", "Giver", "Tom Sawyer"]
+	with open("book_titles.txt") as f:	
+		available_titles = f.read().splitlines()
 
 	def __init__(self, title: str) -> None:
 		super().__init__(f'book called "{title}"', re.sub(r"[^a-zA-Z0-9]+", "-", title).lower() + "-book", f'"{title}" book')
@@ -502,7 +545,8 @@ class Book(MovableItem):
 		return Book(Book.available_titles.pop(idx))
 
 class Pen(MovableItem):
-	available_colors = ["blue", "red", "green", "yellow", "purple", "white", "black", "orange"]
+	with open("colors.txt") as f:	
+		available_colors = f.read().lower().splitlines()
 
 	def __init__(self, color: str) -> None:
 		super().__init__(f"{color} pen", color + "-pen", f"{color} pen")
@@ -515,64 +559,37 @@ class Pen(MovableItem):
 		return Pen(Pen.available_colors.pop(idx))
 
 class Singleton(MovableItem):
-	generated = False
 	def __init__(self, name: str) -> None:
 		super().__init__(name, re.sub(r"[^a-zA-Z0-9]+", "-", name).lower(), name)
 	
-	@classmethod
-	def generate_instance(cls) -> Singleton | None:
-		if cls.generated:
-			return None
-		cls.generated = True
-		return cls.get_unique_instance()
-
 	@staticmethod
 	@abstractmethod
-	def get_unique_instance() -> Singleton:
+	def get_available_names() -> list[str]:
 		pass
 
-class Food(MovableItem):
-	pass
+	@classmethod
+	def generate_instance(cls) -> Singleton | None:
+		names = cls.get_available_names()
+		if len(names) == 0:
+			return None
+		return cls(names.pop(random.randrange(len(names))))
 
-class Apple(Food, Singleton):
+class Food(Singleton):
+	with open("foods.txt") as f:
+		available_foods = f.read().lower().splitlines()
+	
 	@staticmethod
-	def get_unique_instance() -> Apple:
-		return Apple("apple")
+	def get_available_names() -> list[str]:
+		return Food.available_foods
 
-class Orange(Food, Singleton):
+class Kitchenware(Singleton):
+	available_kitchenware = ["plate", "bowl", "fork", "spoon", "knife"]
+
 	@staticmethod
-	def get_unique_instance() -> Orange:
-		return Orange("orange")
+	def get_available_names() -> list[str]:
+		return Kitchenware.available_kitchenware
 
-class Kitchenware(MovableItem):
-	pass
-
-class Plate(Kitchenware, Singleton):
-	@staticmethod
-	def get_unique_instance() -> Plate:
-		return Plate("plate")
-
-class Bowl(Kitchenware, Singleton):
-	@staticmethod
-	def get_unique_instance() -> Bowl:
-		return Bowl("bowl")
-
-class Fork(Kitchenware, Singleton):
-	@staticmethod
-	def get_unique_instance() -> Fork:
-		return Fork("fork")
-
-class Spoon(Kitchenware, Singleton):
-	@staticmethod
-	def get_unique_instance() -> Spoon:
-		return Spoon("spoon")
-
-class Knife(Kitchenware, Singleton):
-	@staticmethod
-	def get_unique_instance() -> Knife:
-		return Knife("knife")
-
-class Window(InteractableItem):
+class Window(StationaryInteractable):
 	def __init__(self, parent: Room, open: bool) -> None:
 		super().__init__("window", parent)
 		self.open = open
@@ -585,7 +602,7 @@ class Window(InteractableItem):
 		return "I {} the blinds of the {}.".format("opened" if self.open else "closed", self.get_full_name_with_room())
 	
 	@staticmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[InteractableItem, str]:
+	def generate_instance(parent: Room, **kwargs) -> tuple[Window, str]:
 		window = Window(parent, random.choice([True, False]))
 		return window, "The window has blinds that can open and close. They are currently {}. ".format("open" if window.open else "closed")
 	
@@ -605,7 +622,7 @@ class Window(InteractableItem):
 			return ["window-open " + self.pddl_name]
 		return []
 
-class Light(InteractableItem):
+class Light(StationaryInteractable):
 	def __init__(self, name: str, parent: Room, on: bool) -> None:
 		super().__init__(name, parent)
 		self.on = on
@@ -618,7 +635,7 @@ class Light(InteractableItem):
 		return "I turned {} the {}.".format("on" if self.on else "off", self.get_full_name_with_room())
 	
 	@staticmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[StationaryItem, str]:
+	def generate_instance(parent: Room, **kwargs) -> tuple[Light, str]:
 		light = Light("overhead light", parent, random.choice([True, False]))
 		return light, "The light turns on and off. It is currently {}. ".format("on" if light.on else "off")
 	
@@ -638,7 +655,7 @@ class Light(InteractableItem):
 			return ["light-on " + self.pddl_name]
 		return []
 
-class TV(InteractableItem):
+class TV(StationaryInteractable):
 	class Channel:
 		TYPE_NAME = "channel"
 		def __init__(self, name: str) -> None:
@@ -714,6 +731,40 @@ class TV(InteractableItem):
 	@staticmethod
 	def get_static_pddl_objects() -> list[str]:
 		return TV.CHANNEL_OBJECTS
+
+class Phone(MovableInteractable):
+	with open("names.txt") as f:	
+		available_names = f.read().splitlines()
+
+	def __init__(self, owner: str) -> None:
+		super().__init__(f"phone that belongs to {owner}", owner.lower() + "-phone", f"{owner}'s phone", use_default_article=False)
+		self.ringing = False
+	
+	def get_special_init_conditions(self, person: Person) -> list[str]:
+		if self.ringing:
+			return ["phone-ringing " + self.pddl_name]
+		return []
+	
+	def generate_interactable_qa(self) -> tuple[str, str]:
+		return f"Is {self.shortened_name} ringing?", "Yes." if self.ringing else "No."
+	
+	def interact(self, person: Person) -> str | None:
+		self.ringing = not self.ringing
+		return "{} {} ringing.".format(self.shortened_name, "started" if self.ringing else "stopped")
+	
+	@staticmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		return [Predicate("is-ringing", ["?a - " + Phone.get_type_name()])]
+	
+	@staticmethod
+	def get_pddl_domain_actions() -> list[Action]:
+		return [Action("answer-phone", ["?a - " + Phone.get_type_name()], ["is-ringing ?a"], ["not (is-ringing ?a)"])]
+
+	@staticmethod
+	def generate_instance() -> Phone | None:
+		if len(Phone.available_names) == 0:
+			return None
+		return Phone(Phone.available_names.pop(random.randrange(len(Phone.available_names))))
 
 class Person:
 	TYPE_NAME = "person"
@@ -884,7 +935,8 @@ class LivingRoom(Room):
 		return not Kitchen.can_hold(stationary_type) or stationary_type == Light
 
 class Bedroom(Room):
-	available_names = ["John", "Linda", "Jane", "Mark"]
+	with open("names.txt") as f:	
+		available_names = f.read().splitlines()
 	
 	@staticmethod
 	def generate_empty() -> Bedroom | None:
@@ -1100,5 +1152,5 @@ stationary_types = get_concrete_subtypes(StationaryItem)
 room_types = get_concrete_subtypes(Room)
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("simulation2", num_queries=10, state_changes_per_query=100)
+	generator = DatasetGenerator("household4", num_queries=10, state_changes_per_query=100)
 	generator.run()
