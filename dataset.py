@@ -33,10 +33,49 @@ class Action:
 					+ "\t\t)\n" \
 					+ "\t)\n"
 
+class EntityID:
+	def __init__(self, name: str, concept: str):
+		self.name = name
+		self.concept = concept
+	
+	def __str__(self) -> str:
+		return f'instance: ["{self.name}", "{self.concept}"]'
+
+class Attribute:
+	def __init__(self, name: str, value: EntityID | int | str | bool | float) -> None:
+		self.name = name
+		self.value = value
+	
+	def to_yaml(self, num_indent: int) -> str:
+		indent = "  " * num_indent
+		if isinstance(self.value, str):
+			str_value = f'"{self.value}"'
+		elif isinstance(self.value, EntityID):
+			str_value = f"\n{indent}    {self.value}"
+		else:
+			str_value = str(self.value).lower()
+		return f"{indent}- name: {self.name}\n" \
+			   f"{indent}  value: {str_value}"
+
+class Instance:
+	def __init__(self, entity_id: EntityID, attributes: list[Attribute]):
+		self.entity_id = entity_id
+		self.attributes = attributes
+
+	def to_yaml(self, num_indent: int) -> str:
+		indent = "  " * num_indent
+		yaml = f"{indent}- {self.entity_id}\n"
+		if len(self.attributes) > 0:
+			yaml += f"{indent}  attributes:\n"
+			for attribute in self.attributes:
+				yaml += attribute.to_yaml(num_indent + 1) + "\n"
+		return yaml
+
 class RoomItem(ABC):
-	def __init__(self, name: str, pddl_name: str) -> None:
+	def __init__(self, name: str, pddl_name: str, yaml_name: str) -> None:
 		self.name = name
 		self.pddl_name = pddl_name
+		self.entity_id = EntityID(yaml_name, type(self).__name__.lower())
 
 	@abstractmethod
 	def perform_action(self, person: Person) -> str | None:
@@ -61,7 +100,7 @@ class RoomItem(ABC):
 		return [cls.get_type_name()]
 	
 	@abstractmethod
-	def get_init_conditions(self, person: Person) -> list[str]:
+	def get_init_conditions(self) -> list[str]:
 		pass
 
 	def get_pddl_objects(self) -> list[str]:
@@ -70,6 +109,13 @@ class RoomItem(ABC):
 	@staticmethod
 	def get_static_pddl_objects() -> list[str]:
 		return []
+	
+	@abstractmethod
+	def get_yaml_attributes(self) -> list[Attribute]:
+		pass
+	
+	def get_yaml_instance(self) -> Instance:
+		return Instance(self.entity_id, self.get_yaml_attributes())
 
 class Queryable:
 	@abstractmethod
@@ -78,7 +124,10 @@ class Queryable:
 
 class StationaryItem(RoomItem):
 	def __init__(self, name: str, parent: Room) -> None:
-		super().__init__(name, parent.pddl_name + "-" + re.sub(r"[^a-zA-Z0-9]+", "-", name).lower())
+		suffix = re.sub(r"[^a-zA-Z0-9]+", "-", name).lower()
+		pddl_name = parent.pddl_name + "-" + suffix
+		yaml_name = parent.entity_id.name + "_" + suffix.replace("-", "_")
+		super().__init__(name, pddl_name, yaml_name)
 		self.parent = parent
 	
 	@staticmethod
@@ -89,21 +138,24 @@ class StationaryItem(RoomItem):
 	def get_full_name_with_room(self) -> str:
 		return f"{self.name} in {self.parent.name}"
 	
-	def get_init_conditions(self, person: Person) -> list[str]:
+	def get_init_conditions(self) -> list[str]:
 		return [self.parent.get_in_room_predicate(self.parent.pddl_name, self.pddl_name)]
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("in_room", self.parent.entity_id)]
 
 class MovableItem(RoomItem, Queryable):
-	def __init__(self, name: str, pddl_name: str, shortened_name: str, use_default_article: bool = True) -> None:
-		super().__init__(name, pddl_name)
+	def __init__(self, name: str, pddl_name: str, yaml_name: str, shortened_name: str, use_default_article: bool = True) -> None:
+		super().__init__(name, pddl_name, yaml_name)
 		self.shortened_name = shortened_name
-		self.container: Container | None = None
+		self.container: Container | Person
 		self.relative_location: str | None = None
 		self.extra_location_info: dict[Any, Any] = {}
 		self.use_default_article = use_default_article
 	
 	def generate_query_answer(self) -> tuple[str, str]:
 		query = f"Where is the {self.shortened_name}?"
-		if self.container is None:
+		if isinstance(self.container, Person):
 			answer = f"You are holding the {self.shortened_name}."
 		else:
 			answer = f"The {self.shortened_name} is {self.relative_location} the {self.container.get_full_name_with_room()}."
@@ -112,10 +164,11 @@ class MovableItem(RoomItem, Queryable):
 	def perform_action(self, person: Person) -> str | None:
 		if person.item is not None:
 			return None
-		assert self.container is not None
+		assert isinstance(self.container, Container)
 		action = "I picked up {}{} {} the {}.".format("the " if self.use_default_article else "", self.shortened_name, self.relative_location, self.container.get_full_name_with_room())
 		person.item = self
-		self.container = None
+		self.container.items.remove(self)
+		self.container = person
 		self.relative_location = None
 		return action
 
@@ -132,16 +185,28 @@ class MovableItem(RoomItem, Queryable):
 	def get_pddl_domain_actions() -> list[Action]:
 		return []
 	
-	def get_init_conditions(self, person: Person) -> list[str]:
-		if self.container is None:
-			return [Person.get_in_hand_predicate(person.pddl_name, self.pddl_name)]
+	def get_init_conditions(self) -> list[str]:
+		if isinstance(self.container, Person):
+			return [Person.get_in_hand_predicate(self.container.pddl_name, self.pddl_name)]
 		return [self.container.get_contains_predicate(self.container.pddl_name, self.pddl_name, **self.extra_location_info)]
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		attributes = [Attribute("held_by" if isinstance(self.container, Person) else "contained_by", self.container.entity_id)]
+		if "extra_attributes" in self.extra_location_info.keys():
+			extras = self.extra_location_info.get("extra_attributes")
+			assert isinstance(extras, list)
+			attributes += extras
+		return attributes
 
 class Container(StationaryItem):
 	CONTAINER_PARAM = "?a"
 	ITEM_PARAM = "?b"
 	PERSON_PARAM = "?c"
 	EXTRA_INFO: dict[str, Any] = {}
+
+	def __init__(self, name: str, parent: Room) -> None:
+		super().__init__(name, parent)
+		self.items: list[MovableItem]
 
 	@staticmethod
 	@abstractmethod
@@ -165,7 +230,7 @@ class Container(StationaryItem):
 			items.remove(item)
 			chosen_items.append(item)
 		container = cls.generate_empty(parent)
-		assert isinstance(container, Container)
+		container.items = chosen_items
 		for item in chosen_items:
 			item.container = container
 			item.relative_location, item.extra_location_info = container.generate_relative_location()
@@ -205,6 +270,7 @@ class Container(StationaryItem):
 			return None
 		item = person.item
 		person.item = None
+		self.items.append(item)
 		item.container = self
 		item.relative_location, item.extra_location_info = self.generate_relative_location()
 		return f"I placed the {item.shortened_name} I was holding {item.relative_location} the {self.get_full_name_with_room()}."
@@ -272,15 +338,28 @@ class Container(StationaryItem):
 	@classmethod
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		return [cls.get_place_action(), cls.get_remove_action()]
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		attributes = StationaryItem.get_yaml_attributes(self)
+		for item in self.items:
+			attributes.append(Attribute("has_object", item.entity_id))
+		return attributes
 
 class InteractableItem(RoomItem, Queryable):
 	@abstractmethod
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
+		pass
+
+	@abstractmethod
+	def get_special_yaml_attributes(self) -> list[Attribute]:
 		pass
 
 class StationaryInteractable(StationaryItem, InteractableItem):
-	def get_init_conditions(self, person: Person) -> list[str]:
-		return StationaryItem.get_init_conditions(self, person) + self.get_special_init_conditions(person)
+	def get_init_conditions(self) -> list[str]:
+		return StationaryItem.get_init_conditions(self) + self.get_special_init_conditions()
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		return StationaryItem.get_yaml_attributes(self) + self.get_special_yaml_attributes()
 
 class MovableInteractable(MovableItem, InteractableItem):
 	@abstractmethod
@@ -310,16 +389,11 @@ class MovableInteractable(MovableItem, InteractableItem):
 			if action is not None:
 				return action
 
-	def get_init_conditions(self, person: Person) -> list[str]:
-		return MovableItem.get_init_conditions(self, person) + self.get_special_init_conditions(person)
-
-# class InteractableItem(StationaryItem, Queryable):
-# 	@abstractmethod
-# 	def get_special_init_conditions(self, person: Person) -> list[str]:
-# 		pass
-
-# 	def get_init_conditions(self, person: Person) -> list[str]:
-# 		return super().get_init_conditions(person) + self.get_special_init_conditions(person)
+	def get_init_conditions(self) -> list[str]:
+		return MovableItem.get_init_conditions(self) + self.get_special_init_conditions()
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		return MovableItem.get_yaml_attributes(self) + self.get_special_yaml_attributes()
 
 class InteractableContainer(Container, StationaryInteractable):
 	@abstractmethod
@@ -332,8 +406,11 @@ class InteractableContainer(Container, StationaryInteractable):
 			if action is not None:
 				return action
 	
-	def get_init_conditions(self, person: Person) -> list[str]:
-		return Container.get_init_conditions(self, person) + self.get_special_init_conditions(person)
+	def get_init_conditions(self) -> list[str]:
+		return Container.get_init_conditions(self) + self.get_special_init_conditions()
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		return Container.get_yaml_attributes(self) + self.get_special_yaml_attributes()
 	
 	@abstractmethod
 	def get_interactable_description(self) -> str:
@@ -362,13 +439,6 @@ class InteractableContainer(Container, StationaryInteractable):
 	@classmethod
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		return super().get_pddl_domain_actions() + cls.get_special_domain_actions()
-	
-
-
-# class InteractableContainer(Container, InteractableItem):
-# 	@staticmethod
-# 	def generate(parent: Room) -> Container:
-# 		return InteractableContainer().
 
 class Table(Container):
 	@staticmethod
@@ -423,7 +493,7 @@ class Shelf(Container):
 	
 	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
 		level = random.randrange(self.levels) + 1
-		return f"on the {Shelf.integer_to_ordinal(level)} level of", {"level" : level, "pddl_level": self.get_level_name(level)}
+		return f"on the {Shelf.integer_to_ordinal(level)} level of", {"level" : level, "pddl_level": self.get_level_name(level), "extra_attributes": [Attribute("on_shelf_level", level)]}
 
 	@staticmethod
 	def integer_to_ordinal(number):
@@ -466,11 +536,16 @@ class Shelf(Container):
 		types.append(cls.LEVEL_TYPE)
 		return types
 	
-	def get_init_conditions(self, person: Person) -> list[str]:
-		conditions = super().get_init_conditions(person)
+	def get_init_conditions(self) -> list[str]:
+		conditions = super().get_init_conditions()
 		for i in range(self.levels):
 			conditions.append(f"shelf-has-level {self.pddl_name} {self.get_level_name(i + 1)}")
 		return conditions
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		attributes = Container.get_yaml_attributes(self)
+		attributes.append(Attribute("num_levels", self.levels))
+		return attributes
 	
 	@staticmethod
 	def get_static_pddl_objects() -> list[str]:
@@ -507,7 +582,7 @@ class Sink(InteractableContainer):
 	def generate_query_answer(self) -> tuple[str, str]:
 		return f"Is the faucet of the {self.get_full_name_with_room()} on or off?", "The faucet is {}.".format("on" if self.faucet_on else "off")
 	
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
 		if self.faucet_on:
 			return ["faucet-on " + self.pddl_name]
 		return []
@@ -529,13 +604,17 @@ class Sink(InteractableContainer):
 	@staticmethod
 	def generate_empty(parent: Room) -> Container:
 		return Sink("sink", parent, random.choice([True, False]))
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("is_faucet_on", self.faucet_on)]
 
 class Book(MovableItem):
 	with open("book_titles.txt") as f:	
 		available_titles = f.read().splitlines()
 
 	def __init__(self, title: str) -> None:
-		super().__init__(f'book called "{title}"', re.sub(r"[^a-zA-Z0-9]+", "-", title).lower() + "-book", f'"{title}" book')
+		prefix = re.sub(r"[^a-zA-Z0-9]+", "-", title).lower()
+		super().__init__(f'book called "{title}"', prefix + "-book", prefix.replace("-", "_") + "_book", f'"{title}" book')
 
 	@staticmethod
 	def generate_instance() -> Book | None:
@@ -549,7 +628,7 @@ class Pen(MovableItem):
 		available_colors = f.read().lower().splitlines()
 
 	def __init__(self, color: str) -> None:
-		super().__init__(f"{color} pen", color + "-pen", f"{color} pen")
+		super().__init__(f"{color} pen", color + "-pen", color + "_pen", f"{color} pen")
 	
 	@staticmethod
 	def generate_instance() -> Pen | None:
@@ -560,7 +639,8 @@ class Pen(MovableItem):
 
 class Singleton(MovableItem):
 	def __init__(self, name: str) -> None:
-		super().__init__(name, re.sub(r"[^a-zA-Z0-9]+", "-", name).lower(), name)
+		pddl_name = re.sub(r"[^a-zA-Z0-9]+", "-", name).lower()
+		super().__init__(name, pddl_name, pddl_name.replace("-", "_"), name)
 	
 	@staticmethod
 	@abstractmethod
@@ -617,10 +697,13 @@ class Window(StationaryInteractable):
 			Action("close-window", ["?a - window"], ["window-open ?a"], ["not (window-open ?a)"])
 		]
 	
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
 		if self.open:
 			return ["window-open " + self.pddl_name]
 		return []
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("is_window_open", self.open)]
 
 class Light(StationaryInteractable):
 	def __init__(self, name: str, parent: Room, on: bool) -> None:
@@ -650,10 +733,13 @@ class Light(StationaryInteractable):
 			Action("turn-off-light", ["?a - " + Light.get_type_name()], ["light-on ?a"], ["not (light-on ?a)"])
 		]
 	
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
 		if self.on:
 			return ["light-on " + self.pddl_name]
 		return []
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("is_light_on", self.on)]
 
 class TV(StationaryInteractable):
 	class Channel:
@@ -661,6 +747,7 @@ class TV(StationaryInteractable):
 		def __init__(self, name: str) -> None:
 			self.name = name
 			self.pddl_name = re.sub(r"[^a-zA-Z0-9]+", "-", name).lower()
+			self.entity_id = EntityID(self.pddl_name.replace("-", "_"), "tv_channel")
 
 	# CHANNELS = ["the Discovery Channel", "Cartoon Network", "NBC", "CNN", "Fox News", "ESPN"]
 	CHANNELS = [
@@ -723,7 +810,7 @@ class TV(StationaryInteractable):
 		types.append(cls.Channel.TYPE_NAME)
 		return types
 	
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
 		if self.on:
 			return ["tv-on " + self.pddl_name, f"tv-playing-channel {self.pddl_name} {self.curr_channel.pddl_name}"]
 		return []
@@ -731,16 +818,22 @@ class TV(StationaryInteractable):
 	@staticmethod
 	def get_static_pddl_objects() -> list[str]:
 		return TV.CHANNEL_OBJECTS
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		attributes = [Attribute("is_tv_on", self.on)]
+		if (self.on):
+			attributes.append(Attribute("channel_playing", self.channel.entity_id))
+		return attributes
 
 class Phone(MovableInteractable):
 	with open("names.txt") as f:	
 		available_names = f.read().splitlines()
 
 	def __init__(self, owner: str) -> None:
-		super().__init__(f"phone that belongs to {owner}", owner.lower() + "-phone", f"{owner}'s phone", use_default_article=False)
+		super().__init__(f"phone that belongs to {owner}", owner.lower() + "-phone", owner.lower() + "_phone", f"{owner}'s phone", use_default_article=False)
 		self.ringing = False
 	
-	def get_special_init_conditions(self, person: Person) -> list[str]:
+	def get_special_init_conditions(self) -> list[str]:
 		if self.ringing:
 			return ["phone-ringing " + self.pddl_name]
 		return []
@@ -765,12 +858,16 @@ class Phone(MovableInteractable):
 		if len(Phone.available_names) == 0:
 			return None
 		return Phone(Phone.available_names.pop(random.randrange(len(Phone.available_names))))
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("is_phone_ringing", self.ringing)]
 
 class Person:
 	TYPE_NAME = "person"
 	def __init__(self) -> None:
 		self.item: MovableItem | None = None
 		self.pddl_name = "me"
+		self.entity_id = EntityID("person_1", "person")
 	
 	@staticmethod
 	def get_in_hand_predicate(person_param: str, item_param: str):
@@ -794,6 +891,12 @@ class Person:
 		if self.item is None:
 			return [self.get_empty_hand_predicate(self.pddl_name)]
 		return []
+	
+	def get_yaml_instance(self) -> Instance:
+		attributes: list[Attribute] = []
+		if self.item is not None:
+			attributes.append(Attribute("is_holding", self.item.entity_id))
+		return Instance(self.entity_id, attributes)
 
 item_types: list[type[RoomItem]]
 movable_types: list[type[MovableItem]]
@@ -803,11 +906,13 @@ class Room(ABC):
 	ROOM_PARAM = "?a"
 	ITEM_PARAM = "?b"
 
-	def __init__(self, name: str, pddl_name: str, movable_items: list[MovableItem]) -> None:
+	def __init__(self, name: str, pddl_name: str, yaml_name: str, movable_items: list[MovableItem]) -> None:
 		self.name = name
 		self.pddl_name = pddl_name
+		self.entity_id = EntityID(yaml_name, type(self).__name__.lower())
 		self.items: list[RoomItem] = []
 		self.queryable_items: list[Queryable] = []
+		self.yaml_instance: Instance
 		for item in movable_items:
 			self.add_item(item)
 	
@@ -841,11 +946,16 @@ class Room(ABC):
 			item, description = item_type.generate_instance(room, items=movable_items, max_allowed=2)
 			items.append(item)
 			item_descriptions.append((item, description))
+		
+		attributes: list[Attribute] = []
+
 		random.shuffle(items)
 		for item in items:
 			room.add_item(item)
-		random.shuffle(item_descriptions)
+			attributes.append(Attribute("has", item.entity_id))
+		room.yaml_instance = Instance(room.entity_id, attributes)
 
+		random.shuffle(item_descriptions)
 		room_description = ""
 		for i, pair in enumerate(item_descriptions):
 			item, description = pair
@@ -896,10 +1006,10 @@ class Room(ABC):
 	def get_required_types(cls) -> list[str]:
 		return [cls.get_type_name()]
 	
-	def get_init_conditions(self, person: Person) -> list[str]:
+	def get_init_conditions(self) -> list[str]:
 		init_conditions: list[str] = []
 		for item in self.items:
-			init_conditions += item.get_init_conditions(person)
+			init_conditions += item.get_init_conditions()
 		return init_conditions
 	
 	def get_pddl_objects(self) -> list[str]:
@@ -907,6 +1017,12 @@ class Room(ABC):
 		for item in self.items:
 			objects += item.get_pddl_objects()
 		return objects
+	
+	def get_knowledge_yaml(self, indent: int) -> str:
+		yaml = self.yaml_instance.to_yaml(indent)
+		for item in self.items:
+			yaml += item.get_yaml_instance().to_yaml(indent)
+		return yaml
 
 class Kitchen(Room):
 	generated = False
@@ -915,7 +1031,7 @@ class Kitchen(Room):
 		if Kitchen.generated:
 			return None
 		Kitchen.generated = True
-		return Kitchen("the kitchen", "kitchen", [])
+		return Kitchen("the kitchen", "kitchen", "the_kitchen", [])
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -928,7 +1044,7 @@ class LivingRoom(Room):
 		if LivingRoom.generated:
 			return None
 		LivingRoom.generated = True
-		return LivingRoom("the living room", "living-room", [])
+		return LivingRoom("the living room", "living-room", "the_living_room", [])
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -943,7 +1059,7 @@ class Bedroom(Room):
 		if len(Bedroom.available_names) == 0:
 			return None
 		name = Bedroom.available_names.pop(random.randrange(len(Bedroom.available_names)))
-		return Bedroom(f"{name}'s bedroom", f"{name.lower()}-bedroom", [])
+		return Bedroom(f"{name}'s bedroom", f"{name.lower()}-bedroom", f"{name.lower()}_bedroom", [])
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -1017,6 +1133,8 @@ class DatasetGenerator:
 			f.write(self.generate_domain_pddl())
 		with open(os.path.join(self.parent_dir, "problem.pddl"), "w") as f:
 			f.write(self.generate_problem_pddl())
+		with open(os.path.join(self.parent_dir, "knowledge.yaml"), "w") as f:
+			f.write(self.generate_knowledge_yaml())
 		
 		time_step = 0
 		for _ in range(self.num_queries):
@@ -1027,6 +1145,8 @@ class DatasetGenerator:
 					f.write(self.generate_state_change())
 				with open(os.path.join(curr_dir, "problem.pddl"), "w") as f:
 					f.write(self.generate_problem_pddl())
+				with open(os.path.join(curr_dir, "knowledge.yaml"), "w") as f:
+					f.write(self.generate_knowledge_yaml())
 				time_step += 1
 			curr_dir = os.path.join(self.parent_dir, f"time_{time_step:04d}_query")
 			os.makedirs(curr_dir, exist_ok=True)
@@ -1070,11 +1190,11 @@ class DatasetGenerator:
 		init_conditions: list[str] = self.person.get_init_conditions()
 		for room in self.rooms:
 			objects += room.get_pddl_objects()
-			init_conditions += room.get_init_conditions(self.person)
+			init_conditions += room.get_init_conditions()
 		
 		for item in self.movable_items:
 			objects += item.get_pddl_objects()
-			init_conditions += item.get_init_conditions(self.person)
+			init_conditions += item.get_init_conditions()
 		
 		for item_type in item_types:
 			objects += item_type.get_static_pddl_objects()
@@ -1088,6 +1208,15 @@ class DatasetGenerator:
 						+ "\t\t({})\n".format(")\n\t\t(".join(init_conditions)) \
 					+ "\t)\n" \
 				+ ")\n"
+	
+	def generate_knowledge_yaml(self) -> str:
+		yaml = "version: 1\nentities:\n"
+		for room in self.rooms:
+			yaml += room.get_knowledge_yaml(1)
+		for item in self.movable_items:
+			yaml += item.get_yaml_instance().to_yaml(1)
+		return yaml
+
 
 class Dataset:
 	def __init__(self, parent_dir: str) -> None:
@@ -1097,11 +1226,14 @@ class Dataset:
 			self.domain_pddl = f.read()
 		with open(os.path.join(parent_dir, "problem.pddl")) as f:
 			self.initial_problem_pddl = f.read()
+		with open(os.path.join(parent_dir, "knowledge.yaml")) as f:
+			self.initial_knowledge_yaml = f.read()
 		
 		time_steps = os.listdir(parent_dir)
 		time_steps.remove("initial_state.txt")
 		time_steps.remove("domain.pddl")
 		time_steps.remove("problem.pddl")
+		time_steps.remove("knowledge.yaml")
 		time_steps.sort()
 
 		self.num_time_steps = len(time_steps)
@@ -1122,6 +1254,8 @@ class Dataset:
 					curr_data["state change"] = f.read()
 				with open(os.path.join(curr_dir, "problem.pddl")) as f:
 					curr_data["problem pddl"] = f.read()
+				with open(os.path.join(curr_dir, "knowledge.yaml")) as f:
+					curr_data["knowledge yaml"] = f.read()
 			self.time_steps.append(curr_data)
 		
 		self.curr_time_step = -1
@@ -1152,5 +1286,5 @@ stationary_types = get_concrete_subtypes(StationaryItem)
 room_types = get_concrete_subtypes(Room)
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("household4", num_queries=10, state_changes_per_query=100)
+	generator = DatasetGenerator("test", num_queries=5, state_changes_per_query=0)
 	generator.run()
