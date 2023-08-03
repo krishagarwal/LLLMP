@@ -9,7 +9,7 @@ def cosine_similarity(a, b):
 
 class Agent(ABC):
 	@abstractmethod
-	def input_initial_state(self, initial_state: str) -> None:
+	def input_initial_state(self, initial_state: str, knowledge_yaml: str) -> None:
 		pass
 
 	@abstractmethod
@@ -37,7 +37,7 @@ class Simulation:
 	
 	def run(self):
 		print(f"Initial State:\n{self.dataset.initial_state}")
-		self.agent.input_initial_state(self.dataset.initial_state)
+		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_yaml)
 		for time_step in self.dataset:
 			print("Time: " + str(time_step["time"]))
 			if time_step["type"] == "state change":
