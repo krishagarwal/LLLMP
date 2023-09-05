@@ -132,7 +132,11 @@ class StationaryItem(RoomItem):
 	
 	@staticmethod
 	@abstractmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[StationaryItem, str]:
+	def generate_instance(parent: Room) -> tuple[StationaryItem, list[AccompanyingItem]]:
+		pass
+
+	@abstractmethod
+	def get_description(self) -> str:
 		pass
 
 	def get_full_name_with_room(self) -> str:
@@ -198,6 +202,10 @@ class MovableItem(RoomItem, Queryable):
 			attributes += extras
 		return attributes
 
+class AccompanyingItem(MovableItem):
+	def __init__(self, name: str, pddl_name: str, yaml_name: str, shortened_name: str, use_default_article: bool = True) -> None:
+		super().__init__(name, pddl_name, yaml_name, shortened_name, use_default_article)
+
 class Container(StationaryItem):
 	CONTAINER_PARAM = "?a"
 	ITEM_PARAM = "?b"
@@ -216,36 +224,24 @@ class Container(StationaryItem):
 	@classmethod
 	def get_holdable_types(cls) -> list[type[MovableItem]]:
 		return [movable_type for movable_type in movable_types if cls.can_hold(movable_type)]
-
-	@classmethod
-	def generate_instance(cls, parent: Room, **kwargs) -> tuple[Container, str]:
-		items: list[MovableItem] = kwargs["items"] if "items" in kwargs.keys() else []
-		max_allowed: int = kwargs["max_allowed"] if "max_allowed" in kwargs.keys() else 0
-
-		chosen_items: list[MovableItem] = []
-		holdables = [item for item in items if cls.can_hold(type(item))]
+	
+	def populate(self, items: list[MovableItem], max_allowed: int) -> None:
+		self.items = []
+		holdables = [item for item in items if self.can_hold(type(item))]
 		random.shuffle(holdables)
-		while len(holdables) > 0 and len(chosen_items) < max_allowed:
+		while len(holdables) > 0 and len(self.items) < max_allowed:
 			item = holdables.pop()
 			items.remove(item)
-			chosen_items.append(item)
-		container = cls.generate_empty(parent)
-		container.items = chosen_items
-		for item in chosen_items:
-			item.container = container
-			item.relative_location, item.extra_location_info = container.generate_relative_location()
-		random.shuffle(chosen_items)
-		return container, container.get_description(chosen_items)
+			self.items.append(item)
+		for item in self.items:
+			item.container = self
+			item.relative_location, item.extra_location_info = self.generate_relative_location()
+		random.shuffle(self.items)
 	
-	@staticmethod
-	@abstractmethod
-	def generate_empty(parent: Room) -> Container:
-		pass
-	
-	def get_description(self, items: list[MovableItem]) -> str:
-		if len(items) == 0:
+	def get_description(self) -> str:
+		if len(self.items) == 0:
 			return f"The {self.name} is empty. "
-		return f"The {self.name} has {self.get_item_list_description(items)}. "
+		return f"The {self.name} has {self.get_item_list_description(self.items)}. "
 	
 	@staticmethod
 	def get_item_list_description(item_list: list[MovableItem]) -> str:
@@ -416,11 +412,11 @@ class InteractableContainer(Container, StationaryInteractable):
 	def get_interactable_description(self) -> str:
 		pass
 
-	@classmethod
-	def generate_instance(cls, parent: Room, **kwargs) -> tuple[InteractableContainer, str]:
-		instance, description = super().generate_instance(parent, **kwargs)
-		assert isinstance(instance, InteractableContainer)
-		return instance, description + instance.get_interactable_description()
+	def get_container_description(self) -> str:
+		return Container.get_description(self)
+	
+	def get_description(self) -> str:
+		return self.get_container_description() + self.get_interactable_description()
 
 	@staticmethod
 	@abstractmethod
@@ -446,8 +442,8 @@ class Table(Container):
 		return True
 	
 	@staticmethod
-	def generate_empty(parent: Room) -> Table:
-		return Table("table", parent)
+	def generate_instance(parent: Room) -> tuple[Table, list[AccompanyingItem]]:
+		return Table("table", parent), []
 	
 	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
 		return "on", {}
@@ -477,12 +473,12 @@ class Shelf(Container):
 		return True
 	
 	@staticmethod
-	def generate_empty(parent: Room) -> Shelf:
-		return Shelf(parent, random.randint(Shelf.MIN_LEVELS, Shelf.MAX_LEVELS))
+	def generate_instance(parent: Room) -> tuple[Shelf, list[AccompanyingItem]]:
+		return Shelf(parent, random.randint(Shelf.MIN_LEVELS, Shelf.MAX_LEVELS)), []
 	
-	def get_description(self, items: list[MovableItem]) -> str:
+	def get_description(self) -> str:
 		items_by_level: dict[int, list[MovableItem]] = {level : [] for level in range(1, self.levels + 1)}
-		for item in items:
+		for item in self.items:
 			items_by_level[item.extra_location_info["level"]].append(item)
 		description = f"The shelf has {self.levels} levels. "
 		for level, item_list in items_by_level.items():
@@ -560,8 +556,8 @@ class Fridge(Container):
 		return "inside", {}
 
 	@staticmethod
-	def generate_empty(parent: Room) -> Container:
-		return Fridge("fridge", parent)
+	def generate_instance(parent: Room) -> tuple[Fridge, list[AccompanyingItem]]:
+		return Fridge("fridge", parent), []
 
 class Sink(InteractableContainer):
 	def __init__(self, name: str, parent: Room, faucet_on: bool) -> None:
@@ -602,8 +598,8 @@ class Sink(InteractableContainer):
 		]
 
 	@staticmethod
-	def generate_empty(parent: Room) -> Container:
-		return Sink("sink", parent, random.choice([True, False]))
+	def generate_instance(parent: Room) -> tuple[Sink, list[AccompanyingItem]]:
+		return Sink("sink", parent, random.choice([True, False])), []
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
 		return [Attribute("is_faucet_on", self.faucet_on)]
@@ -681,10 +677,12 @@ class Window(StationaryInteractable):
 		self.open = not self.open
 		return "I {} the blinds of the {}.".format("opened" if self.open else "closed", self.get_full_name_with_room())
 	
+	def get_description(self) -> str:
+		return "The window has blinds that can open and close. They are currently {}. ".format("open" if self.open else "closed")
+
 	@staticmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[Window, str]:
-		window = Window(parent, random.choice([True, False]))
-		return window, "The window has blinds that can open and close. They are currently {}. ".format("open" if window.open else "closed")
+	def generate_instance(parent: Room) -> tuple[Window, list[AccompanyingItem]]:
+		return Window(parent, random.choice([True, False])), []
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
@@ -717,10 +715,12 @@ class Light(StationaryInteractable):
 		self.on = not self.on
 		return "I turned {} the {}.".format("on" if self.on else "off", self.get_full_name_with_room())
 	
+	def get_description(self) -> str:
+		return "The light turns on and off. It is currently {}. ".format("on" if self.on else "off")
+	
 	@staticmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[Light, str]:
-		light = Light("overhead light", parent, random.choice([True, False]))
-		return light, "The light turns on and off. It is currently {}. ".format("on" if light.on else "off")
+	def generate_instance(parent: Room) -> tuple[Light, list[AccompanyingItem]]:
+		return Light("overhead light", parent, random.choice([True, False])), []
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
@@ -749,7 +749,6 @@ class TV(StationaryInteractable):
 			self.pddl_name = re.sub(r"[^a-zA-Z0-9]+", "-", name).lower()
 			self.entity_id = EntityID(self.pddl_name.replace("-", "_"), "tv_channel")
 
-	# CHANNELS = ["the Discovery Channel", "Cartoon Network", "NBC", "CNN", "Fox News", "ESPN"]
 	CHANNELS = [
 		Channel("the Discovery Channel"),
 		Channel("Cartoon Network"),
@@ -785,12 +784,14 @@ class TV(StationaryInteractable):
 		self.curr_channel = random.choice(TV.CHANNELS)
 		return f"I turned on the TV in {self.parent.name} and set it to {self.curr_channel.name}."
 	
+	def get_description(self) -> str:
+		if self.on:
+			return f"The TV is currently on and is playing {self.curr_channel.name}. "
+		return "The TV is currently off. "
+	
 	@staticmethod
-	def generate_instance(parent: Room, **kwargs) -> tuple[TV, str]:
-		tv = TV(parent, random.choice([True, False]), random.choice(TV.CHANNELS))
-		if tv.on:
-			return tv, f"The TV is currently on and is playing {tv.curr_channel.name}. "
-		return tv, "The TV is currently off. "
+	def generate_instance(parent: Room) -> tuple[TV, list[AccompanyingItem]]:
+		return TV(parent, random.choice([True, False]), random.choice(TV.CHANNELS)), []
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
@@ -906,17 +907,15 @@ class Room(ABC):
 	ROOM_PARAM = "?a"
 	ITEM_PARAM = "?b"
 
-	def __init__(self, name: str, pddl_name: str, yaml_name: str, movable_items: list[MovableItem]) -> None:
+	def __init__(self, name: str, pddl_name: str, yaml_name: str) -> None:
 		self.name = name
 		self.pddl_name = pddl_name
 		self.entity_id = EntityID(yaml_name, type(self).__name__.lower())
-		self.items: list[RoomItem] = []
+		self.items: list[StationaryItem] = []
 		self.queryable_items: list[Queryable] = []
 		self.yaml_instance: Instance
-		for item in movable_items:
-			self.add_item(item)
 	
-	def add_item(self, item: RoomItem) -> None:
+	def add_item(self, item: StationaryItem) -> None:
 		self.items.append(item)
 		if isinstance(item, Queryable):
 			self.queryable_items.append(item)
@@ -927,41 +926,34 @@ class Room(ABC):
 		pass
 
 	@classmethod
-	def generate_with_description(cls, movable_items: list[MovableItem]) -> tuple[Room, str] | None:
+	def generate_outline(cls) -> tuple[Room, list[AccompanyingItem]] | None:
 		room = cls.generate_empty()
 		if room is None:
-			return None
-		
-		item_descriptions: list[tuple[RoomItem, str]] = []
-		items: list[StationaryItem] = []
+			return room
 
-		num_container_types = 0
-		for item_type in stationary_types:
-			if issubclass(item_type, Container) and cls.can_hold(item_type):
-				num_container_types += 1
-
+		attributes: list[Attribute] = []
+		accompanying_items: list[AccompanyingItem] = []
 		for item_type in stationary_types:
 			if not cls.can_hold(item_type):
 				continue
-			item, description = item_type.generate_instance(room, items=movable_items, max_allowed=2)
-			items.append(item)
-			item_descriptions.append((item, description))
-		
-		attributes: list[Attribute] = []
-
-		random.shuffle(items)
-		for item in items:
+			item, additional = item_type.generate_instance(room)
 			room.add_item(item)
+			accompanying_items += additional
 			attributes.append(Attribute("has", item.entity_id))
+					
 		room.yaml_instance = Instance(room.entity_id, attributes)
+		return room, accompanying_items
+		
 
-		random.shuffle(item_descriptions)
+	def populate(self, movable_items: list[MovableItem]) -> str:
+		random.shuffle(self.items)
 		room_description = ""
-		for i, pair in enumerate(item_descriptions):
-			item, description = pair
-			room_description += "{}{} has a{} {}. ".format(room.name.capitalize(), "" if i == 0 else " also", "n" if item.name[0] in "aeiou" else "", item.name)
-			room_description += description
-		return room, room_description
+		for i, item in enumerate(self.items):
+			if isinstance(item, Container):
+				item.populate(movable_items, max_allowed=2)
+			room_description += "{}{} has a{} {}. ".format(self.name.capitalize(), "" if i == 0 else " also", "n" if item.name[0] in "aeiou" else "", item.name)
+			room_description += item.get_description()
+		return room_description
 	
 	def perform_action(self, person: Person) -> str | None:
 		usable_items = self.items.copy()
@@ -1031,7 +1023,7 @@ class Kitchen(Room):
 		if Kitchen.generated:
 			return None
 		Kitchen.generated = True
-		return Kitchen("the kitchen", "kitchen", "the_kitchen", [])
+		return Kitchen("the kitchen", "kitchen", "the_kitchen")
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -1044,7 +1036,7 @@ class LivingRoom(Room):
 		if LivingRoom.generated:
 			return None
 		LivingRoom.generated = True
-		return LivingRoom("the living room", "living-room", "the_living_room", [])
+		return LivingRoom("the living room", "living-room", "the_living_room")
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -1059,7 +1051,7 @@ class Bedroom(Room):
 		if len(Bedroom.available_names) == 0:
 			return None
 		name = Bedroom.available_names.pop(random.randrange(len(Bedroom.available_names)))
-		return Bedroom(f"{name}'s bedroom", f"{name.lower()}-bedroom", f"{name.lower()}_bedroom", [])
+		return Bedroom(f"{name}'s bedroom", f"{name.lower()}-bedroom", f"{name.lower()}_bedroom")
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
@@ -1089,21 +1081,25 @@ class DatasetGenerator:
 				self.movable_items.append(item)
 				count += 1
 		
-		remaining_movables = self.movable_items.copy()
 		for room_type in room_types:
 			count = 0
 			while count < DatasetGenerator.MAX_ROOMS / len(room_types):
-				pair = room_type.generate_with_description(remaining_movables)
+				pair = room_type.generate_outline()
 				if pair is None:
 					break
+				room, additional = pair
 				count += 1
-				room, description = pair
 				self.rooms.append(room)
-				self.description += description + "\n\n"
+				self.movable_items += additional
+		
+		remaining_movables = self.movable_items.copy()
+		for room in self.rooms:
+			self.description += room.populate(remaining_movables) + "\n\n"
 		for item in remaining_movables:
+			if isinstance(item, AccompanyingItem):
+				raise Exception("Unable to include AccompanyingItem: ", item.name)
 			self.movable_items.remove(item)
 		random.shuffle(self.movable_items)
-
 		random.shuffle(self.rooms)
 	
 	def generate_state_change(self) -> str:
@@ -1282,9 +1278,10 @@ def get_concrete_subtypes(initial_type: type[T]) -> list[type[T]]:
 
 item_types = get_concrete_subtypes(RoomItem)
 movable_types = get_concrete_subtypes(MovableItem)
+movable_types = [movable_type for movable_type in movable_types if not isinstance(movable_type, AccompanyingItem)]
 stationary_types = get_concrete_subtypes(StationaryItem)
 room_types = get_concrete_subtypes(Room)
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_queries=5, state_changes_per_query=0)
+	generator = DatasetGenerator("test", num_queries=10, state_changes_per_query=10)
 	generator.run()
