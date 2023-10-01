@@ -1,3 +1,4 @@
+import os
 import openai
 import json
 import subprocess
@@ -7,7 +8,12 @@ from dataset import Dataset
 from knowledge_representation import get_default_ltmc
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge
 
-openai.api_key = # API KEY
+# set API key
+openai_keys_file = os.path.join(os.getcwd(), "keys/openai_keys.txt")
+with open(openai_keys_file, "r") as f:
+    keys = f.read()
+keys = keys.strip().split('\n')
+os.environ["OPENAI_API_KEY"] = keys[0]
 
 class SQLAgent(Agent):
 	initial_prompt = \
@@ -17,140 +23,114 @@ class SQLAgent(Agent):
 
 ```
 
-/* A table of entity ids. An entity is either an object in the household or a concept. Each entity has a unique entity_id */
-CREATE TABLE entities
+/* Table of object names in the household with their corresponding concept name */
+CREATE TABLE objects
 (
-	entity_id SERIAL NOT NULL,
-	PRIMARY KEY (entity_id)
+    name            varchar(50) NOT NULL,
+    concept_name    varchar(50) NOT NULL,
+    PRIMARY KEY (name)
 );
 
-CREATE TYPE attribute_type as ENUM ('id', 'bool', 'int', 'float', 'str');
+CREATE TYPE attribute_type as ENUM ('other_object', 'bool', 'int', 'float', 'str');
 
-/* Table of the attributes that entities can have, including the name of the attribute and its data type */
-CREATE TABLE attributes
+/* Table of the attributes that objects can have, including the name of the attribute and its data type */
+CREATE TABLE attribute_names_and_types
 (
-	attribute_name varchar(24)    NOT NULL,
-	type           attribute_type NOT NULL,
-	PRIMARY KEY (attribute_name)
-);
-
-/* Table of concepts in the household, including the name and antity_id. */
-CREATE TABLE concepts
-(
-	entity_id int NOT NULL,
-	concept_name varchar(24) NOT NULL UNIQUE,
-	PRIMARY KEY (entity_id, concept_name),
-		FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
-
-/* A table with each entity's object type (its concept). */
-CREATE TABLE instance_of
-(
-	entity_id int NOT NULL,
-	concept_name varchar(24) NOT NULL,
-	PRIMARY KEY (entity_id, concept_name),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (concept_name)
-		REFERENCES concepts (concept_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
-
-
-/* A table of all the attributes objects have where the attribute is another entity (stored as the entity_id). It might be worthwhile to separately investigate attributes associated with the entity_ids found here */
-CREATE TABLE entity_attributes_id
-(
-	entity_id       int         NOT NULL,
-	attribute_name  varchar(24) NOT NULL,
-	attribute_value int         NOT NULL,
-	PRIMARY KEY (entity_id, attribute_name, attribute_value),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_name)
-		REFERENCES attributes (attribute_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_value)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
-
-/* A table of all the attributes objects have where the attribute is of type integer */
-CREATE TABLE entity_attributes_int
-(
-	entity_id       int         NOT NULL,
-	attribute_name  varchar(24) NOT NULL,
-	attribute_value int         NOT NULL,
-	PRIMARY KEY (entity_id, attribute_name, attribute_value),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_name)
-		REFERENCES attributes (attribute_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+    attribute_name varchar(50)    NOT NULL,
+    type           attribute_type NOT NULL,
+    PRIMARY KEY (attribute_name)
 );
 
 /* A table of all the attributes objects have where the attribute is of type string */
-CREATE TABLE entity_attributes_str
+CREATE TABLE object_attributes_str
 (
-	entity_id       int         NOT NULL,
-	attribute_name  varchar(24) NOT NULL,
-	attribute_value varchar(24) NOT NULL,
-	PRIMARY KEY (entity_id, attribute_name, attribute_value),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_name)
-		REFERENCES attributes (attribute_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+    name            varchar(50) NOT NULL,
+    attribute_name  varchar(50) NOT NULL,
+    attribute_value varchar(50) NOT NULL,
+    PRIMARY KEY (name, attribute_name, attribute_value),
+    FOREIGN KEY (name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE,
+        ON UPDATE CASCADE,
+    FOREIGN KEY (attribute_name)
+        REFERENCES attribute_names_and_types (attribute_name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+/* A table of all the attributes objects have where the attribute is of type integer */
+CREATE TABLE object_attributes_int
+(
+    name            varchar(50) NOT NULL,
+    attribute_name  varchar(50) NOT NULL,
+    attribute_value int         NOT NULL,
+    PRIMARY KEY (name, attribute_name, attribute_value),
+    FOREIGN KEY (name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE,
+        ON UPDATE CASCADE,
+    FOREIGN KEY (attribute_name)
+        REFERENCES attribute_names_and_types (attribute_name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 /* A table of all the attributes objects have where the attribute is of type float */
-CREATE TABLE entity_attributes_float
+CREATE TABLE object_attributes_float
 (
-	entity_id       int         NOT NULL,
-	attribute_name  varchar(24) NOT NULL,
-	attribute_value double precision NOT NULL,
-	PRIMARY KEY (entity_id, attribute_name, attribute_value),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_name)
-		REFERENCES attributes (attribute_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+    name            varchar(50) NOT NULL,
+    attribute_name  varchar(50) NOT NULL,
+    attribute_value double precision NOT NULL,
+    PRIMARY KEY (name, attribute_name, attribute_value),
+    FOREIGN KEY (name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE,
+        ON UPDATE CASCADE,
+    FOREIGN KEY (attribute_name)
+        REFERENCES attribute_names_and_types (attribute_name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 /* A table of all the attributes objects have where the attribute is of type boolean */
-CREATE TABLE entity_attributes_bool
+CREATE TABLE object_attributes_bool
 (
-	entity_id       int         NOT NULL,
-	attribute_name  varchar(24) NOT NULL,
-	attribute_value bool,
-	PRIMARY KEY (entity_id, attribute_name, attribute_value),
-	FOREIGN KEY (entity_id)
-		REFERENCES entities (entity_id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY (attribute_name)
-		REFERENCES attributes (attribute_name)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+    name            varchar(50) NOT NULL,
+    attribute_name  varchar(50) NOT NULL,
+    attribute_value bool,
+    PRIMARY KEY (name, attribute_name, attribute_value),
+    FOREIGN KEY (name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE,
+        ON UPDATE CASCADE,
+    FOREIGN KEY (attribute_name)
+        REFERENCES attribute_names_and_types (attribute_name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
+
+/* A table of all the attributes objects have where the attribute points to another object */
+/* It might be worthwhile to separately investigate attributes associated with the other objects found here*/
+CREATE TABLE object_attributes_other_object
+(
+    name            varchar(50) NOT NULL,
+    attribute_name  varchar(50) NOT NULL,
+    other_object_name   varchar(50) NOT NULL,
+    PRIMARY KEY (name, attribute_name, other_object_name),
+    FOREIGN KEY (name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE,
+        ON UPDATE CASCADE,
+    FOREIGN KEY (attribute_name)
+        REFERENCES attribute_names_and_types (attribute_name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (other_object_name)
+        REFERENCES objects (name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 ```
 
 """ \
@@ -215,11 +195,11 @@ CREATE TABLE entity_attributes_bool
 		concept_count, instance_count = populate_with_knowledge(get_default_ltmc(), all_knowledge)
 		if self.verbose:
 			print("Loaded {} concepts and {} instances".format(concept_count, instance_count))
-		self.attributes = self.run_psql_command("SELECT * FROM attributes")
-		self.entity_names = self.run_psql_command("SELECT * from entity_attributes_str WHERE attribute_name = 'name'")
+		self.objects = self.run_psql_command("SELECT * from objects")
+		self.attributes = self.run_psql_command("SELECT * FROM attribute_names_and_types")
 		if self.verbose:
+			print(self.objects)
 			print(self.attributes)
-			print(self.entity_names)
 	
 	def input_state_change(self, state_change: str) -> None:
 		pass
@@ -241,15 +221,15 @@ CREATE TABLE entity_attributes_bool
 					"name": "run_sql",
 					"arguments": \
 """{
-	"query": "SELECT * FROM attributes",
-	"reasoning": "I want to know what different attributes objects can have"
+	"query": "SELECT * from objects",
+	"reasoning": "I want to know the names and associated concepts of all the objects to find out which ones are relevant to the user query"
 }"""
 				}
 			},
 			{
 				"role": "function",
 				"name": "run_sql",
-				"content": self.attributes
+				"content": self.objects
 			},
 			{
 				"role": "assistant",
@@ -258,15 +238,15 @@ CREATE TABLE entity_attributes_bool
 					"name": "run_sql",
 					"arguments": \
 """{
-	"query": "SELECT entity_id, attribute_name, attribute_value from entity_attributes_str WHERE attribute_name = 'name'",
-	"reasoning": "I want to know the names of all the objects to find out which ones are relevant to the user query"
+	"query": "SELECT * FROM attribute_names_and_types",
+	"reasoning": "I want to know what different attributes objects can have"
 }"""
 				}
 			},
 			{
 				"role": "function",
 				"name": "run_sql",
-				"content": self.entity_names
+				"content": self.attributes
 			}
 		]
 

@@ -1,5 +1,4 @@
 import os
-
 from llama_index import GPTVectorStoreIndex
 from llama_index.data_structs.node import NodeWithScore
 from llama_index.indices.query.schema import QueryBundle
@@ -7,13 +6,15 @@ from llama_index.indices.response.type import ResponseMode
 from llama_index.data_structs import Node
 from llama_index.indices.postprocessor import FixedRecencyPostprocessor
 from llama_index.indices.postprocessor.types import BaseNodePostprocessor
-
 from simulation import Agent, Simulation
 from dataset import Dataset
 
-import openai
-openai.api_key = # API KEY
-os.environ['OPENAI_API_KEY'] = openai.api_key
+# set API key
+openai_keys_file = os.path.join(os.getcwd(), "keys/openai_keys.txt")
+with open(openai_keys_file, "r") as f:
+    keys = f.read()
+keys = keys.strip().split('\n')
+os.environ["OPENAI_API_KEY"] = keys[0]
 
 class OrderPostProcessor(BaseNodePostprocessor):
 	def __init__(self, initial_state: str) -> None:
