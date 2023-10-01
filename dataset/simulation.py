@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataset import Dataset
+from dataset.dataset import Dataset
 from openai.embeddings_utils import get_embedding
 import numpy as np
 import math

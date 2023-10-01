@@ -3,8 +3,8 @@ import openai
 import json
 import subprocess
 import tempfile
-from simulation import Agent, Simulation
-from dataset import Dataset
+from dataset.simulation import Agent, Simulation
+from dataset.dataset import Dataset
 from knowledge_representation import get_default_ltmc
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge
 

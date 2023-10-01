@@ -32,6 +32,17 @@ class Action:
 					+ "\t\t\t({})\n".format(")\n\t\t\t(".join(self.effects)) \
 					+ "\t\t)\n" \
 					+ "\t)\n"
+	
+class Goal:
+	def __init__(self, predicate_list: list[Predicate]) -> None:
+		self.predicate_list = predicate_list
+	
+	def __str__(self) -> str:
+		return f"\t(:goal\n" \
+					+ "\t\t(and\n" \
+						+ "\t\t\t({})\n".format(")\n\t\t\t(".join([str(predicate) for predicate in self.predicate_list])) \
+					+ "\t\t)" \
+				+ "\t)\n"
 
 class EntityID:
 	def __init__(self, name: str, concept: str):

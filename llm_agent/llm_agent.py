@@ -6,8 +6,8 @@ from llama_index.indices.response.type import ResponseMode
 from llama_index.data_structs import Node
 from llama_index.indices.postprocessor import FixedRecencyPostprocessor
 from llama_index.indices.postprocessor.types import BaseNodePostprocessor
-from simulation import Agent, Simulation
-from dataset import Dataset
+from dataset.simulation import Agent, Simulation
+from dataset.dataset import Dataset
 
 # set API key
 openai_keys_file = os.path.join(os.getcwd(), "keys/openai_keys.txt")
