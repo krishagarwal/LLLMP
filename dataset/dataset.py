@@ -166,25 +166,24 @@ class StationaryItem(RoomItem):
 class MovableItem(RoomItem, Queryable):
 	def __init__(self, name: str, token_name: str, shortened_name: str, use_default_article: bool = True) -> None:
 		super().__init__(name, token_name)
-		self.shortened_name = shortened_name
+		self.set_shortened_name(shortened_name, use_default_article)
 		self.container: Container | Person
 		self.relative_location: str | None = None
 		self.extra_location_info: dict[Any, Any] = {}
-		self.use_default_article = use_default_article
 	
 	def generate_query_answer(self) -> tuple[str, str]:
-		query = f"Where is the {self.shortened_name}?"
+		query = f"Where is {self.shortened_name}?"
 		if isinstance(self.container, Person):
-			answer = f"You are holding the {self.shortened_name}."
+			answer = f"You are holding {self.shortened_name}."
 		else:
-			answer = f"The {self.shortened_name} is {self.relative_location} the {self.container.get_full_name_with_room()}."
+			answer = f"{self.shortened_name.capitalize()} is {self.relative_location} the {self.container.get_full_name_with_room()}."
 		return query, answer
 	
 	def perform_action(self, person: Person) -> str | None:
 		if len(person.items) >= 3 or self in person.items:
 			return None
 		assert isinstance(self.container, Container)
-		action = "I picked up {}{} {} the {}.".format("the " if self.use_default_article else "", self.shortened_name, self.relative_location, self.container.get_full_name_with_room())
+		action = "I picked up {} {} the {}.".format(self.shortened_name, self.relative_location, self.container.get_full_name_with_room())
 		self.container.items.remove(self)
 		person.items.append(self)
 		self.container = person
@@ -217,6 +216,9 @@ class MovableItem(RoomItem, Queryable):
 			assert isinstance(extras, list)
 			attributes += extras
 		return attributes
+	
+	def set_shortened_name(self, shortened_name: str, use_default_article: bool) -> None:
+		self.shortened_name = "{}{}".format("the " if use_default_article else "", shortened_name)
 
 class AccompanyingItem(MovableItem):
 	def __init__(self, name: str, token_name: str, shortened_name: str, use_default_article: bool = True) -> None:
@@ -290,7 +292,7 @@ class Container(StationaryItem):
 			self.items.append(item)
 			item.container = self
 			item.relative_location, item.extra_location_info = self.generate_relative_location()
-			return f"I placed the {item.shortened_name} I was holding {item.relative_location} the {self.get_full_name_with_room()}."
+			return f"I placed {item.shortened_name} {item.relative_location} the {self.get_full_name_with_room()}."
 		return None
 		
 	@classmethod
@@ -364,7 +366,7 @@ class Container(StationaryItem):
 			item.container = self
 			item.relative_location, item.extra_location_info = self.generate_relative_location()
 			return Goal(
-				f"Place the {item.shortened_name} {item.relative_location} the {self.get_full_name_with_room()}.",
+				f"Place {item.shortened_name} {item.relative_location} the {self.get_full_name_with_room()}.",
 				[self.get_contains_predicate(self.token_name, item.token_name, **item.extra_location_info)]
 			)
 		return None
@@ -921,7 +923,7 @@ class TV(StationaryInteractable):
 		self.curr_channel = curr_channel
 		self.remote = remote
 		remote.name = f"remote for {parent.name} TV"
-		remote.shortened_name = remote.name
+		remote.set_shortened_name(remote.name, True)
 		self.remote.token_name = self.token_name + "_remote"
 	
 	def generate_query_answer(self) -> tuple[str, str]:
@@ -1540,6 +1542,5 @@ if __name__ == "__main__":
 To do:
 
 - Implement CollectiveGoals (lights, sinks, TVs)
-- Give agent PDDL actions (pick up/place item)
 
 """
