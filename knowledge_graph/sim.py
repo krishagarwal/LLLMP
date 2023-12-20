@@ -64,7 +64,7 @@ class KGAgent(KGBaseAgent):
 		return contents.format(**kwargs)
 	
 	def input_initial_state(self, initial_state: str, knowledge_yaml: str, predicate_names: list[str]) -> None:
-		os.system("$(rospack find knowledge_representation)/scripts/configure_postgresql.sh password")
+		os.system("$(rospack find knowledge_representation)/scripts/configure_postgresql.sh password >/dev/null 2>&1")
 		with tempfile.NamedTemporaryFile(mode='w') as temp_yaml_file:
 			temp_yaml_file.write(knowledge_yaml)
 			all_knowledge = [load_knowledge_from_yaml(temp_yaml_file.name)]
@@ -106,7 +106,8 @@ class KGAgent(KGBaseAgent):
 			prompt_type=PromptType.QUERY_KEYWORD_EXTRACT,
 		)
 		self.TRIPLET_FILTER_PROMPT = KGAgent.get_prompt_template("prompts/triplet_filter_prompt.txt")
-		self.TRIPLET_UPDATE_PROMPT = KGAgent.get_prompt_template("prompts/triplet_update_prompt.txt", predicate_names=", ".join(predicate_names))
+		self.TRIPLET_UPDATE_PROMPT = KGAgent.get_prompt_template("prompts/triplet_update_prompt.txt",
+											predicate_names=", ".join(predicate_names), entity_names=", ".join(entity_names))
 
 		self.llm = OpenAI(temperature=0, model="gpt-4")
 		service_context = ServiceContext.from_defaults(llm=self.llm)
@@ -155,7 +156,6 @@ class KGAgent(KGBaseAgent):
 		output += "------------------------------------------------\n"
 
 		# process the changes and commit to knowledge graph
-		print(triplet_updates)
 		update_lines = triplet_updates.split('\n')
 		remove_idx = update_lines.index("REMOVE:")
 		add_idx = update_lines.index("ADD:")
@@ -193,14 +193,14 @@ class KGSim:
 		print(f"Initial State:\n{self.dataset.initial_state}")
 		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_yaml, self.dataset.predicate_names)
 		for time_step in self.dataset:
-			print("Time: " + str(time_step["time"]))
 			if time_step["type"] == "state_change":
-				print(f"\nState change: {time_step['state_change']}")
+				print("\nTime: " + str(time_step["time"]))
+				print(f"State change: {time_step['state_change']}")
 				output = self.agent.input_state_change(time_step["state_change"])
 				print("Completed state change")
 
 				script = os.path.join(os.path.dirname(__file__), "configure_postgresql.sh")
-				os.system(f"{script} password knowledge_base_truth")
+				os.system(f"{script} password knowledge_base_truth >/dev/null 2>&1")
 				with tempfile.NamedTemporaryFile(mode='w') as temp_yaml_file:
 					temp_yaml_file.write(time_step["knowledge_yaml"])
 					all_knowledge = [load_knowledge_from_yaml(temp_yaml_file.name)]
@@ -233,6 +233,7 @@ class KGSim:
 					self.agent.close()
 					return
 				print("State change successful")
+		print("\nAll state changes successful")
 		self.agent.close()
 
 if __name__ == "__main__":

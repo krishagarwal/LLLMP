@@ -14,38 +14,30 @@ ADD:
 ```
 
 Here is the list of allowed relation types: {predicate_names}
+Here is the list of entities: {entity_names}
 
 Here is an example:
 ```
 ---------------------
-STATE CHANGE: I moved the bowl to the living room table.
+STATE CHANGE: I picked up Brenda's phone on the 8th level of the shelf in Patrick's bedroom.
 ---------------------
 RELEVANT RELATIONS:
-living_room -> instance_of -> room
-stephanie_bedroom -> instance_of -> room
-living_room -> has -> living_room_table
-bowl -> is_placed_at -> stephanie_bedroom_shelf
-bowl -> on_shelf -> stephanie_br_shelf_1
-bowl -> instance_of -> kitchenware
-stephanie_bedroom -> has -> stephanie_bedroom_shelf
-stephanie_bedroom_shelf -> has -> stephanie_br_shelf_1
-stephanie_bedroom_shelf -> has -> stephanie_br_shelf_2
-stephanie_bedroom_shelf -> has -> stephanie_br_shelf_3
-stephanie_bedroom_shelf -> has -> stephanie_br_shelf_4
-stephanie_bedroom_shelf -> in_room -> stephanie_bedroom
-stephanie_bedroom_shelf -> instance_of -> shelf
-stephanie_br_shelf_1 -> instance_of -> surface
-stephanie_bedroom -> instance_of -> room
-stephanie_br_shelf_2 -> instance_of -> surface
-stephanie_br_shelf_3 -> instance_of -> surface
-stephanie_br_shelf_4 -> instance_of -> surface
+brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf
+brenda_phone -> on_shelf_level -> shelf_level_8
+brenda_phone -> instance_of -> phone
+patrick_bedroom -> has -> patrick_bedroom_shelf
+patrick_bedroom_shelf -> in_room -> patrick_bedroom
+patrick_bedroom_shelf -> instance_of -> shelf
+patrick_bedroom -> instance_of -> bedroom
+patrick_bedroom -> has -> patrick_bedroom_shelf
+patrick_bedroom_shelf -> in_room -> patrick_bedroom
 ---------------------
 REMOVE:
-bowl -> is_placed_at -> stephanie_bedroom_shelf
-bowl -> on_shelf -> stephanie_br_shelf_1
+brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf
+brenda_phone -> on_shelf_level -> shelf_level_8
 
 ADD:
-bowl -> is_placed_at -> living_room_table
+brenda_phone -> in_hand -> me
 ```
 
 Here is the real problem:

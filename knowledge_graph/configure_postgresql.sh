@@ -26,6 +26,7 @@ else
   DB_NAME="knowledge_base"
 fi
 
+sudo -u postgres dropdb $DB_NAME --if-exists
 sudo -u postgres createdb $DB_NAME
 sudo -u postgres psql -d $DB_NAME -f $schema_path
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$ENTERED_PASSWORD'"
