@@ -7,6 +7,8 @@ from inspect import isabstract
 import re
 import os
 
+DIR = os.path.dirname(__file__)
+
 class Predicate:
 	def __init__(self, name: str, parameter_list: list[str]) -> None:
 		self.name = name
@@ -84,10 +86,13 @@ class Instance:
 		return yaml
 
 class RoomItem(ABC):
+	def initialize_entity_id(self):
+		self.entity_id = EntityID(self.token_name, type(self).__name__.lower())
+
 	def __init__(self, name: str, token_name: str) -> None:
 		self.name = name
 		self.token_name = token_name
-		self.entity_id = EntityID(token_name, type(self).__name__.lower())
+		self.initialize_entity_id()
 
 	@abstractmethod
 	def perform_action(self, person: Person) -> str | None:
@@ -739,7 +744,7 @@ class KitchenSink(InteractableContainer):
 		)
 
 class Book(MovableItem):
-	with open("book_titles.txt") as f:	
+	with open(os.path.join(DIR, "book_titles.txt")) as f:	
 		available_titles = f.read().splitlines()
 
 	def __init__(self, title: str) -> None:
@@ -757,7 +762,7 @@ class Book(MovableItem):
 		return None
 
 class Pen(MovableItem):
-	with open("colors.txt") as f:	
+	with open(os.path.join(DIR, "colors.txt")) as f:	
 		available_colors = f.read().lower().splitlines()
 
 	def __init__(self, color: str) -> None:
@@ -791,7 +796,7 @@ class Singleton(MovableItem):
 		return cls(names.pop(random.randrange(len(names))))
 
 class Food(Singleton, AccompanyingItem):
-	with open("foods.txt") as f:
+	with open(os.path.join(DIR, "foods.txt")) as f:
 		available_foods = f.read().lower().splitlines()
 	
 	@staticmethod
@@ -891,7 +896,6 @@ class Remote(AccompanyingItem):
 	def __init__(self, name: str) -> None:
 		token_name = re.sub(r"[^a-zA-Z0-9]+", "_", name).lower()
 		super().__init__(name, token_name, name, True)
-		self.name
 
 	@staticmethod
 	def generate_instance() -> Remote | None:
@@ -925,6 +929,7 @@ class TV(StationaryInteractable):
 		remote.name = f"remote for {parent.name} TV"
 		remote.set_shortened_name(remote.name, True)
 		self.remote.token_name = self.token_name + "_remote"
+		self.remote.initialize_entity_id()
 	
 	def generate_query_answer(self) -> tuple[str, str]:
 		query = f"Is the TV in {self.parent.name} on or off? If it's on, what channel is it playing?"
@@ -1005,7 +1010,7 @@ class TV(StationaryInteractable):
 		)
 
 class Phone(MovableInteractable):
-	with open("names.txt") as f:	
+	with open(os.path.join(DIR, "names.txt")) as f:	
 		available_names = f.read().splitlines()
 
 	def __init__(self, owner: str) -> None:
@@ -1049,7 +1054,7 @@ class Person:
 	def __init__(self) -> None:
 		self.items: list[MovableItem] = []
 		self.token_name = "me"
-		self.entity_id = EntityID("person_1", "person")
+		self.entity_id = EntityID(self.token_name, "person")
 	
 	@staticmethod
 	def get_in_hand_predicate(person_param: str, item_param: str) -> str:
@@ -1225,7 +1230,7 @@ class LivingRoom(Room):
 		return (not Kitchen.can_hold(stationary_type) and stationary_type != Sink) or stationary_type == Light
 
 class Bedroom(Room):
-	with open("names.txt") as f:	
+	with open(os.path.join(DIR, "names.txt")) as f:	
 		available_names = f.read().splitlines()
 	
 	@staticmethod
@@ -1361,8 +1366,11 @@ class DatasetGenerator:
 		os.makedirs(self.parent_dir, exist_ok=True)
 		with open(os.path.join(self.parent_dir, "initial_state.txt"), "w") as f:
 			f.write(self.description)
+		predicate_names, domain_pddl = self.generate_domain_pddl()
+		with open(os.path.join(self.parent_dir, "predicate_names.txt"), "w") as f:
+			f.write("\n".join(predicate_names))
 		with open(os.path.join(self.parent_dir, "domain.pddl"), "w") as f:
-			f.write(self.generate_domain_pddl())
+			f.write(domain_pddl)
 		with open(os.path.join(self.parent_dir, "problem.pddl"), "w") as f:
 			f.write(self.generate_problem_pddl())
 		with open(os.path.join(self.parent_dir, "knowledge.yaml"), "w") as f:
@@ -1400,7 +1408,7 @@ class DatasetGenerator:
 				time_step += 1
 	
 	@staticmethod
-	def generate_domain_pddl() -> str:
+	def generate_domain_pddl() -> tuple[list[str], str]:
 		predicates: list[Predicate] = Person.get_pddl_domain_predicates()
 		actions: list[Action] = []
 		required_types: list[str] = [Person.TYPE_NAME]
@@ -1416,10 +1424,13 @@ class DatasetGenerator:
 		predicates += AgentConstants.get_pddl_domain_predicates()
 		actions += AgentConstants.get_pddl_domain_actions()
 
+		predicate_names = [predicate.name for predicate in predicates]
+
 		formatted_predicates = [str(predicate) for predicate in predicates]
 		formatted_actions = [str(action) for action in actions]
 
-		return "(define (domain simulation)\n" \
+		return predicate_names, \
+				"(define (domain simulation)\n" \
 					+ "\t(:requirements :typing :negative-preconditions)\n" \
 					+ "\t(:types\n" \
 						+ "\t\t{}\n".format("\n\t\t".join(required_types)) \
@@ -1461,6 +1472,7 @@ class DatasetGenerator:
 			yaml += room.get_knowledge_yaml(1)
 		for item in self.movable_items:
 			yaml += item.get_yaml_instance().to_yaml(1)
+		yaml += self.person.get_yaml_instance().to_yaml(1)
 		return yaml
 
 
@@ -1468,6 +1480,8 @@ class Dataset:
 	def __init__(self, parent_dir: str) -> None:
 		with open(os.path.join(parent_dir, "initial_state.txt")) as f:
 			self.initial_state = f.read()
+		with open(os.path.join(parent_dir, "predicate_names.txt")) as f:
+			self.predicate_names = f.read().splitlines()
 		with open(os.path.join(parent_dir, "domain.pddl")) as f:
 			self.domain_pddl = f.read()
 		with open(os.path.join(parent_dir, "problem.pddl")) as f:
@@ -1477,6 +1491,7 @@ class Dataset:
 		
 		time_steps = os.listdir(parent_dir)
 		time_steps.remove("initial_state.txt")
+		time_steps.remove("predicate_names.txt")
 		time_steps.remove("domain.pddl")
 		time_steps.remove("problem.pddl")
 		time_steps.remove("knowledge.yaml")
@@ -1494,14 +1509,22 @@ class Dataset:
 					curr_data["query"] = f.read()
 				with open(os.path.join(curr_dir, "answer.txt")) as f:
 					curr_data["answer"] = f.read()
-			else:
-				curr_data["type"] = "state change"
+			elif time_step.endswith("state_change"):
+				curr_data["type"] = "state_change"
 				with open(os.path.join(curr_dir, "state_change.txt")) as f:
-					curr_data["state change"] = f.read()
+					curr_data["state_change"] = f.read()
 				with open(os.path.join(curr_dir, "problem.pddl")) as f:
-					curr_data["problem pddl"] = f.read()
+					curr_data["problem_pddl"] = f.read()
 				with open(os.path.join(curr_dir, "knowledge.yaml")) as f:
-					curr_data["knowledge yaml"] = f.read()
+					curr_data["knowledge_yaml"] = f.read()
+			elif time_step.endswith("goal"):
+				curr_data["type"] = "goal"
+				with open(os.path.join(curr_dir, "goal.txt")) as f:
+					curr_data["goal"] = f.read()
+				with open(os.path.join(curr_dir, "problem.pddl")) as f:
+					curr_data["problem_pddl"] = f.read()
+			else:
+				raise Exception("Invalid dataset directory:", time_step)
 			self.time_steps.append(curr_data)
 		
 		self.curr_time_step = -1
