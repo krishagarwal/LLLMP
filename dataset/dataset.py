@@ -87,7 +87,7 @@ class Instance:
 
 class RoomItem(ABC):
 	def initialize_entity_id(self):
-		self.entity_id = EntityID(self.token_name, type(self).__name__.lower())
+		self.entity_id = EntityID(self.token_name, self.get_type_name())
 
 	def __init__(self, name: str, token_name: str) -> None:
 		self.name = name
@@ -124,7 +124,7 @@ class RoomItem(ABC):
 		return [self.token_name + " - " + self.get_type_name()]
 	
 	@staticmethod
-	def get_static_pddl_objects() -> list[str]:
+	def get_static_entities() -> list[Instance]:
 		return []
 	
 	@abstractmethod
@@ -163,10 +163,10 @@ class StationaryItem(RoomItem):
 		return f"{self.name} in {self.parent.name}"
 	
 	def get_init_conditions(self) -> list[str]:
-		return [self.parent.get_in_room_predicate(self.parent.token_name, self.token_name)]
+		return [f"{Room.get_in_room_relation()} {self.parent.token_name} {self.token_name}"]
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("in_room", self.parent.entity_id)]
+		return [Attribute(Room.get_in_room_relation(), self.parent.entity_id)]
 
 class MovableItem(RoomItem, Queryable):
 	def __init__(self, name: str, token_name: str, shortened_name: str, use_default_article: bool = True) -> None:
@@ -215,7 +215,7 @@ class MovableItem(RoomItem, Queryable):
 		return [self.container.get_contains_predicate(self.container.token_name, self.token_name, **self.extra_location_info)]
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
-		attributes = [Attribute("held_by" if isinstance(self.container, Person) else "contained_by", self.container.entity_id)]
+		attributes = [Attribute(Person.get_in_hand_relation() if isinstance(self.container, Person) else self.container.get_contains_relation(), self.container.entity_id)]
 		if "extra_attributes" in self.extra_location_info.keys():
 			extras = self.extra_location_info.get("extra_attributes")
 			assert isinstance(extras, list)
@@ -233,8 +233,8 @@ class AccompanyingItem(MovableItem):
 		return None
 
 class Container(StationaryItem):
-	CONTAINER_PARAM = "?a"
-	ITEM_PARAM = "?b"
+	ITEM_PARAM = "?a"
+	CONTAINER_PARAM = "?b"
 	PERSON_PARAM = "?c"
 	EXTRA_INFO: dict[str, Any] = {}
 
@@ -301,8 +301,8 @@ class Container(StationaryItem):
 		return None
 		
 	@classmethod
-	def get_contains_predicate_name(cls) -> str:
-		return f"{cls.get_type_name()}_contains"
+	def get_contains_relation(cls) -> str:
+		return f"contained_by_{cls.get_type_name()}"
 
 	@classmethod
 	def get_place_action_name(cls) -> str:
@@ -314,16 +314,16 @@ class Container(StationaryItem):
 	
 	@classmethod
 	def get_contains_predicate(cls, container_param: str, item_param: str, **kwargs) -> str:
-		return f"{cls.get_contains_predicate_name()} {container_param} {item_param}"
+		return f"{cls.get_contains_relation()} {item_param} {container_param}"
 
 	@classmethod
 	def get_default_parameter_list(cls) -> list[str]:
 		holdable_types = [holdable_type.get_type_name() for holdable_type in cls.get_holdable_types()]
-		return [f"{cls.CONTAINER_PARAM} - {cls.get_type_name()}", "{} - (either {})".format(cls.ITEM_PARAM, " ".join(holdable_types))]
+		return ["{} - (either {})".format(cls.ITEM_PARAM, " ".join(holdable_types)), f"{cls.CONTAINER_PARAM} - {cls.get_type_name()}"]
 	
 	@classmethod
 	def get_pddl_domain_predicates(cls) -> list[Predicate]:
-		return [Predicate(cls.get_contains_predicate_name(), cls.get_default_parameter_list())]
+		return [Predicate(cls.get_contains_relation(), cls.get_default_parameter_list())]
 	
 	@classmethod
 	def get_place_action(cls) -> Action:
@@ -354,12 +354,6 @@ class Container(StationaryItem):
 	@classmethod
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		return [cls.get_place_action(), cls.get_remove_action()]
-	
-	def get_yaml_attributes(self) -> list[Attribute]:
-		attributes = StationaryItem.get_yaml_attributes(self)
-		for item in self.items:
-			attributes.append(Attribute("has_object", item.entity_id))
-		return attributes
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		random.shuffle(all_items)
@@ -503,16 +497,17 @@ class Shelf(Container):
 	MAX_LEVELS = 10
 	LEVEL_PARAM = "?c"
 	PERSON_PARAM = "?d"
-	LEVEL_TYPE = "level"
+	LEVEL_TYPE = "shelf_level"
 	EXTRA_INFO: dict[str, Any] = {"pddl_level" : LEVEL_PARAM}
 
 	@staticmethod
 	def get_level_name(level: int) -> str:
-		return "level_" + str(level)
+		return "shelf_level_" + str(level)
 	
-	LEVEL_OBJECTS: list[str] = []
+	LEVEL_OBJECTS: list[Instance] = []
 	for i in range(MAX_LEVELS):
-		LEVEL_OBJECTS.append(get_level_name.__func__(i + 1) + " - " + LEVEL_TYPE)
+		LEVEL_OBJECTS.append(Instance(EntityID(get_level_name.__func__(i + 1), LEVEL_TYPE), []))
+		# LEVEL_OBJECTS.append(get_level_name.__func__(i + 1) + " - " + LEVEL_TYPE)
 
 	def __init__(self, parent: Room, levels: int) -> None:
 		super().__init__("shelf", parent)
@@ -539,7 +534,12 @@ class Shelf(Container):
 	
 	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
 		level = random.randrange(self.levels) + 1
-		return f"on the {Shelf.integer_to_ordinal(level)} level of", {"level" : level, "pddl_level": self.get_level_name(level), "extra_attributes": [Attribute("on_shelf_level", level)]}
+		return f"on the {Shelf.integer_to_ordinal(level)} level of", \
+				{
+					"level" : level,
+					"pddl_level": self.get_level_name(level),
+					"extra_attributes": [Attribute("on_shelf_level", Shelf.LEVEL_OBJECTS[level - 1].entity_id)]
+				}
 
 	@staticmethod
 	def integer_to_ordinal(number):
@@ -590,11 +590,12 @@ class Shelf(Container):
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
 		attributes = Container.get_yaml_attributes(self)
-		attributes.append(Attribute("num_levels", self.levels))
+		for i in range(self.levels):
+			attributes.append(Attribute("shelf_has_level", Shelf.LEVEL_OBJECTS[i].entity_id))
 		return attributes
 	
 	@staticmethod
-	def get_static_pddl_objects() -> list[str]:
+	def get_static_entities() -> list[Instance]:
 		return Shelf.LEVEL_OBJECTS
 
 class Fridge(Container):
@@ -638,6 +639,8 @@ class Fridge(Container):
 
 
 class Sink(StationaryInteractable):
+	FAUCET_ON_RELATION = "faucet_on"
+
 	def __init__(self, name: str, parent: Room, faucet_on: bool) -> None:
 		super().__init__(name, parent)
 		self.faucet_on = faucet_on
@@ -651,22 +654,22 @@ class Sink(StationaryInteractable):
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
-		return [Predicate("faucet_on", ["?a - " + Sink.get_type_name()])]
+		return [Predicate(Sink.FAUCET_ON_RELATION, ["?a - " + Sink.get_type_name()])]
 	
 	@staticmethod
 	def get_pddl_domain_actions() -> list[Action]:
 		return [
-			Action("turn_on_faucet", ["?a - " + Sink.get_type_name()], ["not (faucet_on ?a)"], ["faucet_on ?a"]),
-			Action("turn_off_faucet", ["?a - " + Sink.get_type_name()], ["faucet_on ?a"], ["not (faucet_on ?a)"])
+			Action("turn_on_faucet", ["?a - " + Sink.get_type_name()], [f"not ({Sink.FAUCET_ON_RELATION} ?a)"], [f"{Sink.FAUCET_ON_RELATION} ?a"]),
+			Action("turn_off_faucet", ["?a - " + Sink.get_type_name()], [f"{Sink.FAUCET_ON_RELATION} ?a"], [f"not ({Sink.FAUCET_ON_RELATION} ?a)"])
 		]
 	
 	def get_special_init_conditions(self) -> list[str]:
 		if self.faucet_on:
-			return ["faucet_on " + self.token_name]
+			return [f"{Sink.FAUCET_ON_RELATION} {self.token_name}"]
 		return []
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("is_faucet_on", self.faucet_on)]
+		return [Attribute(Sink.FAUCET_ON_RELATION, self.faucet_on)]
 	
 	@staticmethod
 	def generate_instance(parent: Room) -> tuple[Sink, list[AccompanyingItem]]:
@@ -700,7 +703,7 @@ class KitchenSink(InteractableContainer):
 	
 	def get_special_init_conditions(self) -> list[str]:
 		if self.faucet_on:
-			return ["kitchen_faucet_on " + self.token_name]
+			return [f"{Sink.FAUCET_ON_RELATION} {self.token_name}"]
 		return []
 	
 	def get_interactable_description(self) -> str:
@@ -708,15 +711,16 @@ class KitchenSink(InteractableContainer):
 	
 	@staticmethod
 	def get_special_domain_predicates() -> list[Predicate]:
-		return [Predicate("kitchen_faucet_on", ["?a - " + KitchenSink.get_type_name()])]
+		return []
 	
 	@staticmethod
 	def get_special_domain_actions() -> list[Action]:
-		return [
-			Action("turn_on_kitchen_faucet", ["?a - " + KitchenSink.get_type_name()], ["not (kitchen_faucet_on ?a)"], ["kitchen_faucet_on ?a"]),
-			Action("turn_off_kitchen_faucet", ["?a - " + KitchenSink.get_type_name()], ["kitchen_faucet_on ?a"], ["not (kitchen_faucet_on ?a)"])
-		]
-
+		return []
+	
+	@classmethod
+	def get_required_types(cls) -> list[str]:
+		return [f"{cls.get_type_name()} - {Sink.get_type_name()}"]
+	
 	@staticmethod
 	def generate_instance(parent: Room) -> tuple[KitchenSink, list[Kitchenware]]:
 		dishes: list[Kitchenware] = []
@@ -727,7 +731,7 @@ class KitchenSink(InteractableContainer):
 		return KitchenSink("sink", parent, random.choice([True, False]), dishes), dishes
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("is_kitchen_faucet_on", self.faucet_on)]
+		return [Attribute(Sink.FAUCET_ON_RELATION, self.faucet_on)]
 	
 	def generate_interactable_goal(self, all_items: list[MovableItem]) -> Goal | None:
 		predicates: list[str] = []
@@ -846,7 +850,7 @@ class Window(StationaryInteractable):
 		return []
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("is_window_open", self.open)]
+		return [Attribute("window_open", self.open)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		return None
@@ -887,7 +891,7 @@ class Light(StationaryInteractable):
 		return []
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("is_light_on", self.on)]
+		return [Attribute("light_on", self.on)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		return None
@@ -907,7 +911,7 @@ class TV(StationaryInteractable):
 		def __init__(self, name: str) -> None:
 			self.name = name
 			self.token_name = re.sub(r"[^a-zA-Z0-9]+", "_", name).lower()
-			self.entity_id = EntityID(self.token_name, "tv_channel")
+			self.entity_id = EntityID(self.token_name, "channel")
 
 	CHANNELS = [
 		Channel("the Discovery Channel"),
@@ -917,9 +921,7 @@ class TV(StationaryInteractable):
 		Channel("Fox News"),
 		Channel("ESPN")
 	]
-	CHANNEL_OBJECTS = []
-	for channel in CHANNELS:
-		CHANNEL_OBJECTS.append(channel.token_name + " - " + Channel.TYPE_NAME)
+	CHANNEL_OBJECTS = [Instance(channel.entity_id, []) for channel in CHANNELS]
 
 	def __init__(self, parent: Room, on: bool, curr_channel: Channel, remote: Remote) -> None:
 		super().__init__("TV", parent)
@@ -986,13 +988,13 @@ class TV(StationaryInteractable):
 		return []
 	
 	@staticmethod
-	def get_static_pddl_objects() -> list[str]:
+	def get_static_entities() -> list[Instance]:
 		return TV.CHANNEL_OBJECTS
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		attributes = [Attribute("is_tv_on", self.on)]
-		if (self.on):
-			attributes.append(Attribute("channel_playing", self.channel.entity_id))
+		attributes = [Attribute("tv_on", self.on)]
+		if self.on:
+			attributes.append(Attribute("tv_playing_channel", self.curr_channel.entity_id))
 		return attributes
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
@@ -1044,7 +1046,7 @@ class Phone(MovableInteractable):
 		return Phone(Phone.available_names.pop(random.randrange(len(Phone.available_names))))
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute("is_phone_ringing", self.ringing)]
+		return [Attribute("phone_ringing", self.ringing)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		return None
@@ -1054,16 +1056,20 @@ class Person:
 	def __init__(self) -> None:
 		self.items: list[MovableItem] = []
 		self.token_name = "me"
-		self.entity_id = EntityID(self.token_name, "person")
+		self.entity_id = EntityID(self.token_name, Person.TYPE_NAME)
+	
+	@staticmethod
+	def get_in_hand_relation() -> str:
+		return "in_hand"
 	
 	@staticmethod
 	def get_in_hand_predicate(person_param: str, item_param: str) -> str:
-		return f"in_person_hand {person_param} {item_param}"
+		return f"{Person.get_in_hand_relation()} {item_param} {person_param}"
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
 		return [
-			Predicate("in_person_hand", [f"?a - {Person.TYPE_NAME}", "?b - (either {})".format(" ".join([movable_type.get_type_name() for movable_type in movable_types]))]),
+			Predicate(Person.get_in_hand_relation(), ["?a - (either {})".format(" ".join([movable_type.get_type_name() for movable_type in movable_types])), f"?b - {Person.TYPE_NAME}"]),
 		]
 	
 	def get_pddl_objects(self) -> list[str]:
@@ -1073,10 +1079,7 @@ class Person:
 		return []
 	
 	def get_yaml_instance(self) -> Instance:
-		attributes: list[Attribute] = []
-		for item in self.items:
-			attributes.append(Attribute("is_holding", item.entity_id))
-		return Instance(self.entity_id, attributes)
+		return Instance(self.entity_id, [])
 
 item_types: list[type[RoomItem]]
 movable_types: list[type[MovableItem]]
@@ -1085,6 +1088,7 @@ stationary_types: list[type[StationaryItem]]
 class Room(ABC):
 	ROOM_PARAM = "?a"
 	ITEM_PARAM = "?b"
+	TYPE_NAME = "room"
 
 	def __init__(self, name: str, token_name: str) -> None:
 		self.name = name
@@ -1163,27 +1167,15 @@ class Room(ABC):
 	@classmethod
 	def get_holdable_items(cls) -> list[type[StationaryItem]]:
 		return [stationary_type for stationary_type in stationary_types if cls.can_hold(stationary_type)]
-	
-	@classmethod
-	def get_in_room_predicate_name(cls) -> str:
-		return "in_" + cls.get_type_name()
-	
-	@classmethod
-	def get_in_room_predicate(cls, room_param: str, container_param: str) -> str:
-		return f"{cls.get_in_room_predicate_name()} {room_param} {container_param}"
-	
-	@classmethod
-	def get_pddl_domain_predicates(cls) -> list[Predicate]:
-		holdable_types = [item_type.get_type_name() for item_type in cls.get_holdable_items()]
-		return [Predicate(cls.get_in_room_predicate_name(), [cls.ROOM_PARAM + " - " + cls.get_type_name(), "{} - (either {})".format(cls.ITEM_PARAM, " ".join(holdable_types))])]
-	
-	@classmethod
-	def get_type_name(cls) -> str:
-		return cls.__name__.lower()
 
-	@classmethod
-	def get_required_types(cls) -> list[str]:
-		return [cls.get_type_name()]
+	@staticmethod
+	def get_in_room_relation() -> str:
+		return "in_room"
+	
+	@staticmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		holdable_types = [item_type.get_type_name() for item_type in stationary_types]
+		return [Predicate(Room.get_in_room_relation(), [Room.ROOM_PARAM + " - " + Room.TYPE_NAME, "{} - (either {})".format(Room.ITEM_PARAM, " ".join(holdable_types))])]
 	
 	def get_init_conditions(self) -> list[str]:
 		init_conditions: list[str] = []
@@ -1192,7 +1184,7 @@ class Room(ABC):
 		return init_conditions
 	
 	def get_pddl_objects(self) -> list[str]:
-		objects: list[str] = [self.token_name + " - " + self.get_type_name()]
+		objects: list[str] = [self.token_name + " - " + Room.TYPE_NAME]
 		for item in self.items:
 			objects += item.get_pddl_objects()
 		return objects
@@ -1249,13 +1241,13 @@ room_types: list[type[Room]]
 class AgentConstants:
 	@staticmethod
 	def get_holding_predicate(item_param: str) -> str:
-		return f"holding {item_param}"
+		return f"held_by_robot {item_param}"
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
 		type_list = "(either {})".format(" ".join([t.get_type_name() for t in movable_types]))
 		return [Predicate(
-			"holding",
+			"held_by_robot",
 			[f"?a - {type_list}"]
 		)]
 	
@@ -1267,20 +1259,20 @@ class AgentConstants:
 			Action(
 				"pick_up",
 				[f"?a - {type_list}"],
-				["not (holding ?a)"],
-				["holding ?a"]
+				["not (held_by_robot ?a)"],
+				["held_by_robot ?a"]
 			),
 			Action(
 				"hand_to_person",
 				[f"?a - {type_list}", f"?b - {Person.TYPE_NAME}"],
-				["holding ?a"],
-				["not (holding ?a)", in_person_hand_predicate]
+				["held_by_robot ?a"],
+				["not (held_by_robot ?a)", in_person_hand_predicate]
 			),
 			Action(
 				"take_from_person",
 				[f"?a - {type_list}", f"?b - {Person.TYPE_NAME}"],
 				[in_person_hand_predicate],
-				[f"not ({in_person_hand_predicate})", "holding ?a"]
+				[f"not ({in_person_hand_predicate})", "held_by_robot ?a"]
 			)
 		]
 
@@ -1409,17 +1401,13 @@ class DatasetGenerator:
 	
 	@staticmethod
 	def generate_domain_pddl() -> tuple[list[str], str]:
-		predicates: list[Predicate] = Person.get_pddl_domain_predicates()
+		predicates: list[Predicate] = Person.get_pddl_domain_predicates() + Room.get_pddl_domain_predicates()
 		actions: list[Action] = []
-		required_types: list[str] = [Person.TYPE_NAME]
+		required_types: list[str] = [Person.TYPE_NAME, Room.TYPE_NAME]
 		for item_type in item_types:
 			predicates += item_type.get_pddl_domain_predicates()
 			actions += item_type.get_pddl_domain_actions()
 			required_types += item_type.get_required_types()		
-		
-		for room_type in room_types:
-			predicates += room_type.get_pddl_domain_predicates()
-			required_types += room_type.get_required_types()
 		
 		predicates += AgentConstants.get_pddl_domain_predicates()
 		actions += AgentConstants.get_pddl_domain_actions()
@@ -1452,8 +1440,8 @@ class DatasetGenerator:
 			objects += item.get_pddl_objects()
 			init_conditions += item.get_init_conditions()
 		
-		for item_type in item_types:
-			objects += item_type.get_static_pddl_objects()
+		for entity in static_entities:
+			objects.append(f"{entity.entity_id.name} - {entity.entity_id.concept}")
 		
 		return "(define (problem simulation-a)\n" \
 					+ "\t(:domain simulation)\n" \
@@ -1472,6 +1460,8 @@ class DatasetGenerator:
 			yaml += room.get_knowledge_yaml(1)
 		for item in self.movable_items:
 			yaml += item.get_yaml_instance().to_yaml(1)
+		for item in static_entities:
+			yaml += item.to_yaml(1)
 		yaml += self.person.get_yaml_instance().to_yaml(1)
 		return yaml
 
@@ -1554,16 +1544,10 @@ movable_types = get_concrete_subtypes(MovableItem)
 creatable_movable_types = [movable_type for movable_type in movable_types if not issubclass(movable_type, AccompanyingItem)]
 stationary_types = get_concrete_subtypes(StationaryItem)
 room_types = get_concrete_subtypes(Room)
+static_entities: list[Instance] = []
+for item_type in item_types:
+	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_state_changes=100, state_changes_per_query=10, state_changes_per_goal=10)
+	generator = DatasetGenerator("test", num_state_changes=25, state_changes_per_query=25, state_changes_per_goal=25)
 	generator.run()
-
-
-"""
-
-To do:
-
-- Implement CollectiveGoals (lights, sinks, TVs)
-
-"""
