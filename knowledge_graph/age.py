@@ -54,7 +54,7 @@ class AgeGraphStore(GraphStore):
         for subj in subjs:
             rel_map[subj] = []
 
-        subjs_str = "['" + "', '".join(subjs) + "']"
+        subjs_str = '["' + '", "'.join(subjs) + '"]'
 
         query = (f"SELECT * FROM ag_catalog.cypher('{self._graph_name}', $$ "
                  f"MATCH p=(n1:{self._node_label})-[*1..{depth}]-() "
