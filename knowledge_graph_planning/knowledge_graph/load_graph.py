@@ -6,7 +6,7 @@ def load_graph(db_name: str, graph_name: str):
 
     BUILD_INDEX = False
 
-    from age import AgeGraphStore
+    from knowledge_graph.age import AgeGraphStore
     graph_store = AgeGraphStore(
         dbname=db_name,
         user="postgres",

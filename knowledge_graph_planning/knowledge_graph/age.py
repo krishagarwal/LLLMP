@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 from llama_index.graph_stores.types import GraphStore
 
-class AgeGraphStore(GraphStore):
+class AgeGraphStore(GraphStore): # type: ignore
     def __init__(
         self,
         dbname: str,
