@@ -188,7 +188,7 @@ class MovableItem(RoomItem, Queryable):
 		if len(person.items) >= 3 or self in person.items:
 			return None
 		assert isinstance(self.container, Container)
-		action = "I picked up {} {} the {}.".format(self.shortened_name, self.relative_location, self.container.get_full_name_with_room())
+		action = "I picked up {}.".format(self.shortened_name)
 		self.container.items.remove(self)
 		person.items.append(self)
 		self.container = person
@@ -1562,5 +1562,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_state_changes=1, state_changes_per_query=1, state_changes_per_goal=1)
+	generator = DatasetGenerator("test", num_state_changes=50, state_changes_per_query=100, state_changes_per_goal=5)
 	generator.run()

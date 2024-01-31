@@ -153,7 +153,7 @@ class KGAgent(KGBaseAgent):
 		return " -> ".join(components)
 
 	def input_state_change(self, state_change: str) -> None:
-		log_file = os.path.join(self.log_dir, f"state_change_{self.time}.log")
+		log_file = os.path.join(self.log_dir, f"state_change_{self.time:02d}.log")
 		with open(log_file, "w") as f:
 			f.write(f"STATE CHANGE: {state_change}\n")
 		
@@ -208,7 +208,7 @@ class KGAgent(KGBaseAgent):
 			with redirect_stdout(f):
 				nodes = self.query_engine.retrieve("I have a task for the robot: " + query) # type: ignore
 
-		objects = set()
+		# objects = set(["me"])
 		# constants = {'Cold', 'Hot', 'RoomTemp', 'Water', 'Coffee', 'Wine'}
 		init_block = "\t(:init\n"
 		for rel in nodes[0].metadata['kg_rel_text']:
@@ -219,21 +219,21 @@ class KGAgent(KGBaseAgent):
 				continue
 			elif arg2 == 'True':
 				init_block += f"\t\t({predicate} {arg1})\n"
-				if arg1 != "Robot":
-					objects.add(arg1)
+				# if arg1 != "Robot":
+				# 	objects.add(arg1)
 			elif arg2 == 'None' or arg2 == 'False':
 				continue
 			else:
 				init_block += f"\t\t({predicate} {arg1} {arg2})\n"
-				if arg1 != "Robot":
-					objects.add(arg1)
-				objects.add(arg2)
+				# if arg1 != "Robot":
+				# 	objects.add(arg1)
+				# objects.add(arg2)
 				# if arg2 not in constants:
 				# 	objects.add(arg2)
 		init_block += "\t)\n"
 		objects_block = "\t(:objects\n"
-		for obj in objects:
-			objects_block += f"\t\t{obj} - {self.entity_types[obj]}\n"
+		for obj, obj_type in self.entity_types.items():
+			objects_block += f"\t\t{obj} - {obj_type}\n"
 		objects_block += "\t)\n"
 
 		plan_query_prompt = self.PLAN_QUERY_TEMPLATE.format(task_nl=query)
@@ -246,13 +246,13 @@ class KGAgent(KGBaseAgent):
 					 f"\t{goal_block}\n)"
 
 		# B. write the problem file into the problem folder
-		task_pddl_file_name = self.log_dir + "/problem_" + str(self.time) + ".pddl"
+		task_pddl_file_name = self.log_dir + f"/problem_{self.time:02d}.pddl"
 		with open(task_pddl_file_name, "w") as f:
 			f.write(task_pddl_)
 		time.sleep(1)
 
 		# C. run lapkt to plan
-		plan_file_name = self.log_dir + "/plan_" + str(self.time) + ".pddl"
+		plan_file_name = self.log_dir + f"/plan_{self.time:02d}.pddl"
 
 		project_dir = Path(__file__).parent.parent.parent.as_posix()
 		os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \

@@ -2,7 +2,8 @@ I have a knowledge graph that represents a household. A state change in the hous
 is provided below. A set of relevant relations in the knowledge graph is also provided.
 Based on the state change, determine which of the relations should be removed and what
 new relations should be added. Only add and remove relations that are strictly necessary
-for the state update. Each update must appear in a triplet form.
+for the state update. Each update must appear in a triplet form. For relations that have
+boolean values, if you remove the existing one, make sure to add in the negation.
 
 Provide your response in the following format:
 ```
@@ -19,7 +20,7 @@ Here is the list of entities: {entity_names}
 Here is an example:
 ```
 ---------------------
-STATE CHANGE: I picked up Brenda's phone on the 8th level of the shelf in Patrick's bedroom.
+STATE CHANGE: I picked up Brenda's phone.
 ---------------------
 RELEVANT RELATIONS:
 brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf

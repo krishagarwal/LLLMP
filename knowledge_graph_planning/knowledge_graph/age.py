@@ -55,6 +55,8 @@ class AgeGraphStore(GraphStore): # type: ignore
         if subjs is None or len(subjs) == 0:
             # unlike simple graph_store, we don't do get_all here
             return rel_map
+        
+        subjs = [subj.replace('"', '') for subj in subjs]
 
         for subj in subjs:
             rel_map[subj] = []

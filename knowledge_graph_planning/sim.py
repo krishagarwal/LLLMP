@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import os
 import psycopg2
 from pathlib import Path
+from difflib import ndiff
 
 from dataset.simulation import Dataset
 
@@ -23,11 +24,13 @@ os.environ["OPENAI_API_KEY"] = keys[0]
 project_dir = Path(__file__).parent.parent.as_posix()
 
 class KGSim:
-	def __init__(self, dataset: Dataset, agent: KGBaseAgent) -> None:
+	def __init__(self, dataset: Dataset, agent: KGBaseAgent, log_dir: str) -> None:
 		self.dataset = dataset
 		self.agent = agent
+		self.log_dir = log_dir
 	
 	def run(self):
+		previous_diff = []
 		print(f"Initial State:\n{self.dataset.initial_state}")
 		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_path, self.dataset.predicate_names, self.dataset.domain_path)
 		for time_step in self.dataset:
@@ -53,17 +56,11 @@ class KGSim:
 				os.remove(os.path.join(project_dir, plan_file))
 				
 				if true_plan != predicted_plan:
-					print("Conflicting predicted plan and true plan.")
-					print("---------------------")
-					print("EXPECTED PLAN:")
-					print("\n".join(true_plan))
-					print("---------------------")
-					print("PREDICTED TRIPLETS:")
-					print("\n".join(predicted_plan))
-					self.agent.close()
-					return
-				
-				print("Plan is correct")
+					print("Conflicting expected plan and predicted plan")
+					with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_plan.diff"), "w") as f:
+						f.write("\n".join(ndiff(true_plan, predicted_plan)))
+				else:
+					print("Plan is correct")
 
 			else:
 				continue
@@ -90,21 +87,17 @@ class KGSim:
 			triplets_pred.sort()
 
 			if triplets_pred != triplets_truth:
-				print("Failed update")
-				print("---------------------")
-				print("EXPECTED TRIPLETS:")
-				print("\n".join(triplets_truth))
-				print("---------------------")
-				print("PREDICTED TRIPLETS:")
-				print("\n".join(triplets_pred))
-				self.agent.close()
-				return
-			
-			print("Update successful")
+				diff = list(item for item in ndiff(triplets_truth, triplets_pred) if item[0] != ' ')
+				print("Conflicting expected and predicted state", "(same as last discrepancy)" if previous_diff == diff else "")
+				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}.diff"), "w") as f:
+					f.write("\n".join(diff))
+				previous_diff = diff
+			else:
+				print("Update successful")
 			
 		print("\nAll updates successful")
 		self.agent.close()
 
 if __name__ == "__main__":
-	sim = KGSim(Dataset("test"), KGAgent("output"))
+	sim = KGSim(Dataset("test"), KGAgent("output"), "output")
 	sim.run()
