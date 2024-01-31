@@ -1,7 +1,8 @@
 household*/
 test*/
+output/
 sample/
 __pycache__/
 .vscode/
 keys/
-.gitignore
+sandbox/
