@@ -212,7 +212,7 @@ class MovableItem(RoomItem, Queryable):
 	def get_init_conditions(self) -> list[str]:
 		if isinstance(self.container, Person):
 			return [Person.get_in_hand_predicate(self.container.token_name, self.token_name)]
-		return [self.container.get_contains_predicate(self.container.token_name, self.token_name, **self.extra_location_info)]
+		return self.container.get_contains_predicates(self.container.token_name, self.token_name, **self.extra_location_info)
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
 		attributes = [Attribute(Person.get_in_hand_relation() if isinstance(self.container, Person) else self.container.get_contains_relation(), self.container.entity_id)]
@@ -313,42 +313,42 @@ class Container(StationaryItem):
 		return f"remove_from_{cls.get_type_name()}"
 	
 	@classmethod
-	def get_contains_predicate(cls, container_param: str, item_param: str, **kwargs) -> str:
-		return f"{cls.get_contains_relation()} {item_param} {container_param}"
+	def get_contains_predicates(cls, container_param: str, item_param: str, **kwargs) -> list[str]:
+		return [f"{cls.get_contains_relation()} {item_param} {container_param}"]
+	
+	@classmethod
+	def get_holdable_param(cls, param_token: str) -> str:
+		holdable_types = [holdable_type.get_type_name() for holdable_type in cls.get_holdable_types()]
+		return "{} - (either {})".format(param_token, " ".join(holdable_types))
 
 	@classmethod
-	def get_default_parameter_list(cls) -> list[str]:
-		holdable_types = [holdable_type.get_type_name() for holdable_type in cls.get_holdable_types()]
-		return ["{} - (either {})".format(cls.ITEM_PARAM, " ".join(holdable_types)), f"{cls.CONTAINER_PARAM} - {cls.get_type_name()}"]
+	def get_default_param_list(cls) -> list[str]:
+		return [cls.get_holdable_param(cls.ITEM_PARAM), f"{cls.CONTAINER_PARAM} - {cls.get_type_name()}"]
 	
 	@classmethod
 	def get_pddl_domain_predicates(cls) -> list[Predicate]:
-		return [Predicate(cls.get_contains_relation(), cls.get_default_parameter_list())]
+		return [Predicate(cls.get_contains_relation(), [cls.get_holdable_param(cls.ITEM_PARAM), f"{cls.CONTAINER_PARAM} - {cls.get_type_name()}"])]
 	
 	@classmethod
 	def get_place_action(cls) -> Action:
-		param_list = cls.get_default_parameter_list()
+		param_list = cls.get_default_param_list()
 		holding_predicate = AgentConstants.get_holding_predicate(cls.ITEM_PARAM)
-		contains_predicate = cls.get_contains_predicate(cls.CONTAINER_PARAM, cls.ITEM_PARAM, **cls.EXTRA_INFO)
+		contains_predicates = cls.get_contains_predicates(cls.CONTAINER_PARAM, cls.ITEM_PARAM, **cls.EXTRA_INFO)
 
 		place_preconditions = [holding_predicate]
-		place_effects = [
-			f"not ({holding_predicate})",
-			contains_predicate
-		]
+		place_effects = [f"not ({holding_predicate})"] + contains_predicates
+
 		return Action(cls.get_place_action_name(), param_list, place_preconditions, place_effects)
 	
 	@classmethod
 	def get_remove_action(cls) -> Action:
-		param_list = cls.get_default_parameter_list()
+		param_list = cls.get_default_param_list()
 		holding_predicate = AgentConstants.get_holding_predicate(cls.ITEM_PARAM)
-		contains_predicate = cls.get_contains_predicate(cls.CONTAINER_PARAM, cls.ITEM_PARAM, **cls.EXTRA_INFO)
+		contains_predicates = cls.get_contains_predicates(cls.CONTAINER_PARAM, cls.ITEM_PARAM, **cls.EXTRA_INFO)
 
-		remove_preconditions = [contains_predicate]
-		remove_effects = [
-			f"not ({contains_predicate})",
-			holding_predicate
-		]
+		remove_preconditions = contains_predicates
+		remove_effects = [f"not ({pred})" for pred in contains_predicates] + [holding_predicate]
+
 		return Action(cls.get_remove_action_name(), param_list, remove_preconditions, remove_effects)
 	
 	@classmethod
@@ -366,7 +366,7 @@ class Container(StationaryItem):
 			item.relative_location, item.extra_location_info = self.generate_relative_location()
 			return Goal(
 				f"Place {item.shortened_name} {item.relative_location} the {self.get_full_name_with_room()}.",
-				[self.get_contains_predicate(self.token_name, item.token_name, **item.extra_location_info)]
+				self.get_contains_predicates(self.token_name, item.token_name, **item.extra_location_info)
 			)
 		return None
 
@@ -498,7 +498,7 @@ class Shelf(Container):
 	LEVEL_PARAM = "?c"
 	PERSON_PARAM = "?d"
 	LEVEL_TYPE = "shelf_level"
-	EXTRA_INFO: dict[str, Any] = {"pddl_level" : LEVEL_PARAM}
+	EXTRA_INFO: dict[str, Any] = {"level_token" : LEVEL_PARAM}
 
 	@staticmethod
 	def get_level_name(level: int) -> str:
@@ -524,7 +524,7 @@ class Shelf(Container):
 	def get_description(self) -> str:
 		items_by_level: dict[int, list[MovableItem]] = {level : [] for level in range(1, self.levels + 1)}
 		for item in self.items:
-			items_by_level[item.extra_location_info["level"]].append(item)
+			items_by_level[item.extra_location_info["level_num"]].append(item)
 		description = f"The shelf has {self.levels} levels. "
 		for level, item_list in items_by_level.items():
 			if len(item_list) == 0:
@@ -536,8 +536,8 @@ class Shelf(Container):
 		level = random.randrange(self.levels) + 1
 		return f"on the {Shelf.integer_to_ordinal(level)} level of", \
 				{
-					"level" : level,
-					"pddl_level": self.get_level_name(level),
+					"level_num" : level,
+					"level_token": self.get_level_name(level),
 					"extra_attributes": [Attribute("on_shelf_level", Shelf.LEVEL_OBJECTS[level - 1].entity_id)]
 				}
 
@@ -558,6 +558,7 @@ class Shelf(Container):
 	def get_pddl_domain_predicates(cls) -> list[Predicate]:
 		predicates = super().get_pddl_domain_predicates()
 		predicates.append(Predicate("shelf_has_level", [f"?a - {cls.get_type_name()}", f"?b - {cls.LEVEL_TYPE}"]))
+		predicates.append(Predicate("on_shelf_level", [cls.get_holdable_param("?a"), f"?b - {cls.LEVEL_TYPE}"]))
 		return predicates
 	
 	@classmethod
@@ -567,14 +568,14 @@ class Shelf(Container):
 		return place
 	
 	@classmethod
-	def get_default_parameter_list(cls) -> list[str]:
-		param_list = super().get_default_parameter_list()
+	def get_default_param_list(cls) -> list[str]:
+		param_list = super().get_default_param_list()
 		param_list.append(f"{cls.LEVEL_PARAM} - {cls.LEVEL_TYPE}")
 		return param_list
 	
 	@classmethod
-	def get_contains_predicate(cls, container_param: str, item_param: str, **kwargs) -> str:
-		return super().get_contains_predicate(container_param, item_param, **kwargs) + " " + kwargs["pddl_level"]
+	def get_contains_predicates(cls, container_param: str, item_param: str, **kwargs) -> list[str]:
+		return super().get_contains_predicates(container_param, item_param) + [f"on_shelf_level {item_param} {kwargs['level_token']}"]
 	
 	@classmethod
 	def get_required_types(cls) -> list[str]:
@@ -631,7 +632,7 @@ class Fridge(Container):
 				self.items.append(food)
 				food.container = self
 				food.relative_location, food.extra_location_info = self.generate_relative_location()
-			predicates.append(self.get_contains_predicate(self.token_name, food.token_name, **food.extra_location_info))
+			predicates += self.get_contains_predicates(self.token_name, food.token_name, **food.extra_location_info)
 		return Goal(
 			f"Please return all food items to the {self.name} in {self.parent.name}.",
 			predicates
@@ -727,7 +728,7 @@ class KitchenSink(InteractableContainer):
 		dish = Kitchenware.generate_instance()
 		while dish is not None and len(dishes) < 5:
 			dishes.append(cast(Kitchenware, dish))
-			dish = Food.generate_instance()
+			dish = Kitchenware.generate_instance()
 		return KitchenSink("sink", parent, random.choice([True, False]), dishes), dishes
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
@@ -741,7 +742,7 @@ class KitchenSink(InteractableContainer):
 				self.items.append(dish)
 				dish.container = self
 				dish.relative_location, dish.extra_location_info = self.generate_relative_location()
-			predicates.append(self.get_contains_predicate(self.token_name, dish.token_name, **dish.extra_location_info))
+			predicates += self.get_contains_predicates(self.token_name, dish.token_name, **dish.extra_location_info)
 		return Goal(
 			f"Please return all dishes to the {self.name} in {self.parent.name}.",
 			predicates
@@ -1122,7 +1123,7 @@ class Room(ABC):
 			item, additional = item_type.generate_instance(room)
 			room.add_item(item)
 			accompanying_items += additional
-			attributes.append(Attribute("has", item.entity_id))
+			attributes.append(Attribute(Room.get_in_room_relation(), item.entity_id))
 					
 		room.yaml_instance = Instance(room.entity_id, attributes)
 		return room, accompanying_items
@@ -1170,7 +1171,7 @@ class Room(ABC):
 
 	@staticmethod
 	def get_in_room_relation() -> str:
-		return "in_room"
+		return "room_has"
 	
 	@staticmethod
 	def get_pddl_domain_predicates() -> list[Predicate]:
@@ -1397,6 +1398,8 @@ class DatasetGenerator:
 					f.write(goal.description)
 				with open(os.path.join(curr_dir, "problem.pddl"), "w") as f:
 					f.write(problem_pddl.format(str(goal)))
+				with open(os.path.join(curr_dir, "knowledge.yaml"), "w") as f:
+					f.write(self.generate_knowledge_yaml())
 				time_step += 1
 	
 	@staticmethod
@@ -1407,8 +1410,10 @@ class DatasetGenerator:
 		for item_type in item_types:
 			predicates += item_type.get_pddl_domain_predicates()
 			actions += item_type.get_pddl_domain_actions()
-			required_types += item_type.get_required_types()		
+			required_types += item_type.get_required_types()
 		
+		required_types = sorted(required_types, key=len)
+
 		predicates += AgentConstants.get_pddl_domain_predicates()
 		actions += AgentConstants.get_pddl_domain_actions()
 
@@ -1468,15 +1473,17 @@ class DatasetGenerator:
 
 class Dataset:
 	def __init__(self, parent_dir: str) -> None:
+		self.domain_path = os.path.join(parent_dir, "domain.pddl")
+		self.initial_knowledge_path = os.path.join(parent_dir, "knowledge.yaml")
 		with open(os.path.join(parent_dir, "initial_state.txt")) as f:
 			self.initial_state = f.read()
 		with open(os.path.join(parent_dir, "predicate_names.txt")) as f:
 			self.predicate_names = f.read().splitlines()
-		with open(os.path.join(parent_dir, "domain.pddl")) as f:
+		with open(self.domain_path) as f:
 			self.domain_pddl = f.read()
 		with open(os.path.join(parent_dir, "problem.pddl")) as f:
 			self.initial_problem_pddl = f.read()
-		with open(os.path.join(parent_dir, "knowledge.yaml")) as f:
+		with open(self.initial_knowledge_path) as f:
 			self.initial_knowledge_yaml = f.read()
 		
 		time_steps = os.listdir(parent_dir)
@@ -1503,16 +1510,22 @@ class Dataset:
 				curr_data["type"] = "state_change"
 				with open(os.path.join(curr_dir, "state_change.txt")) as f:
 					curr_data["state_change"] = f.read()
-				with open(os.path.join(curr_dir, "problem.pddl")) as f:
+				curr_data["problem_path"] = os.path.join(curr_dir, "problem.pddl")
+				with open(curr_data["problem_path"]) as f:
 					curr_data["problem_pddl"] = f.read()
-				with open(os.path.join(curr_dir, "knowledge.yaml")) as f:
+				curr_data["knowledge_path"] = os.path.join(curr_dir, "knowledge.yaml")
+				with open(curr_data["knowledge_path"]) as f:
 					curr_data["knowledge_yaml"] = f.read()
 			elif time_step.endswith("goal"):
 				curr_data["type"] = "goal"
 				with open(os.path.join(curr_dir, "goal.txt")) as f:
 					curr_data["goal"] = f.read()
-				with open(os.path.join(curr_dir, "problem.pddl")) as f:
+				curr_data["problem_path"] = os.path.join(curr_dir, "problem.pddl")
+				with open(curr_data["problem_path"]) as f:
 					curr_data["problem_pddl"] = f.read()
+				curr_data["knowledge_path"] = os.path.join(curr_dir, "knowledge.yaml")
+				with open(curr_data["knowledge_path"]) as f:
+					curr_data["knowledge_yaml"] = f.read()
 			else:
 				raise Exception("Invalid dataset directory:", time_step)
 			self.time_steps.append(curr_data)
@@ -1549,5 +1562,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_state_changes=25, state_changes_per_query=25, state_changes_per_goal=25)
+	generator = DatasetGenerator("test", num_state_changes=1, state_changes_per_query=1, state_changes_per_goal=1)
 	generator.run()
