@@ -54,13 +54,13 @@ def load_graph(db_name: str, graph_name: str):
                                 WHERE ea.attribute_name = '{attribute}'"
             add_attribute_to_graph(attribute, value_type, attribute_query, cur, graph_store)
 
-    instance_of_query = "SELECT instance_of.entity_id AS start_id, \
-                            concepts.entity_id AS end_id \
-                            FROM instance_of \
-                            INNER JOIN concepts ON instance_of.concept_name = concepts.concept_name \
-                            WHERE instance_of.concept_name != 'pose' and instance_of.concept_name != 'region' and instance_of.concept_name != 'map' \
-                            ORDER BY start_id ASC "
-    add_attribute_to_graph("instance_of", "id", instance_of_query, cur, graph_store)
+    # instance_of_query = "SELECT instance_of.entity_id AS start_id, \
+    #                         concepts.entity_id AS end_id \
+    #                         FROM instance_of \
+    #                         INNER JOIN concepts ON instance_of.concept_name = concepts.concept_name \
+    #                         WHERE instance_of.concept_name != 'pose' and instance_of.concept_name != 'region' and instance_of.concept_name != 'map' \
+    #                         ORDER BY start_id ASC "
+    # add_attribute_to_graph("instance_of", "id", instance_of_query, cur, graph_store)
     cur.close()
 
 if __name__ == "__main__":
