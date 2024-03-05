@@ -29,6 +29,10 @@ class AgeGraphStore(GraphStore): # type: ignore
         self._dbname = dbname
         self._graph_name = graph_name
         self._node_label = node_label
+        cur.execute("SELECT entities.entity_id, attribute_value \"name\" FROM entities JOIN entity_attributes_str ON entities.entity_id = entity_attributes_str.entity_id WHERE attribute_name = 'name';")
+        results = cur.fetchall()
+        self.id_to_name = {row[0] : row[1] for row in results}
+        self.name_to_id = {row[1] : row[0] for row in results}
 
     def cursor(self):
         return self._conn.cursor()
@@ -96,8 +100,8 @@ class AgeGraphStore(GraphStore): # type: ignore
         cur = self.cursor()
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$$MERGE (u {{name: '{subj}'}})"
-            f"MERGE (v {{name: '{obj}'}}) "
+            f"$$MERGE (u:{self._node_label} {{name: '{subj}'}})"
+            f"MERGE (v:{self._node_label} {{name: '{obj}'}}) "
             f"MERGE (u)-[e:{rel}]->(v) $$) as (e agtype);")
 
     def upsert_triplet_entity(self, subj: str, rel: str, obj: str) -> None:
@@ -105,15 +109,15 @@ class AgeGraphStore(GraphStore): # type: ignore
         cur = self.cursor()
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$$MERGE (a:entity {{id: '{subj}' }}) "
+            f"$$MERGE (a:{self._node_label} {{id: '{subj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$$MERGE (a:entity {{id: '{obj}' }}) "
+            f"$$MERGE (a:{self._node_label} {{id: '{obj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:entity {{id: '{subj}'}}), "
-            f"(v:entity {{id: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
+            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
+            f"(v:{self._node_label} {{id: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
     def upsert_triplet_bool(self, subj: str, rel: str, obj: str) -> None:
         """Add triplet with bool value."""
@@ -123,7 +127,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"$$MERGE (a:bool {{name: '{obj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:entity {{id: '{subj}'}}), "
+            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:bool {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
     def upsert_triplet_float(self, subj: str, rel: str, obj: str) -> None:
@@ -134,7 +138,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"$$MERGE (a:float {{name: '{obj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:entity {{id: '{subj}'}}), "
+            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:float {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
     
     def upsert_triplet_int(self, subj: str, rel: str, obj: str) -> None:
@@ -145,7 +149,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"$$MERGE (a:int {{name: '{obj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:entity {{id: '{subj}'}}), "
+            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:int {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
     def upsert_triplet_str(self, subj: str, rel: str, obj: str) -> None:
@@ -156,7 +160,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"$$MERGE (a:str {{name: '{obj}' }}) "
             f"RETURN a $$) as (a agtype);")
         cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:entity {{id: '{subj}'}}), "
+            f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:str {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
     def delete(self, subj: str, rel: str, obj: str) -> None:
@@ -192,14 +196,14 @@ class AgeGraphStore(GraphStore): # type: ignore
         cur = self.cursor()
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$$MATCH (u:entity {{name: '{subj}'}})-[e:{rel}]->() DELETE e$$) as (e agtype);")
+            f"$$MATCH (u:{self._node_label} {{name: '{subj}'}})-[e:{rel}]->() DELETE e$$) as (e agtype);")
 
     def delete_rel_with_obj(self, rel: str, obj: str) -> None:
         """Delete triplet with obj and rel."""
         cur = self.cursor()
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$$MATCH (u)-[e:{rel}]->(v:entity {{name: '{obj}'}}) DELETE e$$) as (e agtype);")
+            f"$$MATCH (u)-[e:{rel}]->(v:{self._node_label} {{name: '{obj}'}}) DELETE e$$) as (e agtype);")
 
     def query(self, query: str, param_map: Optional[Dict[str, Any]] = {}) -> Any:
         cur = self.cursor()
