@@ -61,7 +61,6 @@ class KGSim:
 						f.write("\n".join(ndiff(true_plan, predicted_plan)))
 				else:
 					print("Plan is correct")
-
 			else:
 				continue
 			
@@ -89,13 +88,17 @@ class KGSim:
 			if triplets_pred != triplets_truth:
 				diff = list(item for item in ndiff(triplets_truth, triplets_pred) if item[0] != ' ')
 				print("Conflicting expected and predicted state", "(same as last discrepancy)" if previous_diff == diff else "")
-				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}.diff"), "w") as f:
+				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.diff"), "w") as f:
 					f.write("\n".join(diff))
+				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.expected"), "w") as f:
+					f.write("\n".join(triplets_truth))
+				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.predicted"), "w") as f:
+					f.write("\n".join(triplets_pred))
 				previous_diff = diff
 			else:
 				print("Update successful")
 			
-		print("\nAll updates successful")
+		print("\nAll updates/goals processed")
 		self.agent.close()
 
 if __name__ == "__main__":
