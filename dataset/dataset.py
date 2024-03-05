@@ -114,7 +114,7 @@ class RoomItem(ABC):
 
 	@classmethod
 	def get_required_types(cls) -> list[str]:
-		return [cls.get_type_name()]
+		return [cls.get_type_name() + " - object"]
 	
 	@abstractmethod
 	def get_init_conditions(self) -> list[str]:
@@ -166,7 +166,7 @@ class StationaryItem(RoomItem):
 		return [f"{Room.get_in_room_relation()} {self.parent.token_name} {self.token_name}"]
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
-		return [Attribute(Room.get_in_room_relation(), self.parent.entity_id)]
+		return []
 
 class MovableItem(RoomItem, Queryable):
 	def __init__(self, name: str, token_name: str, shortened_name: str, use_default_article: bool = True) -> None:
@@ -185,16 +185,7 @@ class MovableItem(RoomItem, Queryable):
 		return query, answer
 	
 	def perform_action(self, person: Person) -> str | None:
-		if len(person.items) >= 3 or self in person.items:
-			return None
-		assert isinstance(self.container, Container)
-		action = "I picked up {}.".format(self.shortened_name)
-		self.container.items.remove(self)
-		person.items.append(self)
-		self.container = person
-		self.relative_location = None
-		self.extra_location_info = {}
-		return action
+		return None
 
 	@staticmethod
 	@abstractmethod
@@ -224,6 +215,19 @@ class MovableItem(RoomItem, Queryable):
 	
 	def set_shortened_name(self, shortened_name: str, use_default_article: bool) -> None:
 		self.shortened_name = "{}{}".format("the " if use_default_article else "", shortened_name)
+	
+	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
+		if self in person.items:
+			return None
+		self.container.items.remove(self)
+		person.items.append(self)
+		self.container = person
+		self.relative_location = None
+		self.extra_location_info = {}
+		return Goal(
+			f"Hand me {self.shortened_name}.",
+			[person.get_in_hand_predicate(person.token_name, self.token_name)]
+		)
 
 class AccompanyingItem(MovableItem):
 	def __init__(self, name: str, token_name: str, shortened_name: str, use_default_article: bool = True) -> None:
@@ -302,11 +306,11 @@ class Container(StationaryItem):
 		
 	@classmethod
 	def get_contains_relation(cls) -> str:
-		return f"contained_by_{cls.get_type_name()}"
+		return f"placed_at_{cls.get_type_name()}"
 
 	@classmethod
 	def get_place_action_name(cls) -> str:
-		return f"place_among_{cls.get_type_name()}"
+		return f"place_at_{cls.get_type_name()}"
 
 	@classmethod
 	def get_remove_action_name(cls) -> str:
@@ -432,18 +436,18 @@ class InteractableContainer(Container, StationaryInteractable):
 				return action
 	
 	@abstractmethod
-	def generate_interactable_goal(self, all_items: list[MovableItem]) -> Goal | None:
+	def generate_interactable_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		pass
 
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
 		if random.choice([True, False]):
-			goal = self.generate_interactable_goal(all_items)
+			goal = self.generate_interactable_goal(person, all_items)
 			if goal is None:
 				goal = Container.generate_goal(self, person, all_items)
 			return goal
 		goal = Container.generate_goal(self, person, all_items)
 		if goal is None:
-			goal = self.generate_interactable_goal(all_items)
+			goal = self.generate_interactable_goal(person, all_items)
 		return goal
 	
 	def get_init_conditions(self) -> list[str]:
@@ -507,7 +511,6 @@ class Shelf(Container):
 	LEVEL_OBJECTS: list[Instance] = []
 	for i in range(MAX_LEVELS):
 		LEVEL_OBJECTS.append(Instance(EntityID(get_level_name.__func__(i + 1), LEVEL_TYPE), []))
-		# LEVEL_OBJECTS.append(get_level_name.__func__(i + 1) + " - " + LEVEL_TYPE)
 
 	def __init__(self, parent: Room, levels: int) -> None:
 		super().__init__("shelf", parent)
@@ -680,17 +683,19 @@ class Sink(StationaryInteractable):
 		return "The sink has a faucet that can be turned on and off. It is currently {}. ".format("on" if self.faucet_on else "off")
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
-		return None
+		if self.faucet_on:
+			self.faucet_on = False
+			return Goal(f"Turn off the faucet of the {self.get_full_name_with_room()}.", [f"{Sink.FAUCET_ON_RELATION} {self.token_name}"])
 
 class KitchenSink(InteractableContainer):
-	def __init__(self, name: str, parent: Room, faucet_on: bool, dishes: list[Kitchenware]) -> None:
+	def __init__(self, name: str, parent: Room, faucet_on: bool, dishes: list[Kitchenware | LiquidContainer]) -> None:
 		super().__init__(name, parent)
 		self.faucet_on = faucet_on
 		self.dishes = dishes
 
 	@staticmethod
 	def can_hold(item_type: type[MovableItem]) -> bool:
-		return issubclass(item_type, Kitchenware)
+		return issubclass(item_type, Kitchenware) or issubclass(item_type, LiquidContainer)
 	
 	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
 		return "in", {}
@@ -723,18 +728,25 @@ class KitchenSink(InteractableContainer):
 		return [f"{cls.get_type_name()} - {Sink.get_type_name()}"]
 	
 	@staticmethod
-	def generate_instance(parent: Room) -> tuple[KitchenSink, list[Kitchenware]]:
-		dishes: list[Kitchenware] = []
+	def generate_instance(parent: Room) -> tuple[KitchenSink, list[Kitchenware | LiquidContainer]]:
+		dishes: list[Kitchenware | LiquidContainer] = []
 		dish = Kitchenware.generate_instance()
 		while dish is not None and len(dishes) < 5:
 			dishes.append(cast(Kitchenware, dish))
 			dish = Kitchenware.generate_instance()
+		glass = LiquidContainer.generate_instance()
+		if glass is not None:
+			dishes.append(glass)
 		return KitchenSink("sink", parent, random.choice([True, False]), dishes), dishes
 	
 	def get_special_yaml_attributes(self) -> list[Attribute]:
 		return [Attribute(Sink.FAUCET_ON_RELATION, self.faucet_on)]
 	
-	def generate_interactable_goal(self, all_items: list[MovableItem]) -> Goal | None:
+	def generate_interactable_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
+		if random.choice([True, False]):
+			goal = Sink.generate_goal(self, person, all_items) # type: ignore
+			if goal is not None:
+				return goal 
 		predicates: list[str] = []
 		for dish in self.dishes:
 			if self != dish.container:
@@ -762,9 +774,6 @@ class Book(MovableItem):
 			return None
 		idx = random.randrange(len(Book.available_titles))
 		return Book(Book.available_titles.pop(idx))
-	
-	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
-		return None
 
 class Pen(MovableItem):
 	with open(os.path.join(DIR, "colors.txt")) as f:	
@@ -779,9 +788,6 @@ class Pen(MovableItem):
 			return None
 		idx = random.randrange(len(Pen.available_colors))
 		return Pen(Pen.available_colors.pop(idx))
-	
-	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
-		return None
 
 class Singleton(MovableItem):
 	def __init__(self, name: str) -> None:
@@ -854,7 +860,9 @@ class Window(StationaryInteractable):
 		return [Attribute("window_open", self.open)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
-		return None
+		self.open = not self.open
+		pred = f"window_open {self.token_name}"
+		return Goal("{} the blinds of the {}.".format("Open" if self.open else "Close", self.get_full_name_with_room()), [pred if self.open else f"not ({pred})"])
 
 class Light(StationaryInteractable):
 	def __init__(self, name: str, parent: Room, on: bool) -> None:
@@ -895,7 +903,9 @@ class Light(StationaryInteractable):
 		return [Attribute("light_on", self.on)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
-		return None
+		self.on = not self.on
+		pred = f"light_on {self.token_name}"
+		return Goal("Turn {} the {}.".format("on" if self.on else "off", self.get_full_name_with_room()), [pred if self.on else f"not ({pred})"])
 
 class Remote(AccompanyingItem):
 	def __init__(self, name: str) -> None:
@@ -1050,7 +1060,105 @@ class Phone(MovableInteractable):
 		return [Attribute("phone_ringing", self.ringing)]
 	
 	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
+		if random.choice([True, False]):
+			goal = super().generate_goal(person, all_items)
+			if goal is not None:
+				return goal
+		if self.ringing:
+			self.ringing = False
+			return Goal(f"Answer {self.shortened_name}.", [f"not (phone_ringing {self.token_name})"])
 		return None
+
+class LiquidContainer(MovableInteractable, AccompanyingItem):
+	generated = False
+
+	LIQUIDS: list[Instance] = []
+	for l in ["water", "juice", "coffee", "soda"]:
+		LIQUIDS.append(Instance(EntityID(l, "liquid"), []))
+	
+	def __init__(self) -> None:
+		super().__init__(f"glass", "glass", "glass")
+		self.empty = random.choice([True, False])
+		if self.empty:
+			self.liquid = None
+		else:
+			self.liquid = random.choice(LiquidContainer.LIQUIDS)
+	
+	def get_special_init_conditions(self) -> list[str]:
+		if self.empty:
+			return ["glass_empty " + self.token_name]
+		assert(isinstance(self.liquid, Instance))
+		return [f"glass_has_liquid {self.token_name} {self.liquid.entity_id.name}"]
+	
+	def generate_interactable_qa(self) -> tuple[str, str]:
+		liquid = ""
+		if not self.empty:
+			assert(isinstance(self.liquid, Instance))
+			liquid = self.liquid.entity_id.name
+		return f"Is {self.shortened_name} empty? If not, what does it contain?", "It is empty." if self.empty else f"It is not empty. It contains {liquid}."
+	
+	def interact(self, person: Person) -> str | None:
+		if self.empty:
+			self.empty = False
+			self.liquid = random.choice(LiquidContainer.LIQUIDS)
+			return f"I filled {self.shortened_name} with {self.liquid.entity_id.name}."
+		self.empty = True
+		self.liquid = None
+		return f"I emptied {self.shortened_name}."
+	
+	@staticmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		return [
+			Predicate("glass_empty", ["?a - " + LiquidContainer.get_type_name()]),
+			Predicate("glass_has_liquid", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"])
+		  ]
+	
+	@staticmethod
+	def get_pddl_domain_actions() -> list[Action]:
+		return [
+			Action("empty_glass", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_has_liquid ?a ?b"], ["glass_empty ?a", "not (glass_has_liquid ?a ?b)"]),
+			Action("fill_with_liquid", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_empty ?a"], ["not (glass_empty ?a)", "glass_has_liquid ?a ?b"])
+		]
+
+	@staticmethod
+	def generate_instance() -> LiquidContainer | None:
+		if LiquidContainer.generated:
+			return None
+		LiquidContainer.generated = True
+		return LiquidContainer()
+		
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		attributes = [Attribute("glass_empty", self.empty)]
+		if not self.empty:
+			assert(isinstance(self.liquid, Instance))
+			attributes.append(Attribute("glass_has_liquid", self.liquid.entity_id))
+		return attributes
+	
+	def generate_goal(self, person: Person, all_items: list[MovableItem]) -> Goal | None:
+		if not self.empty and random.choice([True, False]):
+			self.empty = True
+			self.liquid = None
+			return Goal("Empty the glass.", ["glass_empty " + self.token_name])
+		self.empty = False
+		self.liquid = random.choice(LiquidContainer.LIQUIDS)
+		
+		self.container.items.remove(self)
+		person.items.append(self)
+		self.container = person
+		self.relative_location = None
+		self.extra_location_info = {}
+		return Goal(
+			f"Hand me a glass of {self.liquid.entity_id.name}.",
+			[person.get_in_hand_predicate(person.token_name, self.token_name), f"glass_has_liquid {self.token_name} {self.liquid.entity_id.name}"]
+		)
+	
+	@staticmethod
+	def get_static_entities() -> list[Instance]:
+		return LiquidContainer.LIQUIDS
+	
+	@classmethod
+	def get_required_types(cls) -> list[str]:
+		return [f"{cls.get_type_name()} - {Kitchenware.get_type_name()}", "liquid"]
 
 class Person:
 	TYPE_NAME = "person"
@@ -1081,6 +1189,25 @@ class Person:
 	
 	def get_yaml_instance(self) -> Instance:
 		return Instance(self.entity_id, [])
+	
+	def generate_goal(self, all_items: list[MovableItem]) -> Goal | None:
+		return None
+	
+	def perform_action(self, all_items: list[MovableItem]) -> str | None:
+		if len(self.items) >= 3:
+			return None
+		random.shuffle(all_items)
+		for item in all_items:
+			if item in self.items:
+				continue
+			assert isinstance(item.container, Container)
+			action = "I picked up {}.".format(item.shortened_name)
+			item.container.items.remove(item)
+			self.items.append(item)
+			item.container = self
+			item.relative_location = None
+			item.extra_location_info = {}
+			return action
 
 item_types: list[type[RoomItem]]
 movable_types: list[type[MovableItem]]
@@ -1094,7 +1221,7 @@ class Room(ABC):
 	def __init__(self, name: str, token_name: str) -> None:
 		self.name = name
 		self.token_name = token_name
-		self.entity_id = EntityID(token_name, type(self).__name__.lower())
+		self.entity_id = EntityID(token_name, "room")
 		self.items: list[StationaryItem] = []
 		self.queryable_items: list[Queryable] = []
 		self.yaml_instance: Instance
@@ -1324,31 +1451,47 @@ class DatasetGenerator:
 	def generate_state_change(self) -> str:
 		usable_rooms = self.rooms.copy()
 		usable_movables = self.movable_items.copy()
+		all_items = self.movable_items.copy()
+		used_person = False
 		while True:
-			assert len(usable_rooms) > 0 or len(usable_movables) > 0
-			if len(usable_rooms) > 0 and random.choice([True, False]):
+			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or (not used_person)
+			choice = random.randrange(2 if used_person else 3)
+			if len(usable_rooms) > 0 and choice == 0:
 				action = usable_rooms.pop(random.randrange(len(usable_rooms))).perform_action(self.person)
 				if action is not None:
 					return action
-			if len(usable_movables) > 0:
+			elif len(usable_movables) > 0 and choice == 1:
 				action = usable_movables.pop(random.randrange(len(usable_movables))).perform_action(self.person)
 				if action is not None:
 					return action
+			elif not used_person:
+				action = self.person.perform_action(all_items)
+				if action is not None:
+					return action
+				used_person = True
+
 	
 	def generate_goal(self) -> Goal:
 		all_items = self.movable_items.copy()
 		usable_rooms = self.rooms.copy()
 		usable_movables = self.movable_items.copy()
+		used_person = False
 		while True:
-			assert len(usable_rooms) > 0 or len(usable_movables) > 0
-			if len(usable_rooms) > 0 and random.choice([True, False]):
+			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or (not used_person)
+			choice = random.randrange(2 if used_person else 3)
+			if len(usable_rooms) > 0 and choice == 0:
 				goal = usable_rooms.pop(random.randrange(len(usable_rooms))).generate_goal(self.person, all_items)
 				if goal is not None:
 					return goal
-			if len(usable_movables) > 0:
+			elif len(usable_movables) > 0 and choice == 1:
 				goal = usable_movables.pop(random.randrange(len(usable_movables))).generate_goal(self.person, all_items)
 				if goal is not None:
 					return goal
+			elif not used_person:
+				goal = self.person.generate_goal(all_items)
+				if goal is not None:
+					return goal
+				used_person = True
 	
 	def generate_query_answer(self) -> tuple[str, str]:
 		if random.choice([True, False]):
@@ -1562,5 +1705,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_state_changes=50, state_changes_per_query=100, state_changes_per_goal=5)
+	generator = DatasetGenerator("test", num_state_changes=50, state_changes_per_query=50, state_changes_per_goal=1)
 	generator.run()
