@@ -8,8 +8,6 @@ import time
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from numpy import require
-
 from knowledge_representation import get_default_ltmc # type: ignore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
 from knowledge_graph.load_graph import load_graph
@@ -21,6 +19,7 @@ from llama_index.storage.storage_context import StorageContext
 from llama_index.llms import OpenAI
 from llama_index.retrievers import KnowledgeGraphRAGRetriever
 from llama_index.query_engine import RetrieverQueryEngine
+from llama_index.llms.base import ChatMessage
 
 from knowledge_graph.utils import get_prompt_template, extract_keywords
 
@@ -74,7 +73,7 @@ class KGAgent(KGBaseAgent):
 			port=self.dbport,
 			graph_name=graph_name,
 			node_label="entity"
-		)
+		) # type: ignore
 		
 		self.cur = self.graph_store.cursor()
 		self.cur.execute(f"LOAD 'age';")
@@ -88,15 +87,9 @@ class KGAgent(KGBaseAgent):
 		self.cur.execute(entity_names_query)
 		entity_list = [row[0] for row in self.cur.fetchall()]
 
-		self.entity_types = {}
-
-		for entity in entity_list:
-			instance_of_query = (f"SELECT * from cypher('{self.graph_name}'," 
-									f"$$MATCH (u:entity {{name: '{entity}'}})-[e:instance_of]->(v)"
-									f"return v.name$$) as (v agtype);")
-			self.cur.execute(instance_of_query)
-			self.entity_types[entity] = self.cur.fetchall()[0][0][1:-1] # remove quotes
-		
+		instance_of_query = ("SELECT * from instance_of")
+		self.cur.execute(instance_of_query)
+		self.entity_types = {self.graph_store.id_to_name[row[0]] : row[1] for row in self.cur.fetchall() if row[0] in self.graph_store.id_to_name}		
 		entity_names = ", ".join(entity_list)
 
 		# load in all default prompts
@@ -113,7 +106,7 @@ class KGAgent(KGBaseAgent):
 			service_context=service_context,
 			llm=self.llm,
 			verbose=False,
-			graph_traversal_depth=2,
+			graph_traversal_depth=3,
 			max_knowledge_sequence=100,
 			entity_extract_fn=partial(extract_keywords, service_context, ENTITY_SELECT_PROMPT),
 			synonym_expand_fn=(lambda _ : [])
@@ -124,6 +117,24 @@ class KGAgent(KGBaseAgent):
 		self.pddl_actions : dict[str, Action] = {}
 		for action in pddl_parser.actions:
 			self.pddl_actions[action.name] = action
+		
+		self.pddl_supertypes: dict[str, list[str]] = {}
+		for supertype in pddl_parser.types:
+			if supertype not in self.pddl_supertypes:
+				self.pddl_supertypes[supertype] = [supertype]
+			for type in pddl_parser.types[supertype]:
+				if type not in self.pddl_supertypes:
+					self.pddl_supertypes[type] = [type]
+				self.pddl_supertypes[type] += self.pddl_supertypes[supertype]
+		
+		self.pddl_predicates = pddl_parser.predicates
+		for pred in self.pddl_predicates:
+			args = self.pddl_predicates[pred]
+			for arg in args:
+				if isinstance(args[arg], str):
+					args[arg] = [args[arg]]
+				else:
+					args[arg].remove("either")
 
 		self.domain_path = domain_path
 		with open(self.domain_path, "r") as f:
@@ -153,43 +164,84 @@ class KGAgent(KGBaseAgent):
 		return " -> ".join(components)
 
 	def input_state_change(self, state_change: str) -> None:
-		log_file = os.path.join(self.log_dir, f"state_change_{self.time:02d}.log")
-		with open(log_file, "w") as f:
-			f.write(f"STATE CHANGE: {state_change}\n")
-		
-			context_nodes = self.rag_update_retriever.retrieve(state_change)
-			context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
-			triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
-			triplet_str = '\n'.join(triplets)
+		context_nodes = self.rag_update_retriever.retrieve(state_change)
+		context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
+		triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
+		extracted_triplets_str = '\n'.join(triplets)
 
-			f.write("------------------------------------------------\n")
-			f.write("EXTRACTED TRIPLETS:\n\n")
-			f.write(triplet_str + "\n")
+		# filter out irrelevant triplets using LLM directly
+		filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=extracted_triplets_str)).text
 
-			# filter out irrelevant triplets using LLM directly
-			filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=triplet_str)).text
-			f.write("------------------------------------------------\n")
-			f.write("FILTERED TRIPLETS:\n\n")
-			f.write(filtered_triplet_str + "\n")
+		update_issues = [""]
+		remove = []
+		add = []
+		triplet_updates = ""
+
+		curr_message = ChatMessage()
+		curr_message.content = self.TRIPLET_UPDATE_PROMPT.format(state_change=state_change, filtered_triplet_str=filtered_triplet_str)
+		messages: list[ChatMessage] = [curr_message]
+
+		num_attempts = 0
+
+		while len(update_issues) > 0:
+			num_attempts += 1
 
 			# query LLM to update triplets (remove existing and add new)
-			triplet_updates = self.llm.complete(self.TRIPLET_UPDATE_PROMPT.format(state_change=state_change, filtered_triplet_str=filtered_triplet_str)).text
-			f.write("------------------------------------------------\n")
-			f.write("TRIPLETS TO ADD AND REMOVE\n\n")
-			f.write(triplet_updates + "\n")
+			curr_response = self.llm.chat(messages).message
+			messages.append(curr_response)
+			triplet_updates = curr_response.content
 
-		# process the changes and commit to knowledge graph
-		update_lines = triplet_updates.split('\n')
-		remove_idx = update_lines.index("REMOVE:")
-		add_idx = update_lines.index("ADD:")
-		remove = update_lines[remove_idx + 1 : add_idx]
-		add = update_lines[add_idx + 1:]
+			# process the changes and commit to knowledge graph
+			update_lines = triplet_updates.split('\n')
+			remove_idx = update_lines.index("REMOVE:")
+			add_idx = update_lines.index("ADD:")
+			remove = update_lines[remove_idx + 1 : add_idx]
+			add = update_lines[add_idx + 1:]
+
+			update_issues = []
+			for triplet_str in add:
+				triplet = triplet_str.split(" -> ")
+				if len(triplet) != 3:
+					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. '{triplet_str}' does not follow this format.")
+					continue
+				
+				subj, rel, obj = triplet[0], triplet[1], triplet[2]
+				obj_is_bool = (obj == "True" or obj == "False")
+				components_valid = True
+				
+				if rel not in self.pddl_predicates:
+					update_issues.append(f"'{triplet[1]}' is not a valid relation in '{triplet_str}'.")
+					components_valid = False
+				if subj not in self.entity_types:
+					update_issues.append(f"'{subj}' is not a valid entity in '{triplet_str}'.")
+					components_valid = False
+				if not obj_is_bool and obj not in self.entity_types:
+					update_issues.append(f"'{obj}' is not a valid entity in '{triplet_str}'.")
+					components_valid = False
+				if not components_valid:
+					continue
+
+				arg_types = self.pddl_predicates[rel]
+				if (obj_is_bool ^ len(arg_types) == 1) or not any(x in self.pddl_supertypes[self.entity_types[subj]] for x in arg_types["?a"]) or (not obj_is_bool and not any(x in self.pddl_supertypes[self.entity_types[obj]] for x in arg_types["?b"])):
+					allowed_subj_types = "/".join(arg_types["?a"])
+					allowed_obj_types = "True/False" if len(arg_types) == 1 else "/".join(arg_types["?b"])
+					update_issues.append(f"Invalid use of '{rel}' in '{triplet_str}'. Can only apply '{rel}' with types: [{allowed_subj_types}] -> {rel} -> [{allowed_obj_types}]")
+
+			if len(update_issues) > 0:
+				curr_message = ChatMessage()
+				curr_message.content = "There are some issues with your provided updates:\n * " + "\n * ".join(update_issues) + "\nPlease try again."
+				messages.append(curr_message)
+
+				with open(os.path.join(self.log_dir, f"{self.time:02d}_state_change.messages.{num_attempts}"), "w") as f:
+					f.write("\n===================================\n".join([message.content for message in messages if message.content is not None]))
 
 		# delete triplets from graph
 		for triplet_str in remove:
 			triplet = triplet_str.split(" -> ")
 			if len(triplet) == 3:
 				self.graph_store.delete(triplet[0], triplet[1], triplet[2])
+				if triplet[2] == "True" or triplet[2] == "False":
+					self.graph_store.upsert_triplet(triplet[0], triplet[1], str(triplet[2] == "False"))
 
 		# add new triplets to graph
 		for triplet_str in add:
@@ -197,11 +249,25 @@ class KGAgent(KGBaseAgent):
 			if len(triplet) == 3:
 				self.graph_store.upsert_triplet(triplet[0], triplet[1], triplet[2])
 		
+		# log the state update
+		log_file = os.path.join(self.log_dir, f"{self.time:02d}_state_change.log")
+		with open(log_file, "w") as f:
+			f.write(f"STATE CHANGE: {state_change}\n")
+			f.write("------------------------------------------------\n")
+			f.write("EXTRACTED TRIPLETS:\n\n")
+			f.write(extracted_triplets_str + "\n")
+			f.write("------------------------------------------------\n")
+			f.write("FILTERED TRIPLETS:\n\n")
+			f.write(filtered_triplet_str + "\n")
+			f.write("------------------------------------------------\n")
+			f.write("TRIPLETS TO ADD AND REMOVE\n\n")
+			f.write(triplet_updates + "\n")
+
 		self.time += 1
 	
 	def answer_planning_query(self, query: str) -> list[str]:
 		# A. generate problem pddl file
-		log_file = os.path.join(self.log_dir, f"plan_query_{self.time}.log")
+		log_file = os.path.join(self.log_dir, f"{self.time}_plan_query")
 
 		with open(log_file + ".context.log", "w") as f:
 			f.write(query + "\n")
@@ -215,7 +281,7 @@ class KGAgent(KGBaseAgent):
 			predicate = rel.split('-[')[1].split(']')[0]
 			arg1 = rel.split(',')[0]
 			arg2 = rel.split('-> ')[1]
-			if predicate == "instance_of" or predicate == "room_has":
+			if predicate == "instance_of":
 				continue
 			elif arg2 == 'True':
 				init_block += f"\t\t({predicate} {arg1})\n"
@@ -246,13 +312,13 @@ class KGAgent(KGBaseAgent):
 					 f"\t{goal_block}\n)"
 
 		# B. write the problem file into the problem folder
-		task_pddl_file_name = self.log_dir + f"/problem_{self.time:02d}.pddl"
+		task_pddl_file_name = self.log_dir + f"/{self.time:02d}_problem.pddl"
 		with open(task_pddl_file_name, "w") as f:
 			f.write(task_pddl_)
 		time.sleep(1)
 
 		# C. run lapkt to plan
-		plan_file_name = self.log_dir + f"/plan_{self.time:02d}.pddl"
+		plan_file_name = self.log_dir + f"/{self.time:02d}_plan.pddl"
 
 		project_dir = Path(__file__).parent.parent.parent.as_posix()
 		os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
@@ -279,7 +345,7 @@ class KGAgent(KGBaseAgent):
 			param_names = {}
 			for token, name in zip(action.parameters, args):
 				param_names[token[0]] = name
-						
+			
 			for del_effect in action.del_effects:
 				predicate, required_params = del_effect[0], del_effect[1:]
 				if len(required_params) == 2:
@@ -289,7 +355,8 @@ class KGAgent(KGBaseAgent):
 				elif len(required_params) == 1:
 					arg = param_names[required_params[0]]
 					self.graph_store.delete(arg, predicate, True) # type: ignore
-					self.graph_store.upsert_triplet_bool(arg, predicate, False) # type: ignore
+					if predicate != "held_by_robot":
+						self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, False) # type: ignore
 
 			for add_effect in action.add_effects:
 				predicate, required_params = add_effect[0], add_effect[1:]
@@ -299,8 +366,9 @@ class KGAgent(KGBaseAgent):
 					self.graph_store.upsert_triplet(arg1, predicate, arg2)
 				elif len(required_params) == 1:
 					arg = param_names[required_params[0]]
-					self.graph_store.delete(arg, predicate, False) # type: ignore
-					self.graph_store.upsert_triplet_bool(arg, predicate, True) # type: ignore
+					if predicate != "held_by_robot":
+						self.graph_store.delete(arg, predicate, False) # type: ignore
+					self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, True) # type: ignore
 
 	
 	def get_all_relations(self) -> list[str]:
