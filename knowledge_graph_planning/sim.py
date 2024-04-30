@@ -1,5 +1,4 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 
 import os
 import psycopg2
@@ -30,6 +29,7 @@ class KGSim:
 		self.log_dir = log_dir
 	
 	def run(self):
+		report: list[Result] = []
 		previous_diff = []
 		print(f"Initial State:\n{self.dataset.initial_state}")
 		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_path, self.dataset.predicate_names, self.dataset.domain_path)
@@ -57,10 +57,12 @@ class KGSim:
 				
 				if true_plan != predicted_plan:
 					print("Conflicting expected plan and predicted plan")
+					report.append(Result(time_step["time"], "plan", time_step["type"], False))
 					with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_plan.diff"), "w") as f:
 						f.write("\n".join(ndiff(true_plan, predicted_plan)))
 				else:
 					print("Plan is correct")
+					report.append(Result(time_step["time"], "plan", time_step["type"], True))
 			else:
 				continue
 			
@@ -87,7 +89,12 @@ class KGSim:
 
 			if triplets_pred != triplets_truth:
 				diff = list(item for item in ndiff(triplets_truth, triplets_pred) if item[0] != ' ')
-				print("Conflicting expected and predicted state", "(same as last discrepancy)" if previous_diff == diff else "")
+				if previous_diff == diff:
+					report.append(Result(time_step["time"], "state", time_step["type"], True))
+					print("Conflicting expected and predicted state (same as last discrepancy)")
+				else:
+					report.append(Result(time_step["time"], "state", time_step["type"], False))
+					print("Conflicting expected and predicted state")
 				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.diff"), "w") as f:
 					f.write("\n".join(diff))
 				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.expected"), "w") as f:
@@ -96,11 +103,31 @@ class KGSim:
 					f.write("\n".join(triplets_pred))
 				previous_diff = diff
 			else:
+				report.append(Result(time_step["time"], "state", time_step["type"], True))
 				print("Update successful")
 			
 		print("\nAll updates/goals processed")
+
+		with open(os.path.join(self.log_dir, "report.txt"), "w") as f:
+			f.write("\n".join(str(result) for result in report))
 		self.agent.close()
 
+class Result:
+	def __init__(self, time: int, result_type: str, time_step_type: str, success: bool) -> None:
+		self.time = time
+		self.result_type = result_type
+		self.time_step_type = time_step_type
+		self.success = success
+	
+	def __str__(self) -> str:
+		return f"{self.time:04d}|{self.result_type}|{self.time_step_type}|{'Success' if self.success else 'Fail'}"
+
+	@staticmethod
+	def from_str(line: str) -> Result:
+		args = line.split('|')
+		assert len(args) == 4
+		return Result(int(args[0]), args[1], args[2], args[3] == "Success")
+
 if __name__ == "__main__":
-	sim = KGSim(Dataset("test"), KGAgent("output"), "output")
+	sim = KGSim(Dataset("domains/domain1"), KGAgent("runs/run1"), "runs/run1")
 	sim.run()
