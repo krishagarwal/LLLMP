@@ -4,11 +4,11 @@ description.
 
 Here is an example:
 ```
-PROVIDED ENTITY NAMES: robot, map, point, pose, region, door, orange, the_living_room, stephanie_bedroom, beige_pen, spoon, espn, the_living_room_tv, light, apple, stephanie_bedroom_tv
+PROVIDED ENTITY NAMES: robot, map, point, pose, region, door, orange, the_living_room, stephanie_bedroom, beige_pen, spoon, espn, the_living_room_tv, light, apple, stephanie_bedroom_tv, me
 ---------------------
 DESCRIPTION: I turned on the TV in Stephanie's bedroom.
 ---------------------
-KEYWORDS: the_living_room_tv, espn, stephanie_bedroom_tv
+KEYWORDS: the_living_room_tv, espn, stephanie_bedroom_tv, me
 ```
 
 Here is the real problem:
