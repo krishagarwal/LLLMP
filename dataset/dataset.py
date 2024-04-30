@@ -6,6 +6,7 @@ from typing import TypeVar, cast
 from inspect import isabstract
 import re
 import os
+import numpy as np
 
 DIR = os.path.dirname(__file__)
 
@@ -848,6 +849,9 @@ class Kitchenware(Singleton, AccompanyingItem):
 	def __init__(self, name: str) -> None:
 		super().__init__(name)
 		self.clean = random.choice([True, False])
+	
+	def get_yaml_attributes(self) -> list[Attribute]:
+		return super().get_yaml_attributes() + [Attribute("is_clean", self.clean)]
 
 class Window(StationaryInteractable):
 	def __init__(self, parent: Room, open: bool) -> None:
@@ -1039,11 +1043,10 @@ class TV(StationaryInteractable):
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
 		usable_people = people.copy()
 		person = usable_people.pop(random.randrange(len(usable_people)))
-		while self.remote in person.items:
+		while self.remote not in person.items:
 			if len(usable_people) == 0:
 				return None
 			person = usable_people.pop(random.randrange(len(usable_people)))
-		assert isinstance(self.remote.container, Container)
 		self.remote.container.items.remove(self.remote)
 		person.items.append(self.remote)
 		self.remote.container = person
@@ -1166,7 +1169,7 @@ class LiquidContainer(MovableInteractable, AccompanyingItem):
 		return LiquidContainer()
 		
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		attributes = [Attribute("glass_empty", self.empty)]
+		attributes = [Attribute("glass_empty", self.empty), Attribute("is_clean", self.clean)]
 		if not self.empty:
 			assert(isinstance(self.liquid, Instance))
 			attributes.append(Attribute("glass_has_liquid", self.liquid.entity_id))
@@ -1250,8 +1253,9 @@ class Person:
 		for item in all_items:
 			if item in self.items:
 				continue
-			assert isinstance(item.container, Container)
-			action = f"{self.name} picked up {item.shortened_name}."
+			# assert isinstance(item.container, Container)
+			action = f"{self.name} picked up {item.shortened_name}." if isinstance(item.container, Container) \
+						else f"{self.name} took {item.shortened_name} from {item.container.name}."
 			item.container.items.remove(item)
 			self.items.append(item)
 			item.container = self
@@ -1263,10 +1267,15 @@ item_types: list[type[RoomItem]]
 movable_types: list[type[MovableItem]]
 stationary_types: list[type[StationaryItem]]
 
+def normalize_probabilities(p: list[float]) -> list[float]:
+	total = sum(p)
+	return [x / total for x in p]
+
 class Room(ABC):
 	ROOM_PARAM = "?a"
 	ITEM_PARAM = "?b"
 	TYPE_NAME = "room"
+	item_type_freq: dict[type[StationaryItem], int] = {}
 
 	def __init__(self, name: str, token_name: str) -> None:
 		self.name = name
@@ -1275,6 +1284,7 @@ class Room(ABC):
 		self.items: list[StationaryItem] = []
 		self.queryable_items: list[Queryable] = []
 		self.yaml_instance: Instance
+		self.item_freq: dict[StationaryItem, int] = {}
 	
 	def add_item(self, item: StationaryItem) -> None:
 		self.items.append(item)
@@ -1315,22 +1325,36 @@ class Room(ABC):
 			room_description += item.get_description()
 		return room_description
 	
+	def get_items_with_probabilities(self) -> tuple[list[StationaryItem], list[float]]:
+		return self.items.copy(), [1 / (self.item_freq.get(item, 0) + 1) / (Room.item_type_freq.get(type(item), 0) + 1) for item in self.items]
+	
 	def perform_action(self, people: list[Person]) -> str | None:
-		usable_items = self.items.copy()
-		random.shuffle(usable_items)
+		usable_items, probabilities = self.get_items_with_probabilities()
 		while len(usable_items) > 0:
-			item = usable_items.pop()
+			probabilities = normalize_probabilities(probabilities)
+			idx = np.random.choice(np.arange(len(usable_items)), p=probabilities)
+			item = usable_items.pop(idx)
+			probabilities.pop(idx)
+
 			action = item.perform_action(people)
 			if action is not None:
+				self.item_freq[item] = self.item_freq.get(item, 0) + 1
+				Room.item_type_freq[type(item)] = Room.item_type_freq.get(type(item), 0) + 1
 				return action
 		return None
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
-		usable_items = self.items.copy()
-		random.shuffle(usable_items)
-		for item in usable_items:
+		usable_items, probabilities = self.get_items_with_probabilities()
+		while len(usable_items) > 0:
+			probabilities = normalize_probabilities(probabilities)
+			idx = np.random.choice(np.arange(len(usable_items)), p=probabilities)
+			item = usable_items.pop(idx)
+			probabilities.pop(idx)
+
 			goal = item.generate_goal(people, all_items)
 			if goal is not None:
+				self.item_freq[item] = self.item_freq.get(item, 0) + 1
+				Room.item_type_freq[type(item)] = Room.item_type_freq.get(type(item), 0) + 1
 				return goal
 		return None
 	
@@ -1455,8 +1479,8 @@ class AgentConstants:
 		]
 
 class DatasetGenerator:
-	MAX_ROOMS = random.randint(3, 7)
-	MAX_ITEMS = random.randint(30, 50)
+	MAX_ROOMS = random.randint(4, 7)
+	MAX_ITEMS = random.randint(20, 40)
 	MAX_PEOPLE = random.randint(2, 5)
 
 	def __init__(self, parent_dir: str, num_state_changes: int = 100, state_changes_per_query: int = 10, state_changes_per_goal: int = 20) -> None:
@@ -1467,6 +1491,8 @@ class DatasetGenerator:
 		self.rooms: list[Room] = []
 		self.people: list[Person] = []
 		self.description = ""
+		self.item_type_freq: dict[type[MovableItem], int] = {}
+		self.item_freq: dict[MovableItem, int] = {}
 
 		while len(self.people) < DatasetGenerator.MAX_PEOPLE:
 			person = Person.generate_person()
@@ -1504,22 +1530,31 @@ class DatasetGenerator:
 			self.movable_items.remove(item)
 		random.shuffle(self.movable_items)
 		random.shuffle(self.rooms)
+
+	def get_items_and_probabilities(self) -> tuple[list[MovableItem], list[float]]:
+		return self.movable_items.copy(), [1 / (self.item_freq.get(item, 0) + 1) / (self.item_type_freq.get(type(item), 0) + 1) for item in self.movable_items]
 	
 	def generate_state_change(self) -> str:
-		usable_rooms = self.rooms.copy()
-		usable_movables = self.movable_items.copy()
 		all_items = self.movable_items.copy()
+		usable_rooms = self.rooms.copy()
+		usable_movables, movable_probabilities = self.get_items_and_probabilities()
 		usable_people = self.people.copy()
 		while True:
 			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or len(usable_people) > 0
-			choice = random.randrange(4 if len(usable_people) > 0 else 5)
+			choice = random.randrange(5)
 			if len(usable_rooms) > 0 and choice <= 2:
 				action = usable_rooms.pop(random.randrange(len(usable_rooms))).perform_action(self.people)
 				if action is not None:
 					return action
 			elif len(usable_movables) > 0 and choice == 3:
-				action = usable_movables.pop(random.randrange(len(usable_movables))).perform_action(self.people)
+				movable_probabilities = normalize_probabilities(movable_probabilities)
+				idx = np.random.choice(np.arange(len(usable_movables)), p=movable_probabilities)
+				movable_probabilities.pop(idx)
+				item = usable_movables.pop(idx)
+				action = item.perform_action(self.people)
 				if action is not None:
+					self.item_freq[item] = self.item_freq.get(item, 0) + 1
+					self.item_type_freq[type(item)] = self.item_type_freq.get(type(item), 0) + 1
 					return action
 			elif len(usable_people) > 0:
 				action = usable_people.pop(random.randrange(len(usable_people))).perform_action(all_items)
@@ -1529,18 +1564,24 @@ class DatasetGenerator:
 	def generate_goal(self) -> Goal:
 		all_items = self.movable_items.copy()
 		usable_rooms = self.rooms.copy()
-		usable_movables = self.movable_items.copy()
+		usable_movables, movable_probabilities = self.get_items_and_probabilities()
 		usable_people = self.people.copy()
 		while True:
 			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or len(usable_people) > 0
-			choice = random.randrange(4 if len(usable_people) > 0 else 5)
+			choice = random.randrange(5)
 			if len(usable_rooms) > 0 and choice <= 2:
 				goal = usable_rooms.pop(random.randrange(len(usable_rooms))).generate_goal(self.people, all_items)
 				if goal is not None:
 					return goal
 			elif len(usable_movables) > 0 and choice == 3:
-				goal = usable_movables.pop(random.randrange(len(usable_movables))).generate_goal(self.people, all_items)
+				movable_probabilities = normalize_probabilities(movable_probabilities)
+				idx = np.random.choice(np.arange(len(usable_movables)), p=movable_probabilities)
+				movable_probabilities.pop(idx)
+				item = usable_movables.pop(idx)
+				goal = item.generate_goal(self.people, all_items)
 				if goal is not None:
+					self.item_freq[item] = self.item_freq.get(item, 0) + 1
+					self.item_type_freq[type(item)] = self.item_type_freq.get(type(item), 0) + 1
 					return goal
 			elif len(usable_people) > 0:
 				goal = usable_people.pop(random.randrange(len(usable_people))).generate_goal(all_items)
@@ -1765,5 +1806,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("domains/domain1", num_state_changes=250, state_changes_per_query=300, state_changes_per_goal=5)
+	generator = DatasetGenerator("domains/domain5", num_state_changes=250, state_changes_per_query=300, state_changes_per_goal=5)
 	generator.run()
