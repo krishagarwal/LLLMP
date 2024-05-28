@@ -58,7 +58,7 @@ class KGSim:
 				if true_plan != predicted_plan:
 					print("Conflicting expected plan and predicted plan")
 					report.append(Result(time_step["time"], "plan", time_step["type"], False))
-					with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_plan.diff"), "w") as f:
+					with open(os.path.join(self.log_dir, f"{time_step['time']:04d}_plan.diff"), "w") as f:
 						f.write("\n".join(ndiff(true_plan, predicted_plan)))
 				else:
 					print("Plan is correct")
@@ -83,6 +83,7 @@ class KGSim:
 			triplets_truth.sort()
 			cur.close()
 			conn.close()
+			os.system('sudo -u postgres psql -c "drop database knowledge_base_truth"')
 
 			triplets_pred = self.agent.get_all_relations()
 			triplets_pred.sort()
@@ -92,18 +93,22 @@ class KGSim:
 				if previous_diff == diff:
 					report.append(Result(time_step["time"], "state", time_step["type"], True))
 					print("Conflicting expected and predicted state (same as last discrepancy)")
+				elif set(diff).issubset(set(previous_diff)):
+					report.append(Result(time_step["time"], "state", time_step["type"], True))
+					print("Conflicting expected and predicted state (fixed part of last discrepancy)")
 				else:
 					report.append(Result(time_step["time"], "state", time_step["type"], False))
 					print("Conflicting expected and predicted state")
-				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.diff"), "w") as f:
-					f.write("\n".join(diff))
-				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.expected"), "w") as f:
-					f.write("\n".join(triplets_truth))
-				with open(os.path.join(self.log_dir, f"{time_step['time']:02d}_state.predicted"), "w") as f:
-					f.write("\n".join(triplets_pred))
+					with open(os.path.join(self.log_dir, f"{time_step['time']:04d}_state.diff"), "w") as f:
+						f.write("\n".join(diff))
+					with open(os.path.join(self.log_dir, f"{time_step['time']:04d}_state.expected"), "w") as f:
+						f.write("\n".join(triplets_truth))
+					with open(os.path.join(self.log_dir, f"{time_step['time']:04d}_state.predicted"), "w") as f:
+						f.write("\n".join(triplets_pred))
 				previous_diff = diff
 			else:
 				report.append(Result(time_step["time"], "state", time_step["type"], True))
+				previous_diff = []
 				print("Update successful")
 			
 		print("\nAll updates/goals processed")
@@ -111,6 +116,7 @@ class KGSim:
 		with open(os.path.join(self.log_dir, "report.txt"), "w") as f:
 			f.write("\n".join(str(result) for result in report))
 		self.agent.close()
+		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
 
 class Result:
 	def __init__(self, time: int, result_type: str, time_step_type: str, success: bool) -> None:
@@ -129,5 +135,6 @@ class Result:
 		return Result(int(args[0]), args[1], args[2], args[3] == "Success")
 
 if __name__ == "__main__":
-	sim = KGSim(Dataset("domains/domain1"), KGAgent("runs/run1"), "runs/run1")
-	sim.run()
+	for i in [1, 2, 3, 4, 5]:
+		sim = KGSim(Dataset(f"domains/domain{i}"), KGAgent(f"runs/run{i}"), f"runs/run{i}")
+		sim.run()

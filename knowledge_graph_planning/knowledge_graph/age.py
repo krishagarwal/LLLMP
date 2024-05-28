@@ -82,6 +82,11 @@ class AgeGraphStore(GraphStore): # type: ignore
             cur = self.cursor()
             try:
                 cur.execute(query)
+            except psycopg2.errors.TooManyArguments as err:
+                print(err)
+                print(query)
+                print(subjs_str)
+                raise err
             except psycopg2.errors.SyntaxError as err:
                 print(err)
                 print(query)

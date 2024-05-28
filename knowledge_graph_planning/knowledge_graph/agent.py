@@ -13,7 +13,6 @@ from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, 
 from knowledge_graph.load_graph import load_graph
 from knowledge_graph.age import AgeGraphStore
 
-from llama_index.prompts import PromptTemplate, PromptType
 from llama_index import ServiceContext
 from llama_index.storage.storage_context import StorageContext
 from llama_index.llms import OpenAI
@@ -195,8 +194,8 @@ class KGAgent(KGBaseAgent):
 			update_lines = triplet_updates.split('\n')
 			remove_idx = update_lines.index("REMOVE:")
 			add_idx = update_lines.index("ADD:")
-			remove = update_lines[remove_idx + 1 : add_idx]
-			add = update_lines[add_idx + 1:]
+			remove = set(update_lines[remove_idx + 1 : add_idx])
+			add = set(update_lines[add_idx + 1:])
 
 			update_issues = []
 			for triplet_str in add:
@@ -210,13 +209,13 @@ class KGAgent(KGBaseAgent):
 				components_valid = True
 				
 				if rel not in self.pddl_predicates:
-					update_issues.append(f"'{triplet[1]}' is not a valid relation in '{triplet_str}'.")
+					update_issues.append(f"'{triplet[1]}' is not a valid relation in '{triplet_str}'")
 					components_valid = False
 				if subj not in self.entity_types:
-					update_issues.append(f"'{subj}' is not a valid entity in '{triplet_str}'.")
+					update_issues.append(f"'{subj}' is not a valid entity in '{triplet_str}'")
 					components_valid = False
 				if not obj_is_bool and obj not in self.entity_types:
-					update_issues.append(f"'{obj}' is not a valid entity in '{triplet_str}'.")
+					update_issues.append(f"'{obj}' is not a valid entity in '{triplet_str}'")
 					components_valid = False
 				if not components_valid:
 					continue
@@ -226,13 +225,26 @@ class KGAgent(KGBaseAgent):
 					allowed_subj_types = "/".join(arg_types["?a"])
 					allowed_obj_types = "True/False" if len(arg_types) == 1 else "/".join(arg_types["?b"])
 					update_issues.append(f"Invalid use of '{rel}' in '{triplet_str}'. Can only apply '{rel}' with types: [{allowed_subj_types}] -> {rel} -> [{allowed_obj_types}]")
+				elif obj_is_bool:
+					expected_remove = "{} -> {} -> {}".format(subj, rel, "True" if obj == "False" else "False")
+					if expected_remove not in remove:
+						update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
+				
+			for triplet_str in remove:
+				triplet = triplet_str.split(" -> ")
+				subj, rel, obj = triplet[0], triplet[1], triplet[2]
+				if obj != "True" and obj != "False":
+					continue
+				expected_add = "{} -> {} -> {}".format(subj, rel, "True" if obj == "False" else "False")
+				if expected_add not in add:
+					update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
 
 			if len(update_issues) > 0:
 				curr_message = ChatMessage()
 				curr_message.content = "There are some issues with your provided updates:\n * " + "\n * ".join(update_issues) + "\nPlease try again."
 				messages.append(curr_message)
 
-				with open(os.path.join(self.log_dir, f"{self.time:02d}_state_change.messages.{num_attempts}"), "w") as f:
+				with open(os.path.join(self.log_dir, f"{self.time:04d}_state_change.messages.{num_attempts}"), "w") as f:
 					f.write("\n===================================\n".join([message.content for message in messages if message.content is not None]))
 
 		# delete triplets from graph
@@ -250,7 +262,7 @@ class KGAgent(KGBaseAgent):
 				self.graph_store.upsert_triplet(triplet[0], triplet[1], triplet[2])
 		
 		# log the state update
-		log_file = os.path.join(self.log_dir, f"{self.time:02d}_state_change.log")
+		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
 		with open(log_file, "w") as f:
 			f.write(f"STATE CHANGE: {state_change}\n")
 			f.write("------------------------------------------------\n")
@@ -267,7 +279,7 @@ class KGAgent(KGBaseAgent):
 	
 	def answer_planning_query(self, query: str) -> list[str]:
 		# A. generate problem pddl file
-		log_file = os.path.join(self.log_dir, f"{self.time}_plan_query")
+		log_file = os.path.join(self.log_dir, f"{self.time:04d}_plan_query")
 
 		with open(log_file + ".context.log", "w") as f:
 			f.write(query + "\n")
@@ -277,25 +289,26 @@ class KGAgent(KGBaseAgent):
 		# objects = set(["me"])
 		# constants = {'Cold', 'Hot', 'RoomTemp', 'Water', 'Coffee', 'Wine'}
 		init_block = "\t(:init\n"
-		for rel in nodes[0].metadata['kg_rel_text']:
-			predicate = rel.split('-[')[1].split(']')[0]
-			arg1 = rel.split(',')[0]
-			arg2 = rel.split('-> ')[1]
-			if predicate == "instance_of":
-				continue
-			elif arg2 == 'True':
-				init_block += f"\t\t({predicate} {arg1})\n"
-				# if arg1 != "Robot":
-				# 	objects.add(arg1)
-			elif arg2 == 'None' or arg2 == 'False':
-				continue
-			else:
-				init_block += f"\t\t({predicate} {arg1} {arg2})\n"
-				# if arg1 != "Robot":
-				# 	objects.add(arg1)
-				# objects.add(arg2)
-				# if arg2 not in constants:
-				# 	objects.add(arg2)
+		if len(nodes) > 0:
+			for rel in nodes[0].metadata['kg_rel_text']:
+				predicate = rel.split('-[')[1].split(']')[0]
+				arg1 = rel.split(',')[0]
+				arg2 = rel.split('-> ')[1]
+				if predicate == "instance_of":
+					continue
+				elif arg2 == 'True':
+					init_block += f"\t\t({predicate} {arg1})\n"
+					# if arg1 != "Robot":
+					# 	objects.add(arg1)
+				elif arg2 == 'None' or arg2 == 'False':
+					continue
+				else:
+					init_block += f"\t\t({predicate} {arg1} {arg2})\n"
+					# if arg1 != "Robot":
+					# 	objects.add(arg1)
+					# objects.add(arg2)
+					# if arg2 not in constants:
+					# 	objects.add(arg2)
 		init_block += "\t)\n"
 		objects_block = "\t(:objects\n"
 		for obj, obj_type in self.entity_types.items():
@@ -312,7 +325,7 @@ class KGAgent(KGBaseAgent):
 					 f"\t{goal_block}\n)"
 
 		# B. write the problem file into the problem folder
-		task_pddl_file_name = self.log_dir + f"/{self.time:02d}_problem.pddl"
+		task_pddl_file_name = os.path.join(self.log_dir, f"{self.time:04d}_problem.pddl")
 		with open(task_pddl_file_name, "w") as f:
 			f.write(task_pddl_)
 		time.sleep(1)
@@ -377,4 +390,5 @@ class KGAgent(KGBaseAgent):
 	
 	def close(self) -> None:
 		self.cur.close()
+		self.graph_store._conn.close()
 
