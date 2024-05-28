@@ -6,5 +6,4 @@ __pycache__/
 .vscode/
 keys/
 sandbox/
-runs/
-domains/
+experiments/
