@@ -6,6 +6,7 @@ from typing import TypeVar, cast
 from inspect import isabstract
 import re
 import os
+from matplotlib.style import available
 import numpy as np
 
 DIR = os.path.dirname(__file__)
@@ -26,11 +27,12 @@ class Action:
 		self.effects = effects
 	
 	def __str__(self) -> str:
+		preconditions = "\t\t:precondition (and\n" \
+							+ "\t\t\t({})\n".format(")\n\t\t\t(".join(self.preconditions)) \
+						+ "\t\t)\n" if len(self.preconditions) > 0 else ""
 		return f"\t(:action {self.name}\n" \
 					+ "\t\t:parameters ({})\n".format(" ".join(self.parameter_list)) \
-					+ "\t\t:precondition (and\n" \
-						+ "\t\t\t({})\n".format(")\n\t\t\t(".join(self.preconditions)) \
-					+ "\t\t)\n" \
+					+ preconditions \
 					+ "\t\t:effect (and\n" \
 					+ "\t\t\t({})\n".format(")\n\t\t\t(".join(self.effects)) \
 					+ "\t\t)\n" \
@@ -426,7 +428,7 @@ class MovableInteractable(MovableItem, InteractableItem):
 
 	def get_init_conditions(self) -> list[str]:
 		return MovableItem.get_init_conditions(self) + self.get_special_init_conditions()
-	
+
 	def get_yaml_attributes(self) -> list[Attribute]:
 		return MovableItem.get_yaml_attributes(self) + self.get_special_yaml_attributes()
 
@@ -648,6 +650,27 @@ class Fridge(Container):
 			predicates
 		)
 
+class Toilet(StationaryItem):
+	@staticmethod
+	def generate_instance(parent: Room) -> tuple[Toilet, list[AccompanyingItem]]:
+		return Toilet("toilet", parent), []
+	
+	def perform_action(self, people: list[Person]) -> str | None:
+		return None
+	
+	@staticmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		return []
+	
+	@staticmethod
+	def get_pddl_domain_actions() -> list[Action]:
+		return []
+	
+	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
+		return None
+	
+	def get_description(self) -> str:
+		return ""
 
 class Sink(StationaryInteractable):
 	FAUCET_ON_RELATION = "faucet_on"
@@ -691,9 +714,11 @@ class Sink(StationaryInteractable):
 		return "The sink has a faucet that can be turned on and off. It is currently {}. ".format("on" if self.faucet_on else "off")
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
-		if self.faucet_on:
-			self.faucet_on = False
-			return Goal(f"Turn off the faucet of the {self.get_full_name_with_room()}.", [f"{Sink.FAUCET_ON_RELATION} {self.token_name}"])
+		self.faucet_on = random.choice([True, False])
+		return Goal(
+			"Make sure that the faucet of the {} is {}.".format(self.get_full_name_with_room(), "on" if self.faucet_on else "off"),
+			[f"{Sink.FAUCET_ON_RELATION} {self.token_name}"]
+		)
 
 class KitchenSink(InteractableContainer):
 	def __init__(self, name: str, parent: Room, faucet_on: bool, dishes: list[Kitchenware | LiquidContainer]) -> None:
@@ -719,7 +744,7 @@ class KitchenSink(InteractableContainer):
 		special_conds = []
 		for dish in self.dishes:
 			if dish.clean:
-				special_conds.append(f"is_clean {dish.token_name}")
+				special_conds.append(f"dish_is_clean {dish.token_name}")
 		if self.faucet_on:
 			return [f"{Sink.FAUCET_ON_RELATION} {self.token_name}"]
 		return []
@@ -729,11 +754,11 @@ class KitchenSink(InteractableContainer):
 	
 	@staticmethod
 	def get_special_domain_predicates() -> list[Predicate]:
-		return [Predicate("is_clean", [f"?a - {Kitchenware.get_type_name()}"])]
+		return [Predicate("dish_is_clean", [f"?a - {Kitchenware.get_type_name()}"])]
 	
 	@staticmethod
 	def get_special_domain_actions() -> list[Action]:
-		return [Action("wash", [f"?a - {Kitchenware.get_type_name()}", f"?b - {KitchenSink.get_type_name()}"], KitchenSink.get_contains_predicates("?b", "?a"), ["is_clean ?a"])]
+		return [Action("wash", [f"?a - {Kitchenware.get_type_name()}", f"?b - {KitchenSink.get_type_name()}"], KitchenSink.get_contains_predicates("?b", "?a"), ["dish_is_clean ?a"])]
 	
 	@classmethod
 	def get_required_types(cls) -> list[str]:
@@ -770,7 +795,7 @@ class KitchenSink(InteractableContainer):
 				dish.relative_location, dish.extra_location_info = self.generate_relative_location()
 			if clean_goal:
 				dish.clean = True
-				predicates.append(f"is_clean {dish.token_name}")
+				predicates.append(f"dish_is_clean {dish.token_name}")
 			else:
 				predicates += self.get_contains_predicates(self.token_name, dish.token_name, **dish.extra_location_info)
 		if clean_goal:
@@ -780,8 +805,75 @@ class KitchenSink(InteractableContainer):
 			predicates
 		)
 
+class Washer(Container):
+	def __init__(self, name: str, parent: Room) -> None:
+		super().__init__(name, parent)
+	
+	@staticmethod
+	def can_hold(item_type: type[MovableItem]) -> bool:
+		return item_type in [Cloth]
+	
+	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
+		return "in", {}
+
+	@staticmethod
+	def generate_instance(parent: Room) -> tuple[Washer, list[AccompanyingItem]]:
+		return Washer("washer", parent), []
+	
+	@classmethod
+	def get_pddl_domain_actions(cls) -> list[Action]:
+		actions = super().get_pddl_domain_actions()
+		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
+		actions.append(Action(
+			"run_washer_cycle",
+			[f"?a - {cls.get_type_name()}"],
+			[],
+			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (and (cloth_is_clean ?b) (not (cloth_is_dry ?b))))"]))
+		return actions
+
+class Dryer(Container):
+	def __init__(self, name: str, parent: Room) -> None:
+		super().__init__(name, parent)
+	
+	@staticmethod
+	def can_hold(item_type: type[MovableItem]) -> bool:
+		return item_type in [Cloth]
+	
+	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
+		return "in", {}
+
+	@staticmethod
+	def generate_instance(parent: Room) -> tuple[Dryer, list[AccompanyingItem]]:
+		return Dryer("dryer", parent), []
+	
+	@classmethod
+	def get_pddl_domain_actions(cls) -> list[Action]:
+		actions = super().get_pddl_domain_actions()
+		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
+		actions.append(Action(
+			"run_dryer_cycle",
+			[f"?a - {cls.get_type_name()}"],
+			[],
+			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (cloth_is_dry ?b))"]))
+		return actions
+
+class LaundryBasket(Container):
+	def __init__(self, name: str, parent: Room) -> None:
+		super().__init__(name, parent)
+	
+	@staticmethod
+	def can_hold(item_type: type[MovableItem]) -> bool:
+		return item_type in [Cloth]
+	
+	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
+		return "in", {}
+
+	@staticmethod
+	def generate_instance(parent: Room) -> tuple[LaundryBasket, list[AccompanyingItem]]:
+		return LaundryBasket("laundry basket", parent), []
+
 class Book(MovableItem):
-	with open(os.path.join(DIR, "book_titles.txt")) as f:	
+	with open(os.path.join(DIR, "book_titles.txt")) as f:
 		available_titles = f.read().splitlines()
 
 	def __init__(self, title: str) -> None:
@@ -851,7 +943,7 @@ class Kitchenware(Singleton, AccompanyingItem):
 		self.clean = random.choice([True, False])
 	
 	def get_yaml_attributes(self) -> list[Attribute]:
-		return super().get_yaml_attributes() + [Attribute("is_clean", self.clean)]
+		return super().get_yaml_attributes() + [Attribute("dish_is_clean", self.clean)]
 
 class Window(StationaryInteractable):
 	def __init__(self, parent: Room, open: bool) -> None:
@@ -892,9 +984,12 @@ class Window(StationaryInteractable):
 		return [Attribute("window_open", self.open)]
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
-		self.open = not self.open
+		self.open = random.choice([True, False])
 		pred = f"window_open {self.token_name}"
-		return Goal("{} the blinds of the {}.".format("Open" if self.open else "Close", self.get_full_name_with_room()), [pred if self.open else f"not ({pred})"])
+		return Goal(
+			"Make sure the blinds of the {} are {}.".format(self.get_full_name_with_room(), "open" if self.open else "closed"),
+			[pred if self.open else f"not ({pred})"]
+		)
 
 class Light(StationaryInteractable):
 	def __init__(self, name: str, parent: Room, on: bool) -> None:
@@ -935,9 +1030,12 @@ class Light(StationaryInteractable):
 		return [Attribute("light_on", self.on)]
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
-		self.on = not self.on
+		self.on = random.choice([True, False])
 		pred = f"light_on {self.token_name}"
-		return Goal("Turn {} the {}.".format("on" if self.on else "off", self.get_full_name_with_room()), [pred if self.on else f"not ({pred})"])
+		return Goal(
+			"Make sure the {} is {}.".format(self.get_full_name_with_room(), "on" if self.on else "off"),
+			[pred if self.on else f"not ({pred})"]
+		)
 
 class Remote(AccompanyingItem):
 	def __init__(self, name: str) -> None:
@@ -947,6 +1045,49 @@ class Remote(AccompanyingItem):
 	@staticmethod
 	def generate_instance() -> Remote | None:
 		return Remote("remote")
+
+class Cloth(MovableInteractable):
+	available_clothes = ["shirt", "jeans", "cardigan", "sweater", "jacket"]
+	with open(os.path.join(DIR, "names.txt")) as f:	
+		available_names = f.read().splitlines()
+
+	def __init__(self, type: str, owner: str, clean: bool) -> None:
+		super().__init__(f"{type} that belongs to {owner}", f"{owner.lower()}_{type}", f"{owner}'s {type}", False)
+		self.clean = clean
+	
+	@staticmethod
+	def generate_instance() -> Cloth | None:
+		if len(Cloth.available_clothes) == 0 or len(Cloth.available_names) == 0:
+			return None
+		return Cloth(Cloth.available_clothes.pop(random.randrange(len(Cloth.available_clothes))),
+			   			Cloth.available_names.pop(random.randrange(len(Cloth.available_names))),
+						random.choice([True, False]))
+	
+	def get_special_init_conditions(self) -> list[str]:
+		conditions = ["cloth_is_dry " + self.token_name]
+		if self.clean:
+			conditions.append("cloth_is_clean " + self.token_name)
+		return conditions
+	
+	def generate_interactable_qa(self) -> tuple[str, str]:
+		return f"Is {self.shortened_name} clean?", "Yes." if self.clean else "No."
+	
+	def interact(self, people: list[Person]) -> str | None:
+		return f"{random.choice(people).name} accidentally spilled something on {self.shortened_name} so now it's dirty."
+	
+	@staticmethod
+	def get_pddl_domain_predicates() -> list[Predicate]:
+		return [
+			Predicate("cloth_is_clean", ["?a - " + Cloth.get_type_name()]),
+			Predicate("cloth_is_dry", ["?a - " + Cloth.get_type_name()])
+		]
+	
+	@staticmethod
+	def get_pddl_domain_actions() -> list[Action]:
+		return []
+	
+	def get_special_yaml_attributes(self) -> list[Attribute]:
+		return [Attribute("cloth_is_clean", self.clean), Attribute("cloth_is_dry", True)]
 
 class TV(StationaryInteractable):
 	class Channel:
@@ -1158,7 +1299,7 @@ class LiquidContainer(MovableInteractable, AccompanyingItem):
 	def get_pddl_domain_actions() -> list[Action]:
 		return [
 			Action("empty_glass", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_has_liquid ?a ?b"], ["glass_empty ?a", "not (glass_has_liquid ?a ?b)"]),
-			Action("fill_with_liquid", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_empty ?a", "is_clean ?a"], ["not (glass_empty ?a)", "glass_has_liquid ?a ?b", "not (is_clean ?a)"])
+			Action("fill_with_liquid", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_empty ?a", "dish_is_clean ?a"], ["not (glass_empty ?a)", "glass_has_liquid ?a ?b", "not (dish_is_clean ?a)"])
 		]
 
 	@staticmethod
@@ -1169,20 +1310,20 @@ class LiquidContainer(MovableInteractable, AccompanyingItem):
 		return LiquidContainer()
 		
 	def get_special_yaml_attributes(self) -> list[Attribute]:
-		attributes = [Attribute("glass_empty", self.empty), Attribute("is_clean", self.clean)]
+		attributes = [Attribute("glass_empty", self.empty), Attribute("dish_is_clean", self.clean)]
 		if not self.empty:
 			assert(isinstance(self.liquid, Instance))
 			attributes.append(Attribute("glass_has_liquid", self.liquid.entity_id))
 		return attributes
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
-		if not self.empty and random.choice([True, False]):
+		if random.choice([True, False]):
 			self.empty = True
 			self.liquid = None
-			return Goal("Empty the glass.", ["glass_empty " + self.token_name])
+			return Goal("Make sure the glass is empty.", ["glass_empty " + self.token_name])
+		
 		self.empty = False
 		self.liquid = random.choice(LiquidContainer.LIQUIDS)
-		
 		person = random.choice(people)
 		self.container.items.remove(self)
 		person.items.append(self)
@@ -1263,9 +1404,57 @@ class Person:
 			item.extra_location_info = {}
 			return action
 
+class CollectiveGoal(ABC):
+	@staticmethod
+	@abstractmethod
+	def generate_goal(movable_items: list[MovableItem], stationary_items: list[StationaryItem]) -> Goal | None:
+		pass
+
+class AnswerPhones(CollectiveGoal):
+	@staticmethod
+	def generate_goal(movable_items: list[MovableItem], stationary_items: list[StationaryItem]) -> Goal | None:
+		predicate_list: list[str] = []
+		for item in movable_items:
+			if isinstance(item, Phone):
+				item.ringing = False
+				predicate_list.append(f"not (phone_ringing {item.token_name})")
+		return Goal("Can you silence all the phones?", predicate_list)
+
+class TurnOffAppliances(CollectiveGoal):
+	@staticmethod
+	def generate_goal(movable_items: list[MovableItem], stationary_items: list[StationaryItem]) -> Goal | None:
+		predicate_list: list[str] = []
+		for item in stationary_items:
+			if isinstance(item, Light):
+				item.on = False
+				predicate_list.append(f"not (light_on {item.token_name})")
+			elif isinstance(item, Sink) or isinstance(item, KitchenSink):
+				item.faucet_on = False
+				predicate_list.append(f"not (faucet_on {item.token_name})")
+		return Goal("The water and electricity bills are high. Can you turn off all lights and faucets?", predicate_list)
+
+class CleanAndDryClothes(CollectiveGoal):
+	@staticmethod
+	def generate_goal(movable_items: list[MovableItem], stationary_items: list[StationaryItem]) -> Goal | None:
+		clothes = [item for item in movable_items if isinstance(item, Cloth)]
+		laundry_basket = next(item for item in stationary_items if isinstance(item, LaundryBasket))
+		if len(clothes) == 0:
+			return None
+		predicates = []
+		for cloth in clothes:
+			cloth.container.items.remove(cloth)
+			cloth.container = laundry_basket
+			laundry_basket.items.append(cloth)
+			cloth.relative_location, cloth.extra_location_info = laundry_basket.generate_relative_location()
+			cloth.clean = True
+			predicates += [f"cloth_is_clean {cloth.token_name}", f"cloth_is_dry {cloth.token_name}"] \
+							+ laundry_basket.get_contains_predicates(laundry_basket.token_name, cloth.token_name)
+		return Goal("Please wash and dry all the clothes, then place them in the laundry basket.", predicates)
+
 item_types: list[type[RoomItem]]
 movable_types: list[type[MovableItem]]
 stationary_types: list[type[StationaryItem]]
+collective_goal_types: list[type[CollectiveGoal]]
 
 def normalize_probabilities(p: list[float]) -> list[float]:
 	total = sum(p)
@@ -1421,7 +1610,7 @@ class LivingRoom(Room):
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
-		return (not Kitchen.can_hold(stationary_type) and stationary_type != Sink) or stationary_type == Light
+		return stationary_type not in [Fridge, KitchenSink, Sink, Washer, Dryer, LaundryBasket]
 
 class Bedroom(Room):
 	with open(os.path.join(DIR, "names.txt")) as f:	
@@ -1436,7 +1625,35 @@ class Bedroom(Room):
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
-		return (not Kitchen.can_hold(stationary_type) and stationary_type != Sink) or stationary_type == Light
+		return stationary_type not in [Fridge, KitchenSink, Sink, Washer, Dryer, LaundryBasket]
+
+class LaundryRoom(Room):
+	generated = False
+
+	@staticmethod
+	def generate_empty() -> LaundryRoom | None:
+		if LaundryRoom.generated:
+			return None
+		LaundryRoom.generated = True
+		return LaundryRoom("the laundry room", "the_laundry_room")
+	
+	@staticmethod
+	def can_hold(stationary_type: type[StationaryItem]) -> bool:
+		return stationary_type in [Light, Washer, Dryer, LaundryBasket]
+
+class Bathroom(Room):
+	generated = False
+
+	@staticmethod
+	def generate_empty() -> Bathroom | None:
+		if Bathroom.generated:
+			return None
+		Bathroom.generated = True
+		return Bathroom("the bathroom", "the_bathroom")
+	
+	@staticmethod
+	def can_hold(stationary_type: type[StationaryItem]) -> bool:
+		return stationary_type in [Light, Sink, Toilet]
 
 room_types: list[type[Room]]
 
@@ -1458,12 +1675,6 @@ class AgentConstants:
 		type_list = "(either {})".format(" ".join([t.get_type_name() for t in movable_types]))
 		in_person_hand_predicate = Person.get_in_hand_predicate("?b", "?a")
 		return [
-			Action(
-				"pick_up",
-				[f"?a - {type_list}"],
-				["not (held_by_robot ?a)"],
-				["held_by_robot ?a"]
-			),
 			Action(
 				"hand_to_person",
 				[f"?a - {type_list}", f"?b - {Person.TYPE_NAME}"],
@@ -1510,6 +1721,7 @@ class DatasetGenerator:
 				self.movable_items.append(item)
 				count += 1
 		
+		self.stationary_items: list[StationaryItem] = []
 		for room_type in room_types:
 			count = 0
 			while count < DatasetGenerator.MAX_ROOMS / len(room_types):
@@ -1520,6 +1732,7 @@ class DatasetGenerator:
 				count += 1
 				self.rooms.append(room)
 				self.movable_items += additional
+				self.stationary_items += room.items
 		
 		remaining_movables = self.movable_items.copy()
 		for room in self.rooms:
@@ -1563,17 +1776,23 @@ class DatasetGenerator:
 	
 	def generate_goal(self) -> Goal:
 		all_items = self.movable_items.copy()
+		all_stationary = self.stationary_items.copy()
 		usable_rooms = self.rooms.copy()
 		usable_movables, movable_probabilities = self.get_items_and_probabilities()
 		usable_people = self.people.copy()
+		usable_collectives = collective_goal_types.copy()
 		while True:
 			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or len(usable_people) > 0
-			choice = random.randrange(5)
+			choice = random.randrange(8)
 			if len(usable_rooms) > 0 and choice <= 2:
 				goal = usable_rooms.pop(random.randrange(len(usable_rooms))).generate_goal(self.people, all_items)
 				if goal is not None:
 					return goal
-			elif len(usable_movables) > 0 and choice == 3:
+			elif len(usable_collectives) > 0 and choice <= 5:
+				goal = usable_collectives.pop(random.randrange(len(usable_collectives))).generate_goal(all_items, all_stationary)
+				if goal is not None:
+					return goal
+			elif len(usable_movables) > 0 and choice == 6:
 				movable_probabilities = normalize_probabilities(movable_probabilities)
 				idx = np.random.choice(np.arange(len(usable_movables)), p=movable_probabilities)
 				movable_probabilities.pop(idx)
@@ -1801,10 +2020,12 @@ movable_types = get_concrete_subtypes(MovableItem)
 creatable_movable_types = [movable_type for movable_type in movable_types if not issubclass(movable_type, AccompanyingItem)]
 stationary_types = get_concrete_subtypes(StationaryItem)
 room_types = get_concrete_subtypes(Room)
+collective_goal_types = get_concrete_subtypes(CollectiveGoal)
+
 static_entities: list[Instance] = []
 for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("domains/domain5", num_state_changes=250, state_changes_per_query=300, state_changes_per_goal=5)
+	generator = DatasetGenerator("experiments/experiment2/domains/domain5", num_state_changes=100, state_changes_per_query=300, state_changes_per_goal=5)
 	generator.run()
