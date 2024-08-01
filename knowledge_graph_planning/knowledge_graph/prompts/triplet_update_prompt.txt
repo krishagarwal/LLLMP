@@ -4,13 +4,12 @@ Based on the state change, determine which of the relations should be removed an
 new relations should be added. Only add and remove relations that are strictly necessary
 for the state update. Each update must appear in a triplet form.
 
-Provide your response in the following format:
+Provide your response in the following JSON format:
 ```
-REMOVE:
-<list of relations to remove>
----------------------
-ADD:
-<list of relations to add>
+{{{{
+    "REMOVE": [list of relations to remove],
+    "ADD": [list of relations to add]
+}}}}
 ```
 
 Here is the list of allowed relation types: {predicate_names}
@@ -32,12 +31,15 @@ patrick_bedroom -> instance_of -> bedroom
 patrick_bedroom -> has -> patrick_bedroom_shelf
 patrick_bedroom_shelf -> in_room -> patrick_bedroom
 ---------------------
-REMOVE:
-brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf
-brenda_phone -> on_shelf_level -> shelf_level_8
----------------------
-ADD:
-brenda_phone -> in_hand -> me
+{{{{
+    "REMOVE": [
+        "brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf",
+        "brenda_phone -> on_shelf_level -> shelf_level_8"
+    ],
+    "ADD": [
+        "brenda_phone -> in_hand -> me"
+    ]
+}}}}
 ```
 
 Here is the real problem:

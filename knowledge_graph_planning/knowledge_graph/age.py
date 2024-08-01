@@ -212,9 +212,13 @@ class AgeGraphStore(GraphStore): # type: ignore
 
     def query(self, query: str, param_map: Optional[Dict[str, Any]] = {}) -> Any:
         cur = self.cursor()
-        query = query.format(param_map)
+        if param_map: # only format if param map isn't empty
+            query = query.format(param_map)
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
             f"$${query}$$) as (a agtype);")
         results = cur.fetchall()
         return results
+    
+    def rel_exists(self, subj: str, rel: str, obj: str) -> bool:
+        return self.query(f"MATCH (V {{name: '{subj}'}})-[:{rel}]-(V2 {{name: '{obj}'}}) RETURN COUNT(V) > 0")[0][0] == 'true'

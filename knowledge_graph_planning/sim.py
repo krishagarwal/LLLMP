@@ -22,6 +22,10 @@ os.environ["OPENAI_API_KEY"] = keys[0]
 
 project_dir = Path(__file__).parent.parent.as_posix()
 
+# from llama_index.llms import OpenAI
+
+# print(OpenAI().complete("What is 1 + 1?"))
+
 class KGSim:
 	def __init__(self, dataset: Dataset, agent: KGBaseAgent, log_dir: str) -> None:
 		self.dataset = dataset
@@ -135,6 +139,8 @@ class Result:
 		return Result(int(args[0]), args[1], args[2], args[3] == "Success")
 
 if __name__ == "__main__":
+	# experiment_dir = "test_experiment"
+	experiment_dir = "experiments/experiment3"
 	for i in [1, 2, 3, 4, 5]:
-		sim = KGSim(Dataset(f"domains/domain{i}"), KGAgent(f"runs/run{i}"), f"runs/run{i}")
+		sim = KGSim(Dataset(f"{experiment_dir}/domains/domain{i}"), KGAgent(f"{experiment_dir}/runs/run{i}"), f"{experiment_dir}/runs/run{i}")
 		sim.run()

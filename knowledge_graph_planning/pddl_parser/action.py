@@ -26,8 +26,12 @@ class Action:
     # -----------------------------------------------
 
     def __init__(self, name, parameters, positive_preconditions, negative_preconditions, add_effects, del_effects):
+        def tuple_of_tuples(data):
+            if not isinstance(data, list):
+                return data
+            return tuple([tuple_of_tuples(t) for t in data])
         def frozenset_of_tuples(data):
-            return frozenset([tuple(t) for t in data])
+            return frozenset([tuple_of_tuples(t) for t in data])
         self.name = name
         self.parameters = tuple(parameters)  # Make parameters a tuple so we can hash this if need be
         self.positive_preconditions = frozenset_of_tuples(positive_preconditions)

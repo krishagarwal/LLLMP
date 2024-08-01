@@ -2,11 +2,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import partial
 
+import itertools
 import os
 import re
 import time
 from contextlib import redirect_stdout
 from pathlib import Path
+import json
 
 from knowledge_representation import get_default_ltmc # type: ignore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
@@ -91,26 +93,6 @@ class KGAgent(KGBaseAgent):
 		self.entity_types = {self.graph_store.id_to_name[row[0]] : row[1] for row in self.cur.fetchall() if row[0] in self.graph_store.id_to_name}		
 		entity_names = ", ".join(entity_list)
 
-		# load in all default prompts
-		ENTITY_SELECT_PROMPT = get_prompt_template("prompts/entity_select_prompt.txt", entity_names=entity_names)
-		self.TRIPLET_FILTER_PROMPT = get_prompt_template("prompts/triplet_filter_prompt.txt")
-		self.TRIPLET_UPDATE_PROMPT = get_prompt_template("prompts/triplet_update_prompt.txt",
-											predicate_names=", ".join(predicate_names), entity_names=entity_names)
-
-		self.llm = OpenAI(temperature=0, model="gpt-4")
-		service_context = ServiceContext.from_defaults(llm=self.llm)
-		storage_context = StorageContext.from_defaults(graph_store=self.graph_store)
-		self.rag_update_retriever = KnowledgeGraphRAGRetriever(
-			storage_context=storage_context,
-			service_context=service_context,
-			llm=self.llm,
-			verbose=False,
-			graph_traversal_depth=3,
-			max_knowledge_sequence=100,
-			entity_extract_fn=partial(extract_keywords, service_context, ENTITY_SELECT_PROMPT),
-			synonym_expand_fn=(lambda _ : [])
-		)
-
 		pddl_parser = PDDL_Parser()
 		pddl_parser.parse_domain(domain_path)
 		self.pddl_actions : dict[str, Action] = {}
@@ -135,6 +117,48 @@ class KGAgent(KGBaseAgent):
 				else:
 					args[arg].remove("either")
 
+		self.entities_by_type: dict[str, list[str]] = {}
+		for entity, entity_type in self.entity_types.items():
+			for supertype in self.pddl_supertypes[entity_type]:
+				if supertype not in self.entities_by_type:
+					self.entities_by_type[supertype] = []
+				self.entities_by_type[supertype].append(entity)
+		
+		def expand_by_type(query_str: str) -> list[str]:
+			entities = [entity[1:-1] for entity in query_str[1:-1].split(", ")]
+			relevant_types = set()
+			for entity in entities:
+				if entity in self.entity_types:
+					relevant_types.add(self.entity_types[entity])
+			result = []
+			for type in relevant_types:
+				result += self.entities_by_type[type]
+			return result
+
+		# load in all default prompts
+		ENTITY_SELECT_PROMPT = get_prompt_template("prompts/entity_select_prompt.txt", entity_names=entity_names)
+		self.TRIPLET_FILTER_PROMPT = get_prompt_template("prompts/triplet_filter_prompt.txt")
+		self.TRIPLET_UPDATE_PROMPT = get_prompt_template("prompts/triplet_update_prompt.txt",
+											predicate_names=", ".join(predicate_names), entity_names=entity_names)
+
+		self.llm = OpenAI(temperature=0, model="gpt-4")
+		service_context = ServiceContext.from_defaults(llm=self.llm)
+		storage_context = StorageContext.from_defaults(graph_store=self.graph_store)
+		self.rag_update_retriever = KnowledgeGraphRAGRetriever(
+			storage_context=storage_context,
+			service_context=service_context,
+			llm=self.llm,
+			verbose=False,
+			graph_traversal_depth=3,
+			max_knowledge_sequence=100,
+			entity_extract_fn=partial(extract_keywords, service_context, ENTITY_SELECT_PROMPT),
+			synonym_expand_fn=expand_by_type,
+			entity_extract_template=None,
+			synonym_expand_template=None,
+		)
+		self.rag_update_retriever._entity_extract_template = None # type: ignore
+		self.rag_update_retriever._synonym_expand_template = None # type: ignore
+
 		self.domain_path = domain_path
 		with open(self.domain_path, "r") as f:
 			domain_pddl = f.read()
@@ -150,8 +174,13 @@ class KGAgent(KGBaseAgent):
 			max_knowledge_sequence=500,
 			max_entities=10,
 			entity_extract_fn=partial(extract_keywords, service_context, template),
-			entity_extract_policy="union"
+			synonym_expand_fn=expand_by_type,
+			entity_extract_template=None,
+			synonym_expand_template=None,
 		)
+		self.rag_plan_retriever._entity_extract_template = None # type: ignore
+		self.rag_plan_retriever._synonym_expand_template = None # type: ignore
+
 		self.query_engine = RetrieverQueryEngine.from_args(
 			self.rag_plan_retriever, service_context=service_context
 		)
@@ -161,6 +190,10 @@ class KGAgent(KGBaseAgent):
 	def postprocess_triplet(triplet: str) -> str:
 		components = [re.sub(r'[^a-zA-Z0-9_]', '', component) for component in triplet.split(", ")]
 		return " -> ".join(components)
+	
+	@staticmethod
+	def is_divider_str(triplet_str: str) -> bool:
+		return all(c == '-' for c in triplet_str)
 
 	def input_state_change(self, state_change: str) -> None:
 		context_nodes = self.rag_update_retriever.retrieve(state_change)
@@ -183,6 +216,7 @@ class KGAgent(KGBaseAgent):
 		num_attempts = 0
 
 		while len(update_issues) > 0:
+			update_issues = []
 			num_attempts += 1
 
 			# query LLM to update triplets (remove existing and add new)
@@ -191,14 +225,49 @@ class KGAgent(KGBaseAgent):
 			triplet_updates = curr_response.content
 
 			# process the changes and commit to knowledge graph
-			update_lines = triplet_updates.split('\n')
-			remove_idx = update_lines.index("REMOVE:")
-			add_idx = update_lines.index("ADD:")
-			remove = set(update_lines[remove_idx + 1 : add_idx])
-			add = set(update_lines[add_idx + 1:])
+			try:
+				start_idx = triplet_updates.index("{")
+			except ValueError:
+				update_issues.append("Your response was not in the correct JSON format")
+				continue
+			
+			try:
+				end_idx = triplet_updates.rindex("}")
+			except ValueError:
+				update_issues.append("Your response was not in the correct JSON format")
+				continue
+			
+			triplet_updates = triplet_updates[start_idx : end_idx + 1]
+			try:
+				update_json = json.loads(triplet_updates)
+			except json.decoder.JSONDecodeError:
+				update_issues.append("Your response was not in the correct JSON format")
+				continue
+			
+			bad_json = False
 
-			update_issues = []
+			if "ADD" not in update_json:
+				update_issues.append("There was no 'ADD' entry in your provided JSON")
+				bad_json = True
+			elif not isinstance(update_json["ADD"], list):
+				update_issues.append("The 'ADD' entry in your provided JSON did not contain a list")
+				bad_json = True
+			
+			if "REMOVE" not in update_json:
+				update_issues.append("There was no 'REMOVE' entry in your provided JSON")
+				bad_json = True
+			elif not isinstance(update_json["REMOVE"], list):
+				update_issues.append("The 'REMOVE' entry in your provided JSON did not contain a list")
+				bad_json = True
+			
+			if bad_json:
+				continue
+			
+			remove = set(update_json["REMOVE"])
+			add = set(update_json["ADD"])
+
 			for triplet_str in add:
+				triplet_str = str(triplet_str)
 				triplet = triplet_str.split(" -> ")
 				if len(triplet) != 3:
 					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. '{triplet_str}' does not follow this format.")
@@ -225,19 +294,34 @@ class KGAgent(KGBaseAgent):
 					allowed_subj_types = "/".join(arg_types["?a"])
 					allowed_obj_types = "True/False" if len(arg_types) == 1 else "/".join(arg_types["?b"])
 					update_issues.append(f"Invalid use of '{rel}' in '{triplet_str}'. Can only apply '{rel}' with types: [{allowed_subj_types}] -> {rel} -> [{allowed_obj_types}]")
-				elif obj_is_bool:
+					continue
+				if obj_is_bool:
 					expected_remove = "{} -> {} -> {}".format(subj, rel, "True" if obj == "False" else "False")
 					if expected_remove not in remove:
 						update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
+						continue
+				if self.graph_store.rel_exists(subj, rel, obj):
+					update_issues.append(f"Cannot add '{triplet_str}' because it already exists in the graph")
 				
 			for triplet_str in remove:
-				triplet = triplet_str.split(" -> ")
-				subj, rel, obj = triplet[0], triplet[1], triplet[2]
-				if obj != "True" and obj != "False":
+				if KGAgent.is_divider_str(triplet_str):
 					continue
-				expected_add = "{} -> {} -> {}".format(subj, rel, "True" if obj == "False" else "False")
-				if expected_add not in add:
-					update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
+
+				triplet = triplet_str.split(" -> ")
+				if len(triplet) != 3:
+					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. '{triplet_str}' does not follow this format.")
+					continue
+
+				subj, rel, obj = triplet[0], triplet[1], triplet[2]
+
+				if not self.graph_store.rel_exists(subj, rel, obj):
+					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
+					continue
+				
+				if obj == "True" and obj == "False":
+					expected_add = "{} -> {} -> {}".format(subj, rel, "True" if obj == "False" else "False")
+					if expected_add not in add:
+						update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
 
 			if len(update_issues) > 0:
 				curr_message = ChatMessage()
@@ -348,6 +432,81 @@ class KGAgent(KGBaseAgent):
 
 		return plan
 	
+	"""
+	('forall' ('?b', '-', 'cloth')
+		('when' ('placed_at_washer', '?b', '?a')
+			('and'
+				('cloth_is_clean', '?b')
+				('not', ('cloth_is_dry', '?b'))
+			)
+		)
+	)
+
+	"""
+
+	def process_forall_effect(self, forall_effect: tuple, param_names: dict[str, str]):
+		if forall_effect[0] != 'forall':
+			return False
+		quantifier_types = forall_effect[1:-1]
+		param_names = param_names.copy()
+		
+		update = forall_effect[-1]
+		assert update[0] == 'when'
+		
+		conditions = update[1]
+		if conditions[0] == 'and':
+			conditions = conditions[1:]
+		else:
+			conditions = [conditions]
+		
+		effects = update[2]
+		if effects[0] == 'and':
+			effects = effects[1:]
+		else:
+			effects = [effects]
+
+		def is_condition_met(condition: tuple):
+			if condition[0] == 'not':
+				return not is_condition_met(condition[1])
+			predicate, params = condition[0], condition[1:]
+			arg1, arg2 = param_names[params[0]], param_names[params[1]] if len(params) == 2 else True
+			return self.graph_store.rel_exists(arg1, predicate, arg2) # type: ignore
+
+		for entity_selection in itertools.product(*[self.entities_by_type[type] for _, _, type in quantifier_types]):
+			for (quantifier, _, _), selection in zip(quantifier_types, entity_selection):
+				param_names[quantifier] = selection
+			if any(not is_condition_met(condition) for condition in conditions):
+				continue
+			for effect in effects:
+				remove = False
+				if effect[0] == 'not':
+					remove = True
+					effect = effect[1]
+				self.process_effect(effect, param_names, remove)
+		
+		return True
+	
+	def process_effect(self, effect: tuple[str], param_names: dict[str, str], remove: bool = False):
+		predicate, required_params = effect[0], effect[1:]
+		if len(required_params) == 2:
+			arg1 = param_names[required_params[0]]
+			arg2 = param_names[required_params[1]]
+			if remove:
+				self.graph_store.delete(arg1, predicate, arg2)
+			elif not self.graph_store.rel_exists(arg1, predicate, arg2):
+				self.graph_store.upsert_triplet(arg1, predicate, arg2)
+		elif len(required_params) == 1:
+			arg = param_names[required_params[0]]
+			if remove:
+				self.graph_store.delete(arg, predicate, True) # type: ignore
+				if predicate != "held_by_robot" and not self.graph_store.rel_exists(arg, predicate, False): # type: ignore
+					self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, False) # type: ignore
+			else:
+				if predicate != "held_by_robot":
+					self.graph_store.delete(arg, predicate, False) # type: ignore
+				if not self.graph_store.rel_exists(arg, predicate, True): # type: ignore
+					self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, True) # type: ignore
+	
 	def process_plan(self, plan: list[str]):
 		for item in plan:
 			tokens = item[1:-1].lower().split()
@@ -360,30 +519,12 @@ class KGAgent(KGBaseAgent):
 				param_names[token[0]] = name
 			
 			for del_effect in action.del_effects:
-				predicate, required_params = del_effect[0], del_effect[1:]
-				if len(required_params) == 2:
-					arg1 = param_names[required_params[0]]
-					arg2 = param_names[required_params[1]]
-					self.graph_store.delete(arg1, predicate, arg2)
-				elif len(required_params) == 1:
-					arg = param_names[required_params[0]]
-					self.graph_store.delete(arg, predicate, True) # type: ignore
-					if predicate != "held_by_robot":
-						self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, False) # type: ignore
+				self.process_effect(del_effect, param_names, remove=True)
 
 			for add_effect in action.add_effects:
-				predicate, required_params = add_effect[0], add_effect[1:]
-				if len(required_params) == 2:
-					arg1 = param_names[required_params[0]]
-					arg2 = param_names[required_params[1]]
-					self.graph_store.upsert_triplet(arg1, predicate, arg2)
-				elif len(required_params) == 1:
-					arg = param_names[required_params[0]]
-					if predicate != "held_by_robot":
-						self.graph_store.delete(arg, predicate, False) # type: ignore
-					self.graph_store.upsert_triplet_bool(self.graph_store.name_to_id[arg], predicate, True) # type: ignore
+				if not self.process_forall_effect(add_effect, param_names):
+					self.process_effect(add_effect, param_names)
 
-	
 	def get_all_relations(self) -> list[str]:
 		self.cur.execute("SELECT * from cypher('knowledge_graph', $$MATCH (V)-[R]->(V2) RETURN V.name, type(R), V2.name$$) as (subj agtype, rel agtype, obj agtype);")
 		return [" -> ".join(row) for row in self.cur.fetchall() if all(isinstance(s, str) for s in row)]
