@@ -10,6 +10,7 @@ from matplotlib.style import available
 import numpy as np
 
 DIR = os.path.dirname(__file__)
+MAX_ITER = 100
 
 class Predicate:
 	def __init__(self, name: str, parameter_list: list[str]) -> None:
@@ -421,10 +422,11 @@ class MovableInteractable(MovableItem, InteractableItem):
 		pass
 
 	def perform_action(self, people: list[Person]) -> str | None:
-		while True:
+		for _ in range(MAX_ITER):
 			action = self.interact(people) if random.choice([True, False]) else MovableItem.perform_action(self, people)
 			if action is not None:
 				return action
+		raise Exception("Unable to generate action")
 
 	def get_init_conditions(self) -> list[str]:
 		return MovableItem.get_init_conditions(self) + self.get_special_init_conditions()
@@ -438,10 +440,11 @@ class InteractableContainer(Container, StationaryInteractable):
 		pass
 
 	def perform_action(self, people: list[Person]) -> str | None:
-		while True:
+		for _ in range(MAX_ITER):
 			action = self.interact(people) if random.choice([True, False]) else Container.perform_action(self, people)
 			if action is not None:
 				return action
+		raise Exception("Unable to generate action")
 	
 	@abstractmethod
 	def generate_interactable_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
@@ -1073,6 +1076,9 @@ class Cloth(MovableInteractable):
 		return f"Is {self.shortened_name} clean?", "Yes." if self.clean else "No."
 	
 	def interact(self, people: list[Person]) -> str | None:
+		if not self.clean:
+			return None
+		self.clean = False
 		return f"{random.choice(people).name} accidentally spilled something on {self.shortened_name} so now it's dirty."
 	
 	@staticmethod
@@ -1752,7 +1758,7 @@ class DatasetGenerator:
 		usable_rooms = self.rooms.copy()
 		usable_movables, movable_probabilities = self.get_items_and_probabilities()
 		usable_people = self.people.copy()
-		while True:
+		for _ in range(MAX_ITER):
 			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or len(usable_people) > 0
 			choice = random.randrange(5)
 			if len(usable_rooms) > 0 and choice <= 2:
@@ -1773,6 +1779,7 @@ class DatasetGenerator:
 				action = usable_people.pop(random.randrange(len(usable_people))).perform_action(all_items)
 				if action is not None:
 					return action
+		raise Exception("Unable to generate state change")
 	
 	def generate_goal(self) -> Goal:
 		all_items = self.movable_items.copy()
@@ -1781,7 +1788,7 @@ class DatasetGenerator:
 		usable_movables, movable_probabilities = self.get_items_and_probabilities()
 		usable_people = self.people.copy()
 		usable_collectives = collective_goal_types.copy()
-		while True:
+		for _ in range(MAX_ITER):
 			assert len(usable_rooms) > 0 or len(usable_movables) > 0 or len(usable_people) > 0
 			choice = random.randrange(8)
 			if len(usable_rooms) > 0 and choice <= 2:
@@ -1806,6 +1813,7 @@ class DatasetGenerator:
 				goal = usable_people.pop(random.randrange(len(usable_people))).generate_goal(all_items)
 				if goal is not None:
 					return goal
+		raise Exception("Unable to generate goal")
 	
 	def generate_query_answer(self) -> tuple[str, str]:
 		if random.choice([True, False]):
