@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataset.dataset import Dataset
-from openai.embeddings_utils import get_embedding
 import numpy as np
 import math
 
@@ -30,22 +29,22 @@ class DummyAgent(Agent):
 	def answer_query(self, query: str) -> str:
 		return ""
 
-class Simulation:
-	def __init__(self, dataset: Dataset, agent: Agent) -> None:
-		self.dataset = dataset
-		self.agent = agent
+# class Simulation:
+# 	def __init__(self, dataset: Dataset, agent: Agent) -> None:
+# 		self.dataset = dataset
+# 		self.agent = agent
 	
-	def run(self):
-		print(f"Initial State:\n{self.dataset.initial_state}")
-		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_yaml)
-		for time_step in self.dataset:
-			print("Time: " + str(time_step["time"]))
-			if time_step["type"] == "state change":
-				print("State change: {}\n".format(time_step["state change"]))
-				self.agent.input_state_change(time_step["state change"])
-			else:
-				print("Query: " + time_step["query"])
-				print("True answer: " + time_step["answer"])
-				predicted_answer = self.agent.answer_query(time_step["query"])
-				print("Predicted answer: " + predicted_answer)
-				print("Similarity: {}\n".format(cosine_similarity(get_embedding(time_step["answer"]), get_embedding(predicted_answer))))
+# 	def run(self):
+# 		print(f"Initial State:\n{self.dataset.initial_state}")
+# 		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_yaml)
+# 		for time_step in self.dataset:
+# 			print("Time: " + str(time_step["time"]))
+# 			if time_step["type"] == "state change":
+# 				print("State change: {}\n".format(time_step["state change"]))
+# 				self.agent.input_state_change(time_step["state change"])
+# 			else:
+# 				print("Query: " + time_step["query"])
+# 				print("True answer: " + time_step["answer"])
+# 				predicted_answer = self.agent.answer_query(time_step["query"])
+# 				print("Predicted answer: " + predicted_answer)
+# 				print("Similarity: {}\n".format(cosine_similarity(get_embedding(time_step["answer"]), get_embedding(predicted_answer))))

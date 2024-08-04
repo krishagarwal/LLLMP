@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from llama_index.graph_stores.types import GraphStore
+from llama_index.core.graph_stores.types import GraphStore
 
 try:
     import psycopg2
@@ -191,10 +191,10 @@ class AgeGraphStore(GraphStore): # type: ignore
                 f"$$MATCH (u {{name: '{subj}'}})-[e:{rel}]->(v {{name: '{obj}'}}) DELETE e$$) as (e agtype);")
 
         delete_rel(subj, obj, rel)
-        if not check_edges(subj):
-            delete_entity(subj)
-        if not check_edges(obj):
-            delete_entity(obj)
+        # if not check_edges(subj):
+        #     delete_entity(subj)
+        # if not check_edges(obj):
+        #     delete_entity(obj)
 
     def delete_rel_with_subj(self, subj: str, rel: str) -> None:
         """Delete triplet with subj and rel."""
@@ -210,13 +210,14 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"SELECT * FROM cypher('{self._graph_name}', "
             f"$$MATCH (u)-[e:{rel}]->(v:{self._node_label} {{name: '{obj}'}}) DELETE e$$) as (e agtype);")
 
-    def query(self, query: str, param_map: Optional[Dict[str, Any]] = {}) -> Any:
+    def query(self, query: str, param_map: Optional[Dict[str, Any]] = {}, return_count: int = 1) -> Any:
         cur = self.cursor()
         if param_map: # only format if param map isn't empty
             query = query.format(param_map)
+        return_list = ", ".join(f'"{i}" agtype' for i in range(return_count))
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$${query}$$) as (a agtype);")
+            f"$${query}$$) as ({return_list});")
         results = cur.fetchall()
         return results
     

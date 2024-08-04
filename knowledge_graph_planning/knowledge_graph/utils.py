@@ -1,9 +1,7 @@
 import os
-from typing import Optional
-from llama_index.graph_stores.types import GraphStore
-from llama_index.indices.keyword_table.utils import extract_keywords_given_response
-from llama_index.prompts import PromptTemplate, PromptType
-from llama_index import ServiceContext
+from llama_index.core.indices.keyword_table.utils import extract_keywords_given_response
+from llama_index.core.prompts import PromptTemplate, PromptType
+from llama_index.core import ServiceContext
 
 # read prompt template from file and format
 def get_prompt_template(filename: str, **kwargs) -> str:

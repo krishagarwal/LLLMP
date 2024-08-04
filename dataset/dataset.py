@@ -6,7 +6,6 @@ from typing import TypeVar, cast
 from inspect import isabstract
 import re
 import os
-from matplotlib.style import available
 import numpy as np
 
 DIR = os.path.dirname(__file__)
@@ -274,7 +273,6 @@ class Container(StationaryItem):
 		for item in self.items:
 			item.container = self
 			item.relative_location, item.extra_location_info = self.generate_relative_location()
-		random.shuffle(self.items)
 	
 	def get_description(self) -> str:
 		if len(self.items) == 0:
@@ -718,9 +716,10 @@ class Sink(StationaryInteractable):
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
 		self.faucet_on = random.choice([True, False])
+		pred = f"{Sink.FAUCET_ON_RELATION} {self.token_name}"
 		return Goal(
 			"Make sure that the faucet of the {} is {}.".format(self.get_full_name_with_room(), "on" if self.faucet_on else "off"),
-			[f"{Sink.FAUCET_ON_RELATION} {self.token_name}"]
+			[pred if self.faucet_on else f"not ({pred})"]
 		)
 
 class KitchenSink(InteractableContainer):
@@ -804,7 +803,7 @@ class KitchenSink(InteractableContainer):
 		if clean_goal:
 			return Goal("Please wash all the dishes.", predicates)
 		return Goal(
-			f"Please return all dishes to the {self.name} in {self.parent.name}.",
+			f"Please return all dishes to the {self.get_full_name_with_room()}.",
 			predicates
 		)
 
@@ -1050,21 +1049,26 @@ class Remote(AccompanyingItem):
 		return Remote("remote")
 
 class Cloth(MovableInteractable):
-	available_clothes = ["shirt", "jeans", "cardigan", "sweater", "jacket"]
+	with open(os.path.join(DIR, "clothes.txt")) as f:	
+		available_clothes = f.read().splitlines()
 	with open(os.path.join(DIR, "names.txt")) as f:	
 		available_names = f.read().splitlines()
+	used_combos = set()
 
 	def __init__(self, type: str, owner: str, clean: bool) -> None:
-		super().__init__(f"{type} that belongs to {owner}", f"{owner.lower()}_{type}", f"{owner}'s {type}", False)
+		type_token = re.sub(r"[^a-zA-Z0-9]+", "_", type).lower()
+		super().__init__(f"{type} that belongs to {owner}", f"{owner.lower()}_{type_token}", f"{owner}'s {type}", False)
 		self.clean = clean
 	
 	@staticmethod
 	def generate_instance() -> Cloth | None:
-		if len(Cloth.available_clothes) == 0 or len(Cloth.available_names) == 0:
-			return None
-		return Cloth(Cloth.available_clothes.pop(random.randrange(len(Cloth.available_clothes))),
-			   			Cloth.available_names.pop(random.randrange(len(Cloth.available_names))),
-						random.choice([True, False]))
+		for _ in range(MAX_ITER):
+			person = random.choice(Cloth.available_names)
+			cloth = random.choice(Cloth.available_clothes)
+			if (person, cloth) not in Cloth.used_combos:
+				Cloth.used_combos.add((person, cloth))
+				return Cloth(cloth, person, random.choice([True, False]))
+		return None
 	
 	def get_special_init_conditions(self) -> list[str]:
 		conditions = ["cloth_is_dry " + self.token_name]
@@ -2035,5 +2039,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("experiments/experiment2/domains/domain5", num_state_changes=100, state_changes_per_query=300, state_changes_per_goal=5)
+	generator = DatasetGenerator("experiment/domains/domain1", num_state_changes=100, state_changes_per_query=300, state_changes_per_goal=5)
 	generator.run()

@@ -7,6 +7,7 @@ from difflib import ndiff
 
 from dataset.simulation import Dataset
 
+from knowledge_graph_planning.knowledge_graph.age import AgeGraphStore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
 from knowledge_representation._libknowledge_rep_wrapper_cpp import LongTermMemoryConduit
 
@@ -33,6 +34,21 @@ class KGSim:
 		self.log_dir = log_dir
 	
 	def run(self):
+		configure_db_script = os.path.join(os.path.dirname(__file__), "knowledge_graph/configure_postgresql.sh")
+		os.system(f"{configure_db_script} password knowledge_base_truth >/dev/null 2>&1")
+		all_knowledge = [load_knowledge_from_yaml(self.dataset.initial_knowledge_path)]
+		populate_with_knowledge(LongTermMemoryConduit("knowledge_base_truth", "localhost"), all_knowledge)
+		load_graph("knowledge_base_truth", "knowledge_graph")
+		truth_graph_store = AgeGraphStore(
+			"knowledge_base_truth",
+			"postgres",
+			"password",
+			"localhost",
+			5432,
+			"knowledge_graph",
+			"entity",
+		) # type: ignore
+
 		report: list[Result] = []
 		previous_diff = []
 		print(f"Initial State:\n{self.dataset.initial_state}")
@@ -46,7 +62,7 @@ class KGSim:
 			elif time_step["type"] == "goal":
 				print("\nTime: " + str(time_step["time"]))
 				print(f"Goal: {time_step['goal']}")
-				predicted_plan = self.agent.answer_planning_query(time_step["goal"])
+				predicted_plan = self.agent.answer_planning_query(time_step["goal"], truth_graph_store)
 				print("Generated plan")
 
 				plan_file = "predicted_plan.pddl"
@@ -69,26 +85,27 @@ class KGSim:
 					report.append(Result(time_step["time"], "plan", time_step["type"], True))
 			else:
 				continue
-			
-			script = os.path.join(os.path.dirname(__file__), "knowledge_graph/configure_postgresql.sh")
-			os.system(f"{script} password knowledge_base_truth >/dev/null 2>&1")
 
+			truth_graph_store._conn.close()
+			os.system('sudo -u postgres psql -c "drop database knowledge_base_truth"')
+
+			os.system(f"{configure_db_script} password knowledge_base_truth >/dev/null 2>&1")
 			all_knowledge = [load_knowledge_from_yaml(time_step["knowledge_path"])]
 			populate_with_knowledge(LongTermMemoryConduit("knowledge_base_truth", "localhost"), all_knowledge)
 			load_graph("knowledge_base_truth", "knowledge_graph")
+			truth_graph_store = AgeGraphStore(
+				"knowledge_base_truth",
+				"postgres",
+				"password",
+				"localhost",
+				5432,
+				"knowledge_graph",
+				"entity",
+			) # type: ignore
 
-			conn = psycopg2.connect(dbname="knowledge_base_truth", user="postgres", password="password", host="localhost", port=5432)
-			cur = conn.cursor()
-			cur.execute(f"LOAD 'age'")
-			cur.execute(f"SET search_path = ag_catalog, '$user', public;")
-			
-			cur.execute("SELECT * from cypher('knowledge_graph', $$MATCH (V)-[R]->(V2) RETURN V.name, type(R), V2.name$$) as (subj agtype, rel agtype, obj agtype);")
-			triplets_truth = [" -> ".join(row) for row in cur.fetchall() if all(isinstance(s, str) for s in row)]
+			triplets_truth = truth_graph_store.query("MATCH (V)-[R]->(V2) RETURN V.name, type(R), V2.name", return_count=3)
+			triplets_truth = [" -> ".join(row) for row in triplets_truth if all(isinstance(s, str) for s in row)]
 			triplets_truth.sort()
-			cur.close()
-			conn.close()
-			os.system('sudo -u postgres psql -c "drop database knowledge_base_truth"')
-
 			triplets_pred = self.agent.get_all_relations()
 			triplets_pred.sort()
 
@@ -140,7 +157,8 @@ class Result:
 
 if __name__ == "__main__":
 	# experiment_dir = "test_experiment"
-	experiment_dir = "experiments/experiment3"
+	experiment_dir = "experiment"
 	for i in [1, 2, 3, 4, 5]:
+		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
 		sim = KGSim(Dataset(f"{experiment_dir}/domains/domain{i}"), KGAgent(f"{experiment_dir}/runs/run{i}"), f"{experiment_dir}/runs/run{i}")
 		sim.run()
