@@ -64,39 +64,42 @@ class AgeGraphStore(GraphStore): # type: ignore
 
         for subj in subjs:
             rel_map[subj] = []
+        
+        # max 100 can be processed at a time by db
+        for i in range(0, len(subjs), 100):
+            subjs_str = '["' + '", "'.join(subjs[i:i+100]) + '"]'
 
-        subjs_str = '["' + '", "'.join(subjs) + '"]'
+            for i in range(depth):
+                path = f"-[]-(:{self._node_label})" * i
 
-        for i in range(depth):
-            path = f"-[]-(:{self._node_label})" * i
-
-            query = (f"SELECT * FROM ag_catalog.cypher('{self._graph_name}', $$ "
-                     f"MATCH p=(n1:{self._node_label}){path}-[]-() "
-                     f"WHERE n1.name IN {subjs_str} "
-                     f"WITH n1.name AS subj, p, relationships(p) AS rels "
-                     f"UNWIND rels AS rel "
-                     f"WITH subj AS subj, p, collect([startNode(rel).name, type(rel), endNode(rel).name]) AS predicates "
-                     f"RETURN subj, predicates LIMIT {limit}"
-                     f"$$) as (subj agtype, rel agtype);"
-                     )
-            cur = self.cursor()
-            try:
-                cur.execute(query)
-            except psycopg2.errors.TooManyArguments as err:
-                print(err)
-                print(query)
-                print(subjs_str)
-                raise err
-            except psycopg2.errors.SyntaxError as err:
-                print(err)
-                print(query)
-                print(subjs_str)
-            results = cur.fetchall()
-            for row in results:
-                for rel in eval(row[1]):
-                    rel_str = "" + rel[0] + ", -[" + rel[1] + "], " + "-> " + rel[2] + ""
-                    if rel_str not in rel_map[eval(row[0])]:
-                        rel_map[eval(row[0])].append(rel_str)
+                query = (f"SELECT * FROM ag_catalog.cypher('{self._graph_name}', $$ "
+                        f"MATCH p=(n1:{self._node_label}){path}-[]-() "
+                        f"WHERE n1.name IN {subjs_str} "
+                        f"WITH n1.name AS subj, p, relationships(p) AS rels "
+                        f"UNWIND rels AS rel "
+                        f"WITH subj AS subj, p, collect([startNode(rel).name, type(rel), endNode(rel).name]) AS predicates "
+                        f"RETURN subj, predicates LIMIT {limit}"
+                        f"$$) as (subj agtype, rel agtype);"
+                        )
+                cur = self.cursor()
+                try:
+                    cur.execute(query)
+                except psycopg2.errors.TooManyArguments as err:
+                    # should never happen
+                    print(err)
+                    print(query)
+                    print(subjs_str)
+                    raise err
+                except psycopg2.errors.SyntaxError as err:
+                    print(err)
+                    print(query)
+                    print(subjs_str)
+                results = cur.fetchall()
+                for row in results:
+                    for rel in eval(row[1]):
+                        rel_str = "" + rel[0] + ", -[" + rel[1] + "], " + "-> " + rel[2] + ""
+                        if rel_str not in rel_map[eval(row[0])]:
+                            rel_map[eval(row[0])].append(rel_str)
 
         return rel_map
 
@@ -124,8 +127,9 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:{self._node_label} {{id: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
-    def upsert_triplet_bool(self, subj: str, rel: str, obj: str) -> None:
+    def upsert_triplet_bool(self, subj: str, rel: str, obj_bool: bool) -> None:
         """Add triplet with bool value."""
+        obj = str(obj_bool).lower()
         cur = self.cursor()
         cur.execute(
             f"SELECT * FROM cypher('{self._graph_name}', "
@@ -135,7 +139,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:bool {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
 
-    def upsert_triplet_float(self, subj: str, rel: str, obj: str) -> None:
+    def upsert_triplet_float(self, subj: str, rel: str, obj: float) -> None:
         """Add triplet with float value."""
         cur = self.cursor()
         cur.execute(
@@ -146,7 +150,7 @@ class AgeGraphStore(GraphStore): # type: ignore
             f"SELECT * FROM cypher('{self._graph_name}', $$MATCH (u:{self._node_label} {{id: '{subj}'}}), "
             f"(v:float {{name: '{obj}'}}) CREATE (u)-[e:{rel}]->(v) RETURN e$$) as (e agtype);")
     
-    def upsert_triplet_int(self, subj: str, rel: str, obj: str) -> None:
+    def upsert_triplet_int(self, subj: str, rel: str, obj: int) -> None:
         """Add triplet with int value."""
         cur = self.cursor()
         cur.execute(
@@ -215,11 +219,15 @@ class AgeGraphStore(GraphStore): # type: ignore
         if param_map: # only format if param map isn't empty
             query = query.format(param_map)
         return_list = ", ".join(f'"{i}" agtype' for i in range(return_count))
-        cur.execute(
-            f"SELECT * FROM cypher('{self._graph_name}', "
-            f"$${query}$$) as ({return_list});")
-        results = cur.fetchall()
+        try:
+            cur.execute(
+                f"SELECT * FROM cypher('{self._graph_name}', "
+                f"$${query}$$) as ({return_list});")
+            results = cur.fetchall()
+        except:
+            return None
         return results
     
     def rel_exists(self, subj: str, rel: str, obj: str) -> bool:
-        return self.query(f"MATCH (V {{name: '{subj}'}})-[:{rel}]-(V2 {{name: '{obj}'}}) RETURN COUNT(V) > 0")[0][0] == 'true'
+        result = self.query(f"MATCH (V {{name: '{subj}'}})-[:{rel}]-(V2 {{name: '{obj}'}}) RETURN COUNT(V) > 0")
+        return result is not None and len(result) == 1 and result[0] is not None and len(result[0]) == 1 and result[0][0] == 'true'

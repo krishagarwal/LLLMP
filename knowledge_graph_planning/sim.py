@@ -1,7 +1,8 @@
 from __future__ import annotations
-
+import sys
+from typing import IO
+from contextlib import redirect_stdout
 import os
-import psycopg2
 from pathlib import Path
 from difflib import ndiff
 
@@ -9,7 +10,7 @@ from dataset.simulation import Dataset
 
 from knowledge_graph_planning.knowledge_graph.age import AgeGraphStore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
-from knowledge_representation._libknowledge_rep_wrapper_cpp import LongTermMemoryConduit
+from knowledge_representation._libknowledge_rep_wrapper_cpp import LongTermMemoryConduit # type: ignore
 
 from knowledge_graph.load_graph import load_graph
 from knowledge_graph.agent import KGBaseAgent, KGAgent
@@ -22,10 +23,6 @@ keys = keys.strip().split('\n')
 os.environ["OPENAI_API_KEY"] = keys[0]
 
 project_dir = Path(__file__).parent.parent.as_posix()
-
-# from llama_index.llms import OpenAI
-
-# print(OpenAI().complete("What is 1 + 1?"))
 
 class KGSim:
 	def __init__(self, dataset: Dataset, agent: KGBaseAgent, log_dir: str) -> None:
@@ -104,7 +101,7 @@ class KGSim:
 			) # type: ignore
 
 			triplets_truth = truth_graph_store.query("MATCH (V)-[R]->(V2) RETURN V.name, type(R), V2.name", return_count=3)
-			triplets_truth = [" -> ".join(row) for row in triplets_truth if all(isinstance(s, str) for s in row)]
+			triplets_truth = [" -> ".join(item[1:-1] for item in row) for row in triplets_truth if all(isinstance(s, str) for s in row)]
 			triplets_truth.sort()
 			triplets_pred = self.agent.get_all_relations()
 			triplets_pred.sort()
@@ -156,9 +153,25 @@ class Result:
 		return Result(int(args[0]), args[1], args[2], args[3] == "Success")
 
 if __name__ == "__main__":
-	# experiment_dir = "test_experiment"
+	class Logger(IO):
+		def __init__(self, file_path):
+			self.terminal = sys.stdout
+			self.log = open(file_path, "w")
+		def write(self, message):
+			self.terminal.write(message)
+			self.log.write(message)  
+		def flush(self):
+			self.terminal.flush()
+			self.log.flush()
+		def close(self):
+			self.log.close()
+
 	experiment_dir = "experiment"
-	for i in [1, 2, 3, 4, 5]:
+	domain_path = f"{experiment_dir}/domains/gpt-4"
+	run_dir = f"{experiment_dir}/runs/gpt-4/none"
+	log = Logger(f"{run_dir}/output.log")
+	with redirect_stdout(log):
 		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
-		sim = KGSim(Dataset(f"{experiment_dir}/domains/domain{i}"), KGAgent(f"{experiment_dir}/runs/run{i}"), f"{experiment_dir}/runs/run{i}")
+		sim = KGSim(Dataset(domain_path), KGAgent(run_dir), run_dir)
 		sim.run()
+	log.close()
