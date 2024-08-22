@@ -251,7 +251,7 @@ class Container(StationaryItem):
 
 	def __init__(self, name: str, parent: Room) -> None:
 		super().__init__(name, parent)
-		self.items: list[MovableItem]
+		self.items: list[MovableItem] = []
 
 	@staticmethod
 	@abstractmethod
@@ -263,13 +263,14 @@ class Container(StationaryItem):
 		return [movable_type for movable_type in movable_types if cls.can_hold(movable_type)]
 	
 	def populate(self, items: list[MovableItem], max_allowed: int) -> None:
-		self.items = []
 		holdables = [item for item in items if self.can_hold(type(item))]
 		random.shuffle(holdables)
-		while len(holdables) > 0 and len(self.items) < max_allowed:
+		selected = 0
+		while len(holdables) > 0 and selected < max_allowed:
 			item = holdables.pop()
 			items.remove(item)
 			self.items.append(item)
+			selected += 1
 		for item in self.items:
 			item.container = self
 			item.relative_location, item.extra_location_info = self.generate_relative_location()
@@ -506,8 +507,8 @@ class Table(Container):
 		return "on", {}
 	
 class Shelf(Container):
-	MIN_LEVELS = 3
-	MAX_LEVELS = 10
+	MIN_LEVELS = 7
+	MAX_LEVELS = 15
 	LEVEL_PARAM = "?c"
 	PERSON_PARAM = "?d"
 	LEVEL_TYPE = "shelf_level"
@@ -612,6 +613,8 @@ class Shelf(Container):
 		return Shelf.LEVEL_OBJECTS
 
 class Fridge(Container):
+	MIN_FOODS = 30
+	MAX_FOODS = 40
 	def __init__(self, name: str, parent: Room, foods: list[Food]) -> None:
 		super().__init__(name, parent)
 		self.foods = foods
@@ -627,7 +630,7 @@ class Fridge(Container):
 	def generate_instance(parent: Room) -> tuple[Fridge, list[Food]]:
 		foods: list[Food] = []
 		food_item = Food.generate_instance()
-		threshold = random.randint(3, 5)
+		threshold = random.randint(Fridge.MIN_FOODS, Fridge.MAX_FOODS)
 		while food_item is not None and len(foods) < threshold:
 			foods.append(cast(Food, food_item))
 			food_item = Food.generate_instance()
@@ -723,6 +726,8 @@ class Sink(StationaryInteractable):
 		)
 
 class KitchenSink(InteractableContainer):
+	MIN_DISHES = 7
+	MAX_DISHES = 10
 	def __init__(self, name: str, parent: Room, faucet_on: bool, dishes: list[Kitchenware | LiquidContainer]) -> None:
 		super().__init__(name, parent)
 		self.faucet_on = faucet_on
@@ -770,7 +775,7 @@ class KitchenSink(InteractableContainer):
 	def generate_instance(parent: Room) -> tuple[KitchenSink, list[Kitchenware | LiquidContainer]]:
 		dishes: list[Kitchenware | LiquidContainer] = []
 		dish = Kitchenware.generate_instance()
-		threshold = random.randint(3, 5)
+		threshold = random.randint(KitchenSink.MIN_DISHES, KitchenSink.MAX_DISHES)
 		while dish is not None and len(dishes) < threshold:
 			dishes.append(cast(Kitchenware, dish))
 			dish = Kitchenware.generate_instance()
@@ -783,6 +788,7 @@ class KitchenSink(InteractableContainer):
 		return [Attribute(Sink.FAUCET_ON_RELATION, self.faucet_on)]
 	
 	def generate_interactable_goal(self, people: list[Person], all_items: list[MovableItem]) -> Goal | None:
+		# 1/3 regular Sink goal, 1/3 clean goal, 1/3 return goal
 		if random.choice([True, False, False]):
 			goal = Sink.generate_goal(self, people, all_items) # type: ignore
 			if goal is not None:
@@ -929,7 +935,7 @@ class Food(Singleton, AccompanyingItem):
 		return Food.available_foods
 
 class Kitchenware(Singleton, AccompanyingItem):
-	available_kitchenware = ["plate", "bowl", "fork", "spoon", "knife"]
+	available_kitchenware = ["plate", "bowl", "fork", "spoon", "knife", "frying pan", "pot", "ladle", "whisk"]
 
 	@staticmethod
 	def get_available_names() -> list[str]:
@@ -1514,12 +1520,15 @@ class Room(ABC):
 		room.yaml_instance = Instance(room.entity_id, attributes)
 		return room, accompanying_items
 
-	def populate(self, movable_items: list[MovableItem]) -> str:
+	def populate(self, movable_items: list[MovableItem]) -> None:
 		random.shuffle(self.items)
+		for item in self.items:
+			if isinstance(item, Container):
+				item.populate(movable_items, max_allowed=random.randint(3, 7))
+	
+	def get_description(self) -> str:
 		room_description = ""
 		for i, item in enumerate(self.items):
-			if isinstance(item, Container):
-				item.populate(movable_items, max_allowed=random.randint(3, 5))
 			room_description += "{}{} has a{} {}. ".format(self.name.capitalize(), "" if i == 0 else " also", "n" if item.name[0] in "aeiou" else "", item.name)
 			room_description += item.get_description()
 		return room_description
@@ -1620,7 +1629,7 @@ class LivingRoom(Room):
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
-		return stationary_type not in [Fridge, KitchenSink, Sink, Washer, Dryer, LaundryBasket]
+		return stationary_type in [Window, Table, TV, Shelf, Light]
 
 class Bedroom(Room):
 	with open(os.path.join(DIR, "names.txt")) as f:	
@@ -1635,7 +1644,7 @@ class Bedroom(Room):
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
-		return stationary_type not in [Fridge, KitchenSink, Sink, Washer, Dryer, LaundryBasket]
+		return stationary_type in [Window, Table, TV, Shelf, Light]
 
 class LaundryRoom(Room):
 	generated = False
@@ -1700,9 +1709,9 @@ class AgentConstants:
 		]
 
 class DatasetGenerator:
-	MAX_ROOMS = random.randint(4, 7)
-	MAX_ITEMS = random.randint(20, 40)
-	MAX_PEOPLE = random.randint(2, 5)
+	MAX_ROOMS = random.randint(30, 40)
+	MAX_ITEMS = random.randint(140, 160)
+	MAX_PEOPLE = random.randint(20, 30)
 
 	def __init__(self, parent_dir: str, num_state_changes: int = 100, state_changes_per_query: int = 10, state_changes_per_goal: int = 20) -> None:
 		self.num_state_changes = num_state_changes
@@ -1730,6 +1739,7 @@ class DatasetGenerator:
 					break
 				self.movable_items.append(item)
 				count += 1
+		random.shuffle(self.movable_items)
 		
 		self.stationary_items: list[StationaryItem] = []
 		for room_type in room_types:
@@ -1745,14 +1755,12 @@ class DatasetGenerator:
 				self.stationary_items += room.items
 		
 		remaining_movables = self.movable_items.copy()
+		while remaining_movables:
+			random.shuffle(self.rooms)
+			for room in self.rooms:
+				room.populate(remaining_movables)
 		for room in self.rooms:
-			self.description += room.populate(remaining_movables) + "\n\n"
-		for item in remaining_movables:
-			if isinstance(item, AccompanyingItem):
-				raise Exception("Unable to include AccompanyingItem: ", item.name)
-			self.movable_items.remove(item)
-		random.shuffle(self.movable_items)
-		random.shuffle(self.rooms)
+			self.description += room.get_description() + "\n\n"
 
 	def get_items_and_probabilities(self) -> tuple[list[MovableItem], list[float]]:
 		return self.movable_items.copy(), [1 / (self.item_freq.get(item, 0) + 1) / (self.item_type_freq.get(type(item), 0) + 1) for item in self.movable_items]
