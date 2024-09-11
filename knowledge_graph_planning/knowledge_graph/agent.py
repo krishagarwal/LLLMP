@@ -221,10 +221,12 @@ class KGAgent(KGBaseAgent):
 		context_nodes = self.rag_update_retriever.retrieve(state_change)
 		context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
 		triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
+		# triplets = self.get_all_relations()
 		extracted_triplets_str = '\n'.join(triplets)
 
 		# filter out irrelevant triplets using LLM directly
 		filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=extracted_triplets_str)).text
+		# filtered_triplet_str = extracted_triplets_str
 		log = [f"STATE CHANGE: {state_change}", f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"FILTERED TRIPLETS:\n{filtered_triplet_str}"]
 
 		update_issues = []

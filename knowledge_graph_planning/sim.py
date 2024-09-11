@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
 	experiment_dir = "experiment"
 	domain_path = f"{experiment_dir}/domains/gpt-4"
-	run_dir = f"{experiment_dir}/runs/gpt-4/none"
+	run_dir = f"{experiment_dir}/runs/gpt-4/rag+check"
 	log = Logger(f"{run_dir}/output.log")
 	with redirect_stdout(log):
 		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
