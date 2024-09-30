@@ -18,7 +18,7 @@ while true; do
   fi
 done
 
-schema_path="$(rospack find knowledge_representation)/sql/schema_postgresql.sql"
+schema_path="knowledge_graph_planning/knowledge_graph/schema_postgresql.sql"
 
 if [ -n "$2" ]; then
   DB_NAME="$2"
