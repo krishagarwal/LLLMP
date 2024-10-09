@@ -16,6 +16,7 @@ from knowledge_representation import get_default_ltmc # type: ignore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
 from knowledge_graph.load_graph import load_graph
 from knowledge_graph.age import AgeGraphStore
+from knowledge_graph.utils import reset_database
 
 from llama_index.core import ServiceContext
 from llama_index.core.storage.storage_context import StorageContext
@@ -28,6 +29,7 @@ from .utils import get_prompt_template, extract_keywords
 from .chat_mem_buffer import TripletTrimBuffer
 
 from pddl_parser.PDDL import PDDL_Parser, Action
+
 
 class KGBaseAgent(ABC):
 	@abstractmethod
@@ -60,11 +62,21 @@ class KGAgent(KGBaseAgent):
 		self.dbpass = "password"
 		self.dbhost = "localhost"
 		self.dbport = 5432
+		self.dbschema = os.path.join(os.path.dirname(__file__), "schema_postgresql.sql")
 		self.graph_name = "knowledge_graph"
 		self.time = 0
 	
 	def input_initial_state(self, initial_state: str, knowledge_path: str, predicate_names: list[str], domain_path: str) -> None:
-		os.system(f"$(rospack find knowledge_representation)/scripts/configure_postgresql.sh {self.dbpass} >/dev/null 2>&1")
+		# configure_db_script = os.path.join(os.path.dirname(__file__), "schema_postgresql.sql")
+		# os.system(f"{configure_db_script} {self.dbpass} >/dev/null 2>&1")
+		reset_database(
+			dbname=self.dbname,
+			user=self.dbuser,
+			password=self.dbpass,
+			host=self.dbhost,
+			port=self.dbport,
+			schema_file=self.dbschema
+		)
 		all_knowledge = [load_knowledge_from_yaml(knowledge_path)]
 		populate_with_knowledge(get_default_ltmc(), all_knowledge)
 
@@ -134,22 +146,26 @@ class KGAgent(KGBaseAgent):
 		self.TRIPLET_FILTER_PROMPT = get_prompt_template("prompts/triplet_filter_prompt.txt")
 		self.TRIPLET_UPDATE_PROMPT = get_prompt_template("prompts/triplet_update_prompt.txt",
 											predicate_names=", ".join(predicate_names), entity_names=entity_names)
-		
-		self.llm = OpenAI(temperature=0, model="gpt-4")
-		service_context = ServiceContext.from_defaults(llm=self.llm)
+
+		openai_keys_file = os.path.join(os.path.dirname(__file__), "../../keys/openai_keys.txt")
+		with open(openai_keys_file, "r") as f:
+			keys = f.read()
+		keys = keys.strip().split('\n')
+		self.llm = OpenAI(temperature=0, model="gpt-4", api_key=keys[0])
+		# service_context = ServiceContext.from_defaults(llm=self.llmself.llm)
 		storage_context = StorageContext.from_defaults(graph_store=self.graph_store)
 		self.rag_update_retriever = KnowledgeGraphRAGRetriever(
-			storage_context=storage_context,
-			service_context=service_context,
 			llm=self.llm,
+			storage_context=storage_context,
 			verbose=True,
 			graph_traversal_depth=3,
 			max_knowledge_sequence=100,
-			entity_extract_fn=partial(extract_keywords, service_context, ENTITY_SELECT_PROMPT),
+			entity_extract_fn=partial(extract_keywords, self.llm, ENTITY_SELECT_PROMPT),
 			synonym_expand_fn=(lambda _: []),
 			entity_extract_template=None,
 			synonym_expand_template=None,
 		)
+		self.rag_update_retriever._verbose = True
 		self.rag_update_retriever._entity_extract_template = None # type: ignore
 		self.rag_update_retriever._synonym_expand_template = None # type: ignore
 
@@ -160,17 +176,17 @@ class KGAgent(KGBaseAgent):
 		PLAN_ENTITY_SELECT_PROMPT = get_prompt_template("prompts/plan_entity_select_prompt.txt", domain_pddl=domain_pddl, entity_names=entity_names)
 		self.PLAN_QUERY_TEMPLATE = get_prompt_template("prompts/plan_query_prompt.txt", domain_pddl=domain_pddl)
 
-		rag_plan_service_context = ServiceContext.from_defaults(
-			llm=OpenAI(temperature=0, model="gpt-4")
-		)
+		# rag_plan_service_context = ServiceContext.from_defaults(
+		# 	llm=OpenAI(temperature=0, model="gpt-4")
+		# )
 		self.rag_plan_retriever = KnowledgeGraphRAGRetriever(
+			llm=self.llm,
 			storage_context=storage_context,
-			service_context=rag_plan_service_context,
 			verbose=True,
 			graph_traversal_depth=3,
 			max_knowledge_sequence=300,
 			max_entities=10,
-			entity_extract_fn=partial(extract_keywords, rag_plan_service_context, PLAN_ENTITY_SELECT_PROMPT),
+			entity_extract_fn=partial(extract_keywords, self.llm, PLAN_ENTITY_SELECT_PROMPT),
 			synonym_expand_fn=(lambda _: []),
 			entity_extract_template=None,
 			synonym_expand_template=None,
@@ -179,7 +195,7 @@ class KGAgent(KGBaseAgent):
 		self.rag_plan_retriever._synonym_expand_template = None # type: ignore
 
 		self.query_engine = RetrieverQueryEngine.from_args(
-			self.rag_plan_retriever, service_context=rag_plan_service_context
+			self.rag_plan_retriever
 		)
 	
 	# format triplets from query output

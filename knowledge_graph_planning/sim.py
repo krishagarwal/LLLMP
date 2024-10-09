@@ -14,6 +14,7 @@ from knowledge_representation._libknowledge_rep_wrapper_cpp import LongTermMemor
 
 from knowledge_graph.load_graph import load_graph
 from knowledge_graph.agent import KGBaseAgent, KGAgent
+from knowledge_graph.utils import reset_database
 
 # set API key
 openai_keys_file = os.path.join(os.getcwd(), "keys/openai_keys.txt")
@@ -31,8 +32,16 @@ class KGSim:
 		self.log_dir = log_dir
 	
 	def run(self):
-		configure_db_script = os.path.join(os.path.dirname(__file__), "knowledge_graph/configure_postgresql.sh")
-		os.system(f"{configure_db_script} password knowledge_base_truth >/dev/null 2>&1")
+		# configure_db_script = os.path.join(os.path.dirname(__file__), "knowledge_graph/configure_postgresql.sh")
+		# os.system(f"{configure_db_script} -S password knowledge_base_truth")
+		reset_database(
+			dbname="knowledge_base_truth",
+			user=self.agent.dbuser,
+			password=self.agent.dbpass,
+			host=self.agent.dbhost,
+			port=self.agent.dbport,
+			schema_file=self.agent.dbschema
+		)
 		all_knowledge = [load_knowledge_from_yaml(self.dataset.initial_knowledge_path)]
 		populate_with_knowledge(LongTermMemoryConduit("knowledge_base_truth", "localhost"), all_knowledge)
 		load_graph("knowledge_base_truth", "knowledge_graph")
@@ -84,9 +93,17 @@ class KGSim:
 				continue
 
 			truth_graph_store._conn.close()
-			os.system('sudo -u postgres psql -c "drop database knowledge_base_truth"')
+			# os.system('sudo -u postgres psql -c "drop database knowledge_base_truth"')
 
-			os.system(f"{configure_db_script} password knowledge_base_truth >/dev/null 2>&1")
+			# os.system(f"{configure_db_script} password knowledge_base_truth >/dev/null 2>&1")
+			reset_database(
+				dbname="knowledge_base_truth",
+				user=self.agent.dbuser,
+				password=self.agent.dbpass,
+				host=self.agent.dbhost,
+				port=self.agent.dbport,
+				schema_file=self.agent.dbschema
+			)
 			all_knowledge = [load_knowledge_from_yaml(time_step["knowledge_path"])]
 			populate_with_knowledge(LongTermMemoryConduit("knowledge_base_truth", "localhost"), all_knowledge)
 			load_graph("knowledge_base_truth", "knowledge_graph")
@@ -134,7 +151,7 @@ class KGSim:
 		with open(os.path.join(self.log_dir, "report.txt"), "w") as f:
 			f.write("\n".join(str(result) for result in report))
 		self.agent.close()
-		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
+		# os.system('sudo -u postgres psql -c "drop database knowledge_base"')
 
 class Result:
 	def __init__(self, time: int, result_type: str, time_step_type: str, success: bool) -> None:
@@ -167,11 +184,11 @@ if __name__ == "__main__":
 			self.log.close()
 
 	experiment_dir = "experiment"
-	domain_path = f"{experiment_dir}/domains/gpt-4"
+	domain_path = f"{experiment_dir}/domains/domain1"
 	run_dir = f"{experiment_dir}/runs/gpt-4/rag+check"
 	log = Logger(f"{run_dir}/output.log")
 	with redirect_stdout(log):
-		os.system('sudo -u postgres psql -c "drop database knowledge_base"')
+		# os.system('sudo -u postgres psql -c "drop database knowledge_base"')
 		sim = KGSim(Dataset(domain_path), KGAgent(run_dir), run_dir)
 		sim.run()
 	log.close()
