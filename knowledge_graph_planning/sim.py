@@ -189,6 +189,6 @@ if __name__ == "__main__":
 	log = Logger(f"{run_dir}/output.log")
 	with redirect_stdout(log):
 		# os.system('sudo -u postgres psql -c "drop database knowledge_base"')
-		sim = KGSim(Dataset(domain_path), KGAgent(run_dir), run_dir)
+		sim = KGSim(Dataset(domain_path), KGAgent(run_dir, True, True), run_dir)
 		sim.run()
 	log.close()

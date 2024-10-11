@@ -55,7 +55,7 @@ class KGBaseAgent(ABC):
 class KGAgent(KGBaseAgent):
 	MAX_RETRY_STATE_CHANGE = 5
 
-	def __init__(self, log_dir: str) -> None:
+	def __init__(self, log_dir: str, use_rag: bool, use_verifier: bool, model: str = "gpt-4o") -> None:
 		self.log_dir = log_dir
 		self.dbname = "knowledge_base"
 		self.dbuser = "postgres"
@@ -65,10 +65,11 @@ class KGAgent(KGBaseAgent):
 		self.dbschema = os.path.join(os.path.dirname(__file__), "schema_postgresql.sql")
 		self.graph_name = "knowledge_graph"
 		self.time = 0
+		self.use_rag = use_rag
+		self.use_verifier = use_verifier
+		self.model = model
 	
 	def input_initial_state(self, initial_state: str, knowledge_path: str, predicate_names: list[str], domain_path: str) -> None:
-		# configure_db_script = os.path.join(os.path.dirname(__file__), "schema_postgresql.sql")
-		# os.system(f"{configure_db_script} {self.dbpass} >/dev/null 2>&1")
 		reset_database(
 			dbname=self.dbname,
 			user=self.dbuser,
@@ -151,8 +152,7 @@ class KGAgent(KGBaseAgent):
 		with open(openai_keys_file, "r") as f:
 			keys = f.read()
 		keys = keys.strip().split('\n')
-		self.llm = OpenAI(temperature=0, model="gpt-4", api_key=keys[0])
-		# service_context = ServiceContext.from_defaults(llm=self.llmself.llm)
+		self.llm = OpenAI(temperature=0, model=self.model, api_key=keys[0])
 		storage_context = StorageContext.from_defaults(graph_store=self.graph_store)
 		self.rag_update_retriever = KnowledgeGraphRAGRetriever(
 			llm=self.llm,
@@ -176,9 +176,6 @@ class KGAgent(KGBaseAgent):
 		PLAN_ENTITY_SELECT_PROMPT = get_prompt_template("prompts/plan_entity_select_prompt.txt", domain_pddl=domain_pddl, entity_names=entity_names)
 		self.PLAN_QUERY_TEMPLATE = get_prompt_template("prompts/plan_query_prompt.txt", domain_pddl=domain_pddl)
 
-		# rag_plan_service_context = ServiceContext.from_defaults(
-		# 	llm=OpenAI(temperature=0, model="gpt-4")
-		# )
 		self.rag_plan_retriever = KnowledgeGraphRAGRetriever(
 			llm=self.llm,
 			storage_context=storage_context,
@@ -234,15 +231,19 @@ class KGAgent(KGBaseAgent):
 		return issues
 
 	def input_state_change(self, state_change: str) -> None:
-		context_nodes = self.rag_update_retriever.retrieve(state_change)
-		context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
-		triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
-		# triplets = self.get_all_relations()
-		extracted_triplets_str = '\n'.join(triplets)
-
-		# filter out irrelevant triplets using LLM directly
-		filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=extracted_triplets_str)).text
-		# filtered_triplet_str = extracted_triplets_str
+		if self.use_rag:
+			with redirect_stdout(open(os.path.join(self.log_dir, f"{self.time:04d}_state_change.context.log"), "w")):
+				context_nodes = self.rag_update_retriever.retrieve(state_change)
+			context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
+			triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
+			extracted_triplets_str = '\n'.join(triplets)
+			# filter out irrelevant triplets using LLM directly
+			filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=extracted_triplets_str)).text
+		else:
+			triplets = self.get_all_relations()
+			extracted_triplets_str = '\n'.join(triplets)
+			filtered_triplet_str = extracted_triplets_str
+			
 		log = [f"STATE CHANGE: {state_change}", f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"FILTERED TRIPLETS:\n{filtered_triplet_str}"]
 
 		update_issues = []
@@ -331,18 +332,18 @@ class KGAgent(KGBaseAgent):
 					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. '{triplet_str}' does not follow this format.")
 					continue
 				
-				subj, rel, obj = triplet[0], triplet[1], triplet[2]
-				obj_is_bool = (obj == "true" or obj == "false")
-				
-				update_issues += self.get_relation_issues(subj, rel, obj)
-				if update_issues:
-					continue
-
-				if obj_is_bool:
-					expected_remove = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
-					if expected_remove not in remove:
-						update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
+				if self.use_verifier:
+					subj, rel, obj = triplet[0], triplet[1], triplet[2]
+					obj_is_bool = (obj == "true" or obj == "false")
+					update_issues += self.get_relation_issues(subj, rel, obj)
+					if update_issues:
 						continue
+					if obj_is_bool:
+						expected_remove = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
+						if expected_remove not in remove:
+							update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
+							continue
+
 				if self.graph_store.rel_exists(subj, rel, obj):
 					update_issues.append(f"Cannot add '{triplet_str}' because it already exists in the graph")
 				
@@ -358,10 +359,11 @@ class KGAgent(KGBaseAgent):
 					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
 					continue
 				
-				if obj == "true" or obj == "false":
-					expected_add = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
-					if expected_add not in add:
-						update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
+				if self.use_verifier:
+					if obj == "true" or obj == "false":
+						expected_add = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
+						if expected_add not in add:
+							update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
 
 		# log the state update
 		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
