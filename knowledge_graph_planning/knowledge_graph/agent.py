@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import partial
+from pydantic import BaseModel
 
 import itertools
 import os
@@ -52,6 +53,14 @@ class KGBaseAgent(ABC):
 	def answer_planning_query(self, query: str, truth_graph_store: AgeGraphStore) -> list[str]:
 		pass
 
+class Triplet(BaseModel):
+	subject: str
+	relation: str
+	object: str
+class UpdateResponse(BaseModel):
+	REMOVE: list[Triplet]
+	ADD: list[Triplet]
+
 class KGAgent(KGBaseAgent):
 	MAX_RETRY_STATE_CHANGE = 5
 
@@ -67,7 +76,33 @@ class KGAgent(KGBaseAgent):
 		self.time = 0
 		self.use_rag = use_rag
 		self.use_verifier = use_verifier
-		self.model = model
+
+		openai_keys_file = os.path.join(os.path.dirname(__file__), "../../keys/openai_keys.txt")
+		with open(openai_keys_file, "r") as f:
+			keys = f.read()
+		keys = keys.strip().split('\n')
+		self.llm = OpenAI(temperature=0, model=model, api_key=keys[0])
+		self.update_llm = self.llm.as_structured_llm(output_cls=UpdateResponse) # type: ignore
+	
+	def validate_json(self, json_str: str) -> tuple[list[str], UpdateResponse | None]:
+		# process the changes and commit to knowledge graph
+		try:
+			start_idx = json_str.index("{")
+		except ValueError:
+			return ["Your response was not in the correct JSON format"], None
+		
+		try:
+			end_idx = json_str.rindex("}")
+		except ValueError:
+			return ["Your response was not in the correct JSON format"], None
+		
+		json_str = json_str[start_idx : end_idx + 1]
+		try:
+			update_obj = UpdateResponse.model_validate_json(json_str)
+		except json.decoder.JSONDecodeError:
+			return ["Your response was not in the correct JSON format"], None
+		
+		return [], update_obj
 	
 	def input_initial_state(self, initial_state: str, knowledge_path: str, predicate_names: list[str], domain_path: str) -> None:
 		reset_database(
@@ -148,11 +183,6 @@ class KGAgent(KGBaseAgent):
 		self.TRIPLET_UPDATE_PROMPT = get_prompt_template("prompts/triplet_update_prompt.txt",
 											predicate_names=", ".join(predicate_names), entity_names=entity_names)
 
-		openai_keys_file = os.path.join(os.path.dirname(__file__), "../../keys/openai_keys.txt")
-		with open(openai_keys_file, "r") as f:
-			keys = f.read()
-		keys = keys.strip().split('\n')
-		self.llm = OpenAI(temperature=0, model=self.model, api_key=keys[0])
 		storage_context = StorageContext.from_defaults(graph_store=self.graph_store)
 		self.rag_update_retriever = KnowledgeGraphRAGRetriever(
 			llm=self.llm,
@@ -188,6 +218,7 @@ class KGAgent(KGBaseAgent):
 			entity_extract_template=None,
 			synonym_expand_template=None,
 		)
+		self.rag_plan_retriever._verbose = True
 		self.rag_plan_retriever._entity_extract_template = None # type: ignore
 		self.rag_plan_retriever._synonym_expand_template = None # type: ignore
 
@@ -277,93 +308,49 @@ class KGAgent(KGBaseAgent):
 			assert triplet_updates is not None
 			log.append(triplet_updates)
 
-			# process the changes and commit to knowledge graph
-			try:
-				start_idx = triplet_updates.index("{")
-			except ValueError:
-				update_issues.append("Your response was not in the correct JSON format")
+			json_issues, update_json = self.validate_json(triplet_updates)
+			update_issues += json_issues
+			if update_issues:
 				continue
+			assert update_json is not None
 			
-			try:
-				end_idx = triplet_updates.rindex("}")
-			except ValueError:
-				update_issues.append("Your response was not in the correct JSON format")
-				continue
+			remove = update_json.REMOVE
+			add = update_json.ADD
+			remove_strs = [f"{triplet.subject} -> {triplet.relation} -> {triplet.object}" for triplet in remove]
+			add_strs = [f"{triplet.subject} -> {triplet.relation} -> {triplet.object}" for triplet in add]
 			
-			triplet_updates = triplet_updates[start_idx : end_idx + 1]
-			try:
-				update_json = json.loads(triplet_updates)
-			except json.decoder.JSONDecodeError:
-				update_issues.append("Your response was not in the correct JSON format")
-				continue
-			
-			bad_json = False
+			if len(set(remove_strs)) != len(remove_strs):
+				update_issues.append("The 'REMOVE' entry has duplicate triplets")
+			elif len(set(add_strs)) != len(add_strs):
+				update_issues.append("The 'ADD' entry has duplicate triplets")
 
-			if "ADD" not in update_json:
-				update_issues.append("There was no 'ADD' entry in your provided JSON")
-				bad_json = True
-			elif not isinstance(update_json["ADD"], list):
-				update_issues.append("The 'ADD' entry in your provided JSON did not contain a list")
-				bad_json = True
-			elif not all(isinstance(x, str) for x in update_json["ADD"]):
-				update_issues.append("The 'ADD' entry in your provided JSON did not contain a list of triplet strings")
-				bad_json = True
-			
-			if "REMOVE" not in update_json:
-				update_issues.append("There was no 'REMOVE' entry in your provided JSON")
-				bad_json = True
-			elif not isinstance(update_json["REMOVE"], list):
-				update_issues.append("The 'REMOVE' entry in your provided JSON did not contain a list")
-				bad_json = True
-			elif not all(isinstance(x, str) for x in update_json["REMOVE"]):
-				update_issues.append("The 'REMOVE' entry in your provided JSON did not contain a list of triplet strings")
-				bad_json = True
-			
-			if bad_json:
-				continue
-			
-			remove = set(update_json["REMOVE"])
-			add = set(update_json["ADD"])
-
-			for triplet_str in add:
-				triplet_str = str(triplet_str)
-				triplet = triplet_str.split(" -> ")
-				if len(triplet) != 3:
-					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. '{triplet_str}' does not follow this format.")
-					continue
-				
-				if self.use_verifier:
-					subj, rel, obj = triplet[0], triplet[1], triplet[2]
+			for triplet, triplet_str in zip(add, add_strs):
+				subj, rel, obj = triplet.subject, triplet.relation, triplet.object
+				if self.use_verifier:					
 					obj_is_bool = (obj == "true" or obj == "false")
 					update_issues += self.get_relation_issues(subj, rel, obj)
 					if update_issues:
 						continue
 					if obj_is_bool:
 						expected_remove = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
-						if expected_remove not in remove:
+						if expected_remove not in remove_strs:
 							update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
 							continue
 
 				if self.graph_store.rel_exists(subj, rel, obj):
 					update_issues.append(f"Cannot add '{triplet_str}' because it already exists in the graph")
 				
-			for triplet_str in remove:
-				triplet = triplet_str.split(" -> ")
-				if len(triplet) != 3:
-					update_issues.append(f"All relations must follow the following format: [subject] -> [relation] -> [object or boolean]. `{triplet_str}` does not follow this format.")
-					continue
-
-				subj, rel, obj = triplet[0], triplet[1], triplet[2]
-
-				if not self.graph_store.rel_exists(subj, rel, obj):
-					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
-					continue
-				
+			for triplet, triplet_str in zip(remove, remove_strs):
+				subj, rel, obj = triplet.subject, triplet.relation, triplet.object
 				if self.use_verifier:
 					if obj == "true" or obj == "false":
 						expected_add = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
-						if expected_add not in add:
+						if expected_add not in add_strs:
 							update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
+				
+				if not self.graph_store.rel_exists(subj, rel, obj):
+					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
+					continue
 
 		# log the state update
 		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
@@ -374,20 +361,16 @@ class KGAgent(KGBaseAgent):
 		if update_issues:
 			print("Could not resolve state change within maximum number of tries", KGAgent.MAX_RETRY_STATE_CHANGE)
 			return
-
-		# delete triplets from graph
-		for triplet_str in remove:
-			triplet = triplet_str.split(" -> ")
-			if len(triplet) == 3:
-				self.graph_store.delete(triplet[0], triplet[1], triplet[2])
-				if triplet[2] == "true" or triplet[2] == "false":
-					self.graph_store.upsert_triplet_bool(triplet[0], triplet[1], triplet[2] == "false")
-
+		
 		# add new triplets to graph
-		for triplet_str in add:
-			triplet = triplet_str.split(" -> ")
-			if len(triplet) == 3:
-				self.graph_store.upsert_triplet(triplet[0], triplet[1], triplet[2])
+		for triplet in add:
+			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
+			self.graph_store.upsert_triplet(subj, rel, obj)
+			
+		# delete triplets from graph
+		for triplet in remove:
+			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
+			self.graph_store.delete(subj, rel, obj)
 	
 	def answer_planning_query(self, query: str, truth_graph_store: AgeGraphStore) -> list[str]:
 		# A. generate problem pddl file

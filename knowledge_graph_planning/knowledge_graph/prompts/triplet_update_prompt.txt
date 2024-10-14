@@ -25,20 +25,30 @@ RELEVANT RELATIONS:
 brenda_phone -> placed_at_shelf -> patrick_bedroom_shelf
 brenda_phone -> on_shelf_level -> level_8
 brenda_phone -> instance_of -> phone
-patrick_bedroom -> has -> patrick_bedroom_shelf
-patrick_bedroom_shelf -> in_room -> patrick_bedroom
+patrick_bedroom -> room_has -> patrick_bedroom_shelf
 patrick_bedroom_shelf -> instance_of -> shelf
 patrick_bedroom -> instance_of -> bedroom
-patrick_bedroom -> has -> patrick_bedroom_shelf
-patrick_bedroom_shelf -> in_room -> patrick_bedroom
+patrick_bedroom -> room_has -> patrick_bedroom_shelf
 ---------------------
 {{{{{{{{
     "REMOVE": [
-        "brenda_phone -> contained_by_shelf -> patrick_bedroom_shelf",
-        "brenda_phone -> on_shelf_level -> shelf_level_8"
+        {{{{{{{{
+            "subject": "brenda_phone",
+            "relation": "placed_at_shelf",
+            "object": "patrick_bedroom_shelf"
+        }}}}}}}},
+        {{{{{{{{
+            "subject": "brenda_phone",
+            "relation": "on_shelf_level",
+            "object": "shelf_level_8"
+        }}}}}}}}
     ],
     "ADD": [
-        "brenda_phone -> in_hand -> me"
+        {{{{{{{{
+            "subject": "brenda_phone",
+            "relation": "in_person_hand",
+            "object": "me"
+        }}}}}}}}
     ]
 }}}}}}}}
 ```
