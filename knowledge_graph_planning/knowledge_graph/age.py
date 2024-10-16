@@ -66,8 +66,8 @@ class AgeGraphStore(GraphStore): # type: ignore
             rel_map[subj] = []
         
         # max 100 can be processed at a time by db
-        for i in range(0, len(subjs), 100):
-            subjs_str = '["' + '", "'.join(subjs[i:i+100]) + '"]'
+        for j in range(0, len(subjs), 100):
+            subjs_str = '["' + '", "'.join(subjs[j:j+100]) + '"]'
 
             for i in range(depth):
                 path = f"-[]-(:{self._node_label})" * i

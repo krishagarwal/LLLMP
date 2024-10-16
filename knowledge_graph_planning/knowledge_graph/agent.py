@@ -262,6 +262,9 @@ class KGAgent(KGBaseAgent):
 		return issues
 
 	def input_state_change(self, state_change: str) -> None:
+		start_time = time.time()
+		log = [f"STATE CHANGE: {state_change}"]
+
 		if self.use_rag:
 			with redirect_stdout(open(os.path.join(self.log_dir, f"{self.time:04d}_state_change.context.log"), "w")):
 				context_nodes = self.rag_update_retriever.retrieve(state_change)
@@ -274,8 +277,9 @@ class KGAgent(KGBaseAgent):
 			triplets = self.get_all_relations()
 			extracted_triplets_str = '\n'.join(triplets)
 			filtered_triplet_str = extracted_triplets_str
-			
-		log = [f"STATE CHANGE: {state_change}", f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"FILTERED TRIPLETS:\n{filtered_triplet_str}"]
+		
+		duration = time.time() - start_time
+		log += [f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"FILTERED TRIPLETS:\n{filtered_triplet_str}", f"Retrieved triplets in {duration:.2f} seconds"]
 
 		update_issues = []
 		remove = []
@@ -302,7 +306,12 @@ class KGAgent(KGBaseAgent):
 
 			# query LLM to update triplets (remove existing and add new)
 			truncated_msgs = TripletTrimBuffer.from_defaults(messages, llm=self.llm, tokenizer_fn=tiktoken.encoding_for_model(self.llm.model).encode).get(triplet_update_prompt, triplets=filtered_triplet_str)
+			
+			curr_start_time = time.time()
 			curr_response = self.llm.chat(truncated_msgs).message
+			duration = time.time() - curr_start_time
+			log.append(f"Got LLM response for attempt {num_attempts} in {duration:.2f} seconds")
+			
 			messages.append(curr_response)
 			triplet_updates = curr_response.content
 			assert triplet_updates is not None
@@ -352,12 +361,6 @@ class KGAgent(KGBaseAgent):
 					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
 					continue
 
-		# log the state update
-		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
-		with open(log_file, "w") as f:
-			f.write("\n===================================\n".join(log))
-		self.time += 1
-
 		if update_issues:
 			print("Could not resolve state change within maximum number of tries", KGAgent.MAX_RETRY_STATE_CHANGE)
 			return
@@ -371,8 +374,20 @@ class KGAgent(KGBaseAgent):
 		for triplet in remove:
 			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
 			self.graph_store.delete(subj, rel, obj)
+		
+		duration = time.time() - start_time
+		log.append(f"Processed state change in (total time) {duration:.2f} seconds")
+		
+		# log the state update
+		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
+		with open(log_file, "w") as f:
+			f.write("\n===================================\n".join(log))
+		self.time += 1
 	
 	def answer_planning_query(self, query: str, truth_graph_store: AgeGraphStore) -> list[str]:
+		start_time = time.time()
+		log = [f"PLAN QUERY: {query}"]
+
 		# A. generate problem pddl file
 		log_file = os.path.join(self.log_dir, f"{self.time:04d}_plan_query")
 
@@ -380,6 +395,8 @@ class KGAgent(KGBaseAgent):
 			f.write(query + "\n")
 			with redirect_stdout(f):
 				nodes = self.query_engine.retrieve("I have a task for the robot: " + query) # type: ignore
+		duration = time.time() - start_time
+		log.append(f"Completed RAG in {duration:.2f} seconds")
 
 		# objects = set(["me"])
 		# constants = {'Cold', 'Hot', 'RoomTemp', 'Water', 'Coffee', 'Wine'}
@@ -436,6 +453,13 @@ class KGAgent(KGBaseAgent):
 				  f"--problem /root/experiments/{task_pddl_file_name} " + \
 				  f"--output /root/experiments/{plan_file_name} " + \
 				  f"> {log_file}.pddl.log")
+		
+		duration = time.time() - start_time
+
+		log.append(f"Processed planning query in (total time) {duration:.2f} seconds")
+		
+		with open(f"{log_file}.log", "w") as f:
+			f.write("\n===================================\n".join(log))
 		
 		with open(plan_file_name, "r") as f:
 			plan = f.read().splitlines()
