@@ -236,8 +236,8 @@ class MovableItem(RoomItem, Queryable):
 			if len(usable_people) == 0:
 				return None
 			person = usable_people.pop(random.randrange(len(usable_people)))
-		self.exchange_container(person)
 		agent.parent = person.parent
+		self.exchange_container(person)
 		return Goal(
 			f"Hand {person.name} {self.shortened_name}.",
 			[person.get_in_hand_predicate(self.token_name, person.token_name)]
@@ -385,8 +385,8 @@ class Container(StationaryItem):
 		for item in all_items:
 			if not self.can_hold(type(item)):
 				continue
-			item.exchange_container(self)
 			agent.parent = self.parent
+			item.exchange_container(self)
 			return Goal(
 				f"Place {item.shortened_name} {item.relative_location} the {self.get_full_name_with_room()}.",
 				self.get_contains_predicates(self.token_name, item.token_name, **item.extra_location_info)
@@ -652,11 +652,11 @@ class Fridge(Container):
 			if goal is not None:
 				return goal
 		predicates: list[str] = []
+		agent.parent = self.parent
 		for food in self.foods:
 			if self != food.container:
 				food.exchange_container(self)
 			predicates += self.get_contains_predicates(self.token_name, food.token_name, **food.extra_location_info)
-		agent.parent = self.parent
 		return Goal(
 			f"Please return all food items to the {self.name} in {self.parent.name}.",
 			predicates
@@ -809,6 +809,7 @@ class KitchenSink(InteractableContainer):
 				return goal
 		clean_goal = random.choice([True, False])
 		predicates: list[str] = []
+		agent.parent = self.parent
 		for dish in self.dishes:
 			if self != dish.container:
 				dish.exchange_container(self)
@@ -817,7 +818,6 @@ class KitchenSink(InteractableContainer):
 				predicates.append(f"dish_is_clean {dish.token_name}")
 			else:
 				predicates += self.get_contains_predicates(self.token_name, dish.token_name, **dish.extra_location_info)
-		agent.parent = self.parent
 		if clean_goal:
 			return Goal("Please wash all the dishes.", predicates)
 		return Goal(
@@ -1229,8 +1229,8 @@ class TV(StationaryInteractable):
 			if len(usable_people) == 0:
 				return None
 			person = usable_people.pop(random.randrange(len(usable_people)))
-		self.remote.exchange_container(person)
 		agent.parent = person.parent
+		self.remote.exchange_container(person)
 		return Goal(
 			f"{person.name} is trying to use the TV in {self.parent.name} but they need the remote. Please hand it to them.",
 			[person.get_in_hand_predicate(self.remote.token_name, person.token_name)]
@@ -1364,8 +1364,8 @@ class LiquidContainer(MovableInteractable, AccompanyingItem):
 		self.empty = False
 		self.liquid = random.choice(LiquidContainer.LIQUIDS)
 		person = random.choice(people)
-		self.exchange_container(person)
 		agent.parent = person.parent
+		self.exchange_container(person)
 		return Goal(
 			f"Hand {person.name} a glass of {self.liquid.entity_id.name}.",
 			[person.get_in_hand_predicate(self.token_name, person.token_name), f"glass_has_liquid {self.token_name} {self.liquid.entity_id.name}"]
@@ -1436,8 +1436,8 @@ class Person:
 				continue
 			action = f"{self.name} went to {item.container.parent.name} and picked up {item.shortened_name}." if isinstance(item.container, Container) \
 						else f"{self.name} went to {item.container.parent.name} and took {item.shortened_name} from {item.container.name}."
-			item.exchange_container(self)
 			self.parent = item.container.parent
+			item.exchange_container(self)
 			return action
 	
 	def get_description(self) -> str:
@@ -1485,12 +1485,12 @@ class CleanAndDryClothes(CollectiveGoal):
 		if len(clothes) == 0:
 			return None
 		predicates = []
+		agent.parent = laundry_basket.parent
 		for cloth in clothes:
 			cloth.exchange_container(laundry_basket)
 			cloth.clean = True
 			predicates += [f"cloth_is_clean {cloth.token_name}", f"cloth_is_dry {cloth.token_name}"] \
 							+ laundry_basket.get_contains_predicates(laundry_basket.token_name, cloth.token_name)
-		agent.parent = laundry_basket.parent
 		return Goal("Please wash and dry all the clothes, then place them in the laundry basket.", predicates)
 
 item_types: list[type[RoomItem]]
