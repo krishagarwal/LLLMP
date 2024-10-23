@@ -532,8 +532,8 @@ class Shelf(Container):
 	for i in range(MAX_LEVELS):
 		LEVEL_OBJECTS.append(Instance(EntityID(get_level_name.__func__(i + 1), LEVEL_TYPE), []))
 
-	def __init__(self, parent: Room, levels: int) -> None:
-		super().__init__("shelf", parent)
+	def __init__(self, name: str, parent: Room, levels: int) -> None:
+		super().__init__(name, parent)
 		self.levels = levels
 	
 	@staticmethod
@@ -542,17 +542,17 @@ class Shelf(Container):
 	
 	@staticmethod
 	def generate_instance(parent: Room) -> tuple[Shelf, list[AccompanyingItem]]:
-		return Shelf(parent, random.randint(Shelf.MIN_LEVELS, Shelf.MAX_LEVELS)), []
+		return Shelf("shelf", parent, random.randint(Shelf.MIN_LEVELS, Shelf.MAX_LEVELS)), []
 	
 	def get_description(self) -> str:
 		items_by_level: dict[int, list[MovableItem]] = {level : [] for level in range(1, self.levels + 1)}
 		for item in self.items:
 			items_by_level[item.extra_location_info["level_num"]].append(item)
-		description = f"The shelf has {self.levels} levels. "
+		description = f"The {self.name} has {self.levels} levels. "
 		for level, item_list in items_by_level.items():
 			if len(item_list) == 0:
 				continue
-			description += f"The {Shelf.integer_to_ordinal(level)} level of the shelf has {Shelf.get_item_list_description(item_list)}. "
+			description += f"The {Shelf.integer_to_ordinal(level)} level of the {self.name} has {Shelf.get_item_list_description(item_list)}. "
 		return description
 	
 	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
@@ -622,35 +622,151 @@ class Shelf(Container):
 	def get_static_entities() -> list[Instance]:
 		return Shelf.LEVEL_OBJECTS
 
-class Fridge(Container):
+class Pantry(Shelf):
 	MIN_FOODS = 30
 	MAX_FOODS = 40
-	def __init__(self, name: str, parent: Room, foods: list[Food]) -> None:
-		super().__init__(name, parent)
+
+	def __init__(self, name: str, parent: Room, levels: int, foods: list[NonPerishable]) -> None:
+		super().__init__(name, parent, levels)
 		self.foods = foods
 
 	@staticmethod
 	def can_hold(item_type: type[MovableItem]) -> bool:
-		return issubclass(item_type, Food)
+		return issubclass(item_type, NonPerishable)
+		
+	@classmethod
+	def get_contains_relation(cls) -> str:
+		return Shelf.get_contains_relation()
+
+	@classmethod
+	def get_place_action_name(cls) -> str:
+		return Shelf.get_place_action_name()
+
+	@classmethod
+	def get_remove_action_name(cls) -> str:
+		return Shelf.get_remove_action_name()
 	
-	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
-		return "inside", {}
+	@classmethod
+	def get_pddl_domain_predicates(cls) -> list[Predicate]:
+		return []
+	
+	@classmethod
+	def get_place_action(cls) -> Action:
+		return Shelf.get_place_action()
+	
+	@classmethod
+	def get_remove_action(cls) -> Action:
+		return Shelf.get_remove_action()
+	
+	@classmethod
+	def get_pddl_domain_actions(cls) -> list[Action]:
+		return []
 
 	@staticmethod
-	def generate_instance(parent: Room) -> tuple[Fridge, list[Food]]:
-		foods: list[Food] = []
-		food_item = Food.generate_instance()
-		threshold = random.randint(Fridge.MIN_FOODS, Fridge.MAX_FOODS)
+	def generate_instance(parent: Room) -> tuple[Pantry, list[NonPerishable]]:
+		foods: list[NonPerishable] = []
+		food_item = NonPerishable.generate_instance()
+		threshold = random.randint(Pantry.MIN_FOODS, Pantry.MAX_FOODS)
 		while food_item is not None and len(foods) < threshold:
-			foods.append(cast(Food, food_item))
-			food_item = Food.generate_instance()
-		return Fridge("fridge", parent, foods), foods
+			assert isinstance(food_item, NonPerishable)
+			foods.append(food_item)
+			food_item = NonPerishable.generate_instance()
+		return Pantry("pantry", parent, random.randint(Shelf.MIN_LEVELS, Shelf.MAX_LEVELS), foods), foods
+	
+	def generate_special_goal(self, agent: Agent, combined: bool = False) -> Goal:
+		num_splits = random.randint(min(3, Shelf.MIN_LEVELS), min(len(NonPerishable.categories), Shelf.MAX_LEVELS))
+		levels = random.sample(range(1, self.levels + 1), num_splits)
+		categories = NonPerishable.categories.copy()
+		random.shuffle(categories)
+		category_to_level: dict[str, int] = {}
+		split_size, split_remainder = divmod(len(categories), num_splits)
+		goal_str = f"Organize the {self.name if combined else self.get_full_name_with_room()} as follows. "
+
+		idx = 0
+		for i, level in enumerate(levels):
+			newidx = idx + split_size + (1 if i < split_remainder else 0)
+			curr_categories = categories[idx : newidx]
+			idx = newidx
+			for category in curr_categories:
+				category_to_level[category] = level
+			
+			categories_str = curr_categories[0]
+			for j, category in enumerate(curr_categories[1:]):
+				if j == len(curr_categories) - 2:
+					categories_str += " and " + category
+				else:
+					categories_str += ", " + category
+
+			goal_str += f"Place all {categories_str} on the {Shelf.integer_to_ordinal(level)} level. "
+
+		predicates: list[str] = []
+		agent.parent = self.parent
+		for food in self.foods:
+			if self != food.container:
+				food.exchange_container(self)
+			category = NonPerishable.item_to_category[re.sub(r"[^a-z]", "", food.name)]
+			level = category_to_level[category]
+			food.relative_location = f"on the {Shelf.integer_to_ordinal(level)} level of"
+			food.extra_location_info = {
+				"level_num": level,
+				"level_token": self.get_level_name(level),
+				"extra_attributes": [Attribute("on_shelf_level", Shelf.LEVEL_OBJECTS[level - 1].entity_id)]
+			}
+			predicates += self.get_contains_predicates(self.token_name, food.token_name, **food.extra_location_info)
+
+		return Goal(goal_str, predicates)
 	
 	def generate_goal(self, people: list[Person], all_items: list[MovableItem], agent: Agent) -> Goal | None:
 		if random.choice([True, False]):
 			goal = super().generate_goal(people, all_items, agent)
 			if goal is not None:
 				return goal
+		return self.generate_special_goal(agent)
+	
+	@classmethod
+	def get_default_param_list(cls) -> list[str]:
+		param_list = super().get_default_param_list()
+		param_list.append(f"{cls.LEVEL_PARAM} - {cls.LEVEL_TYPE}")
+		return param_list
+	
+	@classmethod
+	def get_type_name(cls) -> str:
+		return Shelf.get_type_name()
+
+	@classmethod
+	def get_required_types(cls) -> list[str]:
+		return []
+	
+	@staticmethod
+	def get_static_entities() -> list[Instance]:
+		return []
+
+class Fridge(Container):
+	MIN_FOODS = 30
+	MAX_FOODS = 40
+	def __init__(self, name: str, parent: Room, foods: list[Perishable]) -> None:
+		super().__init__(name, parent)
+		self.foods = foods
+
+	@staticmethod
+	def can_hold(item_type: type[MovableItem]) -> bool:
+		return issubclass(item_type, Perishable)
+	
+	def generate_relative_location(self) -> tuple[str, dict[Any, Any]]:
+		return "inside", {}
+
+	@staticmethod
+	def generate_instance(parent: Room) -> tuple[Fridge, list[Perishable]]:
+		foods: list[Perishable] = []
+		food_item = Perishable.generate_instance()
+		threshold = random.randint(Fridge.MIN_FOODS, Fridge.MAX_FOODS)
+		while food_item is not None and len(foods) < threshold:
+			assert isinstance(food_item, Perishable)
+			foods.append(food_item)
+			food_item = Perishable.generate_instance()
+		return Fridge("fridge", parent, foods), foods
+	
+	def generate_special_goal(self, agent: Agent, combined: bool = False) -> Goal:
 		predicates: list[str] = []
 		agent.parent = self.parent
 		for food in self.foods:
@@ -658,9 +774,16 @@ class Fridge(Container):
 				food.exchange_container(self)
 			predicates += self.get_contains_predicates(self.token_name, food.token_name, **food.extra_location_info)
 		return Goal(
-			f"Please return all food items to the {self.name} in {self.parent.name}.",
+			f"Move all fruits/vegetables, dairy products, and frozen food to the {self.name if combined else self.get_full_name_with_room()}.",
 			predicates
 		)
+	
+	def generate_goal(self, people: list[Person], all_items: list[MovableItem], agent: Agent) -> Goal | None:
+		if random.choice([True, False]):
+			goal = super().generate_goal(people, all_items, agent)
+			if goal is not None:
+				return goal
+		return self.generate_special_goal(agent)
 
 class Toilet(StationaryItem):
 	@staticmethod
@@ -957,13 +1080,41 @@ class Singleton(MovableItem):
 			return None
 		return cls(names.pop(random.randrange(len(names))))
 
-class Food(Singleton, AccompanyingItem):
-	with open(os.path.join(DIR, "foods.txt")) as f:
+class Perishable(Singleton, AccompanyingItem):
+	with open(os.path.join(DIR, "perishable_foods.txt")) as f:
 		available_foods = f.read().lower().splitlines()
 	
 	@staticmethod
 	def get_available_names() -> list[str]:
-		return Food.available_foods
+		return Perishable.available_foods
+	
+	@classmethod
+	def get_required_types(cls) -> list[str]:
+		return ["food", f"{cls.get_type_name()} - food"]
+	
+class NonPerishable(Singleton, AccompanyingItem):
+	available_foods: list[str] = []
+	categories: list[str] = []
+	item_to_category: dict[str, str] = {}	
+	with open(os.path.join(DIR, "nonperishable_foods.txt")) as f:
+		foods = f.read().lower().strip().split("\n\n")
+	for category in foods:
+		items = category.splitlines()
+		name, items = items[0], items[1:]
+		available_foods += items
+		categories.append(name)
+		for item in items:
+			item = re.sub(r"[^a-z]", "", item)
+			item_to_category[item] = name
+	del foods, category, items, name, item
+
+	@staticmethod
+	def get_available_names() -> list[str]:
+		return NonPerishable.available_foods
+	
+	@classmethod
+	def get_required_types(cls) -> list[str]:
+		return [f"{cls.get_type_name()} - food"]
 
 class Kitchenware(Singleton, AccompanyingItem):
 	available_kitchenware = ["plate", "bowl", "fork", "spoon", "knife", "frying pan", "pot", "ladle", "whisk"]
@@ -1706,7 +1857,21 @@ class Kitchen(Room):
 	
 	@staticmethod
 	def can_hold(stationary_type: type[StationaryItem]) -> bool:
-		return stationary_type in [Fridge, KitchenSink, Light]
+		return stationary_type in [Fridge, KitchenSink, Light, Pantry]
+
+	def generate_goal(self, people: list[Person], all_items: list[MovableItem], agent: Agent) -> Goal | None:
+		if random.choice([True, False]):
+			goal = super().generate_goal(people, all_items, agent)
+			if goal is not None:
+				return goal
+		pantry = next(item for item in self.items if isinstance(item, Pantry))
+		fridge = next(item for item in self.items if isinstance(item, Fridge))
+		fridge_goal = fridge.generate_special_goal(agent, combined=True)
+		pantry_goal = pantry.generate_special_goal(agent, combined=True)
+		return Goal(
+			"I want to organize the kitchen. " + fridge_goal.description + " " + pantry_goal.description,
+			fridge_goal.predicate_list + pantry_goal.predicate_list
+		)
 
 class LivingRoom(Room):
 	generated = False
@@ -2194,6 +2359,13 @@ class Dataset:
 				curr_data["knowledge_path"] = os.path.join(curr_dir, "knowledge.yaml")
 				with open(curr_data["knowledge_path"]) as f:
 					curr_data["knowledge_yaml"] = f.read()
+				try:
+					true_plan_path = os.path.join(curr_dir, "true_plan.pddl")
+					with open(true_plan_path) as f:
+						curr_data["true_plan_path"] = true_plan_path
+						curr_data["true_plan_pddl"] = f.read()
+				except:
+					pass
 			else:
 				raise Exception("Invalid dataset directory:", time_step)
 			self.time_steps.append(curr_data)
@@ -2232,5 +2404,5 @@ for item_type in item_types:
 	static_entities += item_type.get_static_entities()
 
 if __name__ == "__main__":
-	generator = DatasetGenerator("test", num_state_changes=1, state_changes_per_query=300, state_changes_per_goal=1)
+	generator = DatasetGenerator("experiment/domains/gpt-4o", num_state_changes=100, state_changes_per_query=300, state_changes_per_goal=5)
 	generator.run()
