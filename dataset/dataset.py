@@ -706,9 +706,21 @@ class Sink(StationaryInteractable):
 	
 	@staticmethod
 	def get_pddl_domain_actions() -> list[Action]:
+		param_list = ["?a - " + Sink.get_type_name(), "?b - " + Room.TYPE_NAME, "?c - " + Agent.TYPE_NAME]
+		base_preconditions = [Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")]
 		return [
-			Action("turn_on_faucet", ["?a - " + Sink.get_type_name()], [f"not ({Sink.FAUCET_ON_RELATION} ?a)"], [f"{Sink.FAUCET_ON_RELATION} ?a"]),
-			Action("turn_off_faucet", ["?a - " + Sink.get_type_name()], [f"{Sink.FAUCET_ON_RELATION} ?a"], [f"not ({Sink.FAUCET_ON_RELATION} ?a)"])
+			Action(
+				"turn_on_faucet",
+				param_list,
+				base_preconditions + [f"not ({Sink.FAUCET_ON_RELATION} ?a)"],
+				[f"{Sink.FAUCET_ON_RELATION} ?a"]
+			),
+			Action(
+				"turn_off_faucet",
+				param_list,
+				base_preconditions + [f"{Sink.FAUCET_ON_RELATION} ?a"],
+				[f"not ({Sink.FAUCET_ON_RELATION} ?a)"]
+			)
 		]
 	
 	def get_special_init_conditions(self) -> list[str]:
@@ -779,7 +791,14 @@ class KitchenSink(InteractableContainer):
 	
 	@staticmethod
 	def get_special_domain_actions() -> list[Action]:
-		return [Action("wash", [f"?a - {Kitchenware.get_type_name()}", f"?b - {KitchenSink.get_type_name()}"], KitchenSink.get_contains_predicates("?b", "?a"), ["dish_is_clean ?a"])]
+		return [
+			Action(
+				"wash",
+				[f"?a - {Kitchenware.get_type_name()}", f"?b - {KitchenSink.get_type_name()}", "?c - " + Room.TYPE_NAME, "?d - " + Agent.TYPE_NAME],
+				[Room.get_in_room_predicate("?c", "?b"), Agent.get_in_room_predicate("?d", "?c")] + KitchenSink.get_contains_predicates("?b", "?a"),
+				["dish_is_clean ?a"]
+			)
+		]
 	
 	@classmethod
 	def get_required_types(cls) -> list[str]:
@@ -846,8 +865,8 @@ class Washer(Container):
 		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
 		actions.append(Action(
 			"run_washer_cycle",
-			[f"?a - {cls.get_type_name()}"],
-			[],
+			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
+			[Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")],
 			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (and (cloth_is_clean ?b) (not (cloth_is_dry ?b))))"]))
 		return actions
 
@@ -872,8 +891,8 @@ class Dryer(Container):
 		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
 		actions.append(Action(
 			"run_dryer_cycle",
-			[f"?a - {cls.get_type_name()}"],
-			[],
+			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
+			[Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")],
 			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (cloth_is_dry ?b))"]))
 		return actions
 
@@ -999,9 +1018,21 @@ class Window(StationaryInteractable):
 
 	@staticmethod
 	def get_pddl_domain_actions() -> list[Action]:
+		param_list = ["?a - window", "?b - " + Room.TYPE_NAME, "?c - " + Agent.TYPE_NAME]
+		base_preconditions = [Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")]
 		return [
-			Action("open_window", ["?a - window"], ["not (window_open ?a)"], ["window_open ?a"]),
-			Action("close_window", ["?a - window"], ["window_open ?a"], ["not (window_open ?a)"])
+			Action(
+				"open_window",
+				param_list,
+				base_preconditions + ["not (window_open ?a)"],
+				["window_open ?a"]
+			),
+			Action(
+				"close_window",
+				param_list,
+				base_preconditions + ["window_open ?a"],
+				["not (window_open ?a)"]
+			)
 		]
 	
 	def get_special_init_conditions(self) -> list[str]:
@@ -1048,9 +1079,21 @@ class Light(StationaryInteractable):
 	
 	@staticmethod
 	def get_pddl_domain_actions() -> list[Action]:
+		param_list = ["?a - " + Light.get_type_name(), "?b - " + Room.TYPE_NAME, "?c - " + Agent.TYPE_NAME]
+		base_preconditions = [Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")]
 		return [
-			Action("turn_on_light", ["?a - " + Light.get_type_name()], ["not (light_on ?a)"], ["light_on ?a"]),
-			Action("turn_off_light", ["?a - " + Light.get_type_name()], ["light_on ?a"], ["not (light_on ?a)"])
+			Action(
+				"turn_on_light",
+				param_list,
+				base_preconditions + ["not (light_on ?a)"],
+				["light_on ?a"]
+			),
+			Action(
+				"turn_off_light",
+				param_list,
+				base_preconditions + ["light_on ?a"],
+				["not (light_on ?a)"]
+			)
 		]
 	
 	def get_special_init_conditions(self) -> list[str]:
@@ -1337,8 +1380,18 @@ class LiquidContainer(MovableInteractable, AccompanyingItem):
 	@staticmethod
 	def get_pddl_domain_actions() -> list[Action]:
 		return [
-			Action("empty_glass", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_has_liquid ?a ?b"], ["glass_empty ?a", "not (glass_has_liquid ?a ?b)"]),
-			Action("fill_with_liquid", ["?a - " + LiquidContainer.get_type_name(), "?b - liquid"], ["glass_empty ?a", "dish_is_clean ?a"], ["not (glass_empty ?a)", "glass_has_liquid ?a ?b", "not (dish_is_clean ?a)"])
+			Action(
+				"empty_glass",
+				["?a - " + LiquidContainer.get_type_name(), "?b - liquid", "?c - " + Agent.TYPE_NAME],
+				[Agent.get_in_hand_predicate("?a", "?c"),  "glass_has_liquid ?a ?b"],
+				["glass_empty ?a", "not (glass_has_liquid ?a ?b)"]
+			),
+			Action(
+				"fill_with_liquid",
+				["?a - " + LiquidContainer.get_type_name(), "?b - liquid", "?c - " + Agent.TYPE_NAME],
+				[Agent.get_in_hand_predicate("?a", "?c"), "glass_empty ?a", "dish_is_clean ?a"],
+				["not (glass_empty ?a)", "glass_has_liquid ?a ?b", "not (dish_is_clean ?a)"]
+			)
 		]
 
 	@staticmethod
@@ -1473,9 +1526,13 @@ class TurnOffAppliances(CollectiveGoal):
 				item.faucet_on = False
 				predicate_list.append(f"not (faucet_on {item.token_name})")
 				last = item
+			elif isinstance(item, TV):
+				item.on = False
+				predicate_list.append(f"not (tv_on {item.token_name})")
+				last = item
 		if last:
 			agent.parent = last.parent
-		return Goal("The water and electricity bills are high. Can you turn off all lights and faucets?", predicate_list)
+		return Goal("The water and electricity bills are high. Can you turn off all appliances (other than the fridge)?", predicate_list)
 
 class CleanAndDryClothes(CollectiveGoal):
 	@staticmethod
