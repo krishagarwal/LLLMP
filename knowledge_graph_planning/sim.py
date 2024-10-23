@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from difflib import ndiff
 
-from dataset.simulation import Dataset
+from dataset.dataset import Dataset
 
 from knowledge_graph_planning.knowledge_graph.age import AgeGraphStore
 from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, populate_with_knowledge # type: ignore
@@ -71,15 +71,18 @@ class KGSim:
 				predicted_plan = self.agent.answer_planning_query(time_step["goal"], truth_graph_store)
 				print("Generated plan")
 
-				plan_file = "predicted_plan.pddl"
-				os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
-				  f"--domain /root/experiments/{self.dataset.domain_path} " + \
-				  f"--problem /root/experiments/{time_step['problem_path']} " + \
-				  f"--output /root/experiments/{plan_file} " + \
-				  f"> /dev/null")
-				with open(os.path.join(project_dir, plan_file), "r") as f:
-					true_plan = f.read().splitlines()
-				os.remove(os.path.join(project_dir, plan_file))
+				if "true_plan_pddl" in time_step:
+					true_plan = time_step["true_plan_pddl"].splitlines()
+				else:
+					plan_file = "true_plan.pddl"
+					os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
+						f"--domain /root/experiments/{self.dataset.domain_path} " + \
+						f"--problem /root/experiments/{time_step['problem_path']} " + \
+						f"--output /root/experiments/{plan_file} " + \
+						f"> /dev/null")
+					with open(os.path.join(project_dir, plan_file), "r") as f:
+						true_plan = f.read().splitlines()
+					os.remove(os.path.join(project_dir, plan_file))
 				
 				if true_plan != predicted_plan:
 					print("Conflicting expected plan and predicted plan")
@@ -188,7 +191,6 @@ if __name__ == "__main__":
 	run_dir = f"{experiment_dir}/runs/gpt-4/rag+check"
 	log = Logger(f"{run_dir}/output.log")
 	with redirect_stdout(log):
-		# os.system('sudo -u postgres psql -c "drop database knowledge_base"')
 		sim = KGSim(Dataset(domain_path), KGAgent(run_dir, True, True), run_dir)
 		sim.run()
 	log.close()
