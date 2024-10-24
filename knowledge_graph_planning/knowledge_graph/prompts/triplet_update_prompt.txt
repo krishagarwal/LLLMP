@@ -19,16 +19,13 @@ Here is the list of entities: {entity_names}
 Here is an example:
 ```
 ---------------------
-STATE CHANGE: I picked up Brenda's phone.
+STATE CHANGE: John went to the Patrick's bedroom and picked up Brenda's phone.
 ---------------------
 RELEVANT RELATIONS:
 brenda_phone -> placed_at_shelf -> patrick_bedroom_shelf
 brenda_phone -> on_shelf_level -> level_8
-brenda_phone -> instance_of -> phone
 patrick_bedroom -> room_has -> patrick_bedroom_shelf
-patrick_bedroom_shelf -> instance_of -> shelf
-patrick_bedroom -> instance_of -> bedroom
-patrick_bedroom -> room_has -> patrick_bedroom_shelf
+john -> person_in_room -> the_living_room
 ---------------------
 {{{{{{{{
     "REMOVE": [
@@ -41,13 +38,23 @@ patrick_bedroom -> room_has -> patrick_bedroom_shelf
             "subject": "brenda_phone",
             "relation": "on_shelf_level",
             "object": "shelf_level_8"
+        }}}}}}}},
+        {{{{{{{{
+            "subject": "john",
+            "relation": "person_in_room",
+            "object": "the_living_room"
         }}}}}}}}
     ],
     "ADD": [
         {{{{{{{{
             "subject": "brenda_phone",
             "relation": "in_person_hand",
-            "object": "me"
+            "object": "john"
+        }}}}}}}},
+        {{{{{{{{
+            "subject": "john",
+            "relation": "person_in_room",
+            "object": "patrick_bedroom"
         }}}}}}}}
     ]
 }}}}}}}}
