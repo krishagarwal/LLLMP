@@ -179,7 +179,6 @@ class KGAgent(KGBaseAgent):
 
 		# load in all default prompts
 		ENTITY_SELECT_PROMPT = get_prompt_template("prompts/entity_select_prompt.txt", entity_names=entity_names)
-		self.TRIPLET_FILTER_PROMPT = get_prompt_template("prompts/triplet_filter_prompt.txt")
 		self.TRIPLET_UPDATE_PROMPT = get_prompt_template("prompts/triplet_update_prompt.txt",
 											predicate_names=", ".join(predicate_names), entity_names=entity_names)
 
@@ -271,15 +270,12 @@ class KGAgent(KGBaseAgent):
 			context_str = context_nodes[0].text if len(context_nodes) > 0 else "None"
 			triplets = [KGAgent.postprocess_triplet(triplet) for triplet in context_str.split('\n')[2:]]
 			extracted_triplets_str = '\n'.join(triplets)
-			# filter out irrelevant triplets using LLM directly
-			filtered_triplet_str = self.llm.complete(self.TRIPLET_FILTER_PROMPT.format(state_change=state_change, triplet_str=extracted_triplets_str)).text
 		else:
 			triplets = self.get_all_relations()
 			extracted_triplets_str = '\n'.join(triplets)
-			filtered_triplet_str = extracted_triplets_str
 		
 		duration = time.time() - start_time
-		log += [f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"FILTERED TRIPLETS:\n{filtered_triplet_str}", f"Retrieved triplets in {duration:.2f} seconds"]
+		log += [f"EXTRACTED TRIPLETS:\n{extracted_triplets_str}", f"Retrieved triplets in {duration:.2f} seconds"]
 
 		update_issues = []
 		remove = []
@@ -305,7 +301,7 @@ class KGAgent(KGBaseAgent):
 			print("Attempting state change...", num_attempts)
 
 			# query LLM to update triplets (remove existing and add new)
-			truncated_msgs = TripletTrimBuffer.from_defaults(messages, llm=self.llm, tokenizer_fn=tiktoken.encoding_for_model(self.llm.model).encode).get(triplet_update_prompt, triplets=filtered_triplet_str)
+			truncated_msgs = TripletTrimBuffer.from_defaults(messages, llm=self.llm, tokenizer_fn=tiktoken.encoding_for_model(self.llm.model).encode).get(triplet_update_prompt, triplets=extracted_triplets_str)
 			
 			curr_start_time = time.time()
 			curr_response = self.llm.chat(truncated_msgs).message
