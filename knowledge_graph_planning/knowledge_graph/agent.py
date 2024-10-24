@@ -213,7 +213,7 @@ class KGAgent(KGBaseAgent):
 			graph_traversal_depth=3,
 			max_knowledge_sequence=300,
 			max_entities=10,
-			entity_extract_fn=partial(extract_keywords, self.llm, PLAN_ENTITY_SELECT_PROMPT),
+			entity_extract_fn=partial(extract_keywords, self.llm, PLAN_ENTITY_SELECT_PROMPT, always_include=["the_agent"]),
 			synonym_expand_fn=(lambda _: []),
 			entity_extract_template=None,
 			synonym_expand_template=None,
@@ -430,7 +430,7 @@ class KGAgent(KGBaseAgent):
 		objects_block += "\t)\n"
 
 		plan_query_prompt = self.PLAN_QUERY_TEMPLATE.format(task_nl=query)
-		goal_block = self.query_engine._response_synthesizer.synthesize(query=plan_query_prompt, nodes=nodes).response # type:ignore
+		goal_block = self.query_engine.synthesize(plan_query_prompt, nodes=nodes).response # type: ignore
 
 		task_pddl_ = f"(define (problem p{self.time})\n" + \
 					 f"\t(:domain simulation)\n" + \
