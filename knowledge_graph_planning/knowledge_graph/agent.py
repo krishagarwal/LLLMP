@@ -64,7 +64,7 @@ class KGAgent(KGBaseAgent):
 	MAX_RETRY_STATE_CHANGE = 5
 	MAX_RETRY_GOAL = 5
 
-	def __init__(self, log_dir: str, use_rag: bool, use_verifier: bool, model: str = "gpt-4o") -> None:
+	def __init__(self, log_dir: str, use_rag: bool, use_verifier: bool, agent_label: str, model: str = "gpt-4o") -> None:
 		self.log_dir = log_dir
 		self.dbname = "knowledge_base"
 		self.dbuser = "postgres"
@@ -76,6 +76,7 @@ class KGAgent(KGBaseAgent):
 		self.time = 0
 		self.use_rag = use_rag
 		self.use_verifier = use_verifier
+		self.agent_label = agent_label
 
 		openai_keys_file = os.path.join(os.path.dirname(__file__), "../../keys/openai_keys.txt")
 		with open(openai_keys_file, "r") as f:
@@ -208,7 +209,7 @@ class KGAgent(KGBaseAgent):
 			graph_traversal_depth=3,
 			max_knowledge_sequence=300,
 			max_entities=10,
-			entity_extract_fn=partial(extract_keywords, self.llm, PLAN_ENTITY_SELECT_PROMPT, always_include=["the_agent"]),
+			entity_extract_fn=partial(extract_keywords, self.llm, PLAN_ENTITY_SELECT_PROMPT, always_include=[self.agent_label]),
 			synonym_expand_fn=(lambda _: []),
 			entity_extract_template=None,
 			synonym_expand_template=None,

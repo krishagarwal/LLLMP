@@ -14,8 +14,11 @@ from knowledge_representation.knowledge_loader import load_knowledge_from_yaml, 
 from knowledge_representation._libknowledge_rep_wrapper_cpp import LongTermMemoryConduit # type: ignore
 
 from knowledge_graph.load_graph import load_graph
-from knowledge_graph.agent import KGBaseAgent, KGAgent
+from knowledge_graph.agent import KGAgent
 from knowledge_graph.utils import reset_database
+
+AGENT_LABEL = "the_agent"
+AGENT_IN_ROOM = "agent_in_room"
 
 # set API key
 openai_keys_file = os.path.join(os.getcwd(), "keys/openai_keys.txt")
@@ -55,9 +58,14 @@ class KGSim:
 			"entity",
 		) # type: ignore
 
+		def get_true_agent_loc(kg: AgeGraphStore) -> str:
+			return truth_graph_store.query(f"MATCH ({{name: '{AGENT_LABEL}'}})-[{AGENT_IN_ROOM}]->(V2) RETURN V2.name")[0][1:-1]
+
+		true_agent_loc = get_true_agent_loc(truth_graph_store)
 		previous_diff = []
 		print(f"Initial State:\n{self.dataset.initial_state}")
 		self.agent.input_initial_state(self.dataset.initial_state, self.dataset.initial_knowledge_path, self.dataset.predicate_names, self.dataset.domain_path)
+		
 		for time_step in self.dataset:
 			if time_step["type"] == "state_change":
 				print("\nTime: " + str(time_step["time"]))
@@ -68,6 +76,7 @@ class KGSim:
 				print("\nTime: " + str(time_step["time"]))
 				print(f"Goal: {time_step['goal']}")
 				predicted_plan = self.agent.answer_planning_query(time_step["goal"], truth_graph_store)
+				true_agent_loc = get_true_agent_loc(truth_graph_store)
 				print("Generated plan")
 
 				if "true_plan_pddl" in time_step:
@@ -116,6 +125,9 @@ class KGSim:
 				"knowledge_graph",
 				"entity",
 			) # type: ignore
+			bad_agent_loc = get_true_agent_loc(truth_graph_store)
+			truth_graph_store.delete(AGENT_LABEL, AGENT_IN_ROOM, bad_agent_loc)
+			truth_graph_store.upsert_triplet(AGENT_LABEL, AGENT_IN_ROOM, true_agent_loc)
 
 			triplets_truth = truth_graph_store.query("MATCH (V)-[R]->(V2) RETURN V.name, type(R), V2.name", return_count=3)
 			triplets_truth = [" -> ".join(item[1:-1] for item in row) for row in triplets_truth if all(isinstance(s, str) for s in row)]
@@ -197,7 +209,7 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, lambda sig, frame: cleanup(True))
 	
 	with redirect_stdout(log):
-		sim = KGSim(Dataset(domain_path), KGAgent(run_dir, True, True), run_dir)
+		sim = KGSim(Dataset(domain_path), KGAgent(run_dir, True, True, AGENT_LABEL), run_dir)
 		try:
 			sim.run()
 		finally:
