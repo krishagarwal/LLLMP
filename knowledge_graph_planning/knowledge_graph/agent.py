@@ -24,6 +24,8 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
 from llama_index.core.chat_engine import ContextChatEngine
 from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
+
 
 from .utils import get_prompt_template, extract_keywords
 from .chat_mem_buffer import TripletTrimBuffer
@@ -82,7 +84,8 @@ class KGAgent(KGBaseAgent):
 		with open(openai_keys_file, "r") as f:
 			keys = f.read()
 		keys = keys.strip().split('\n')
-		self.llm = OpenAI(temperature=0, model=model, api_key=keys[0])
+		self.token_counter = TokenCountingHandler(tokenizer=tiktoken.encoding_for_model(model).encode)
+		self.llm = OpenAI(temperature=0, model=model, api_key=keys[0], callback_manager=CallbackManager([self.token_counter]))
 		self.update_llm = self.llm.as_structured_llm(output_cls=UpdateResponse) # type: ignore
 	
 	def validate_json(self, json_str: str) -> tuple[list[str], UpdateResponse | None]:
@@ -256,6 +259,7 @@ class KGAgent(KGBaseAgent):
 
 	def input_state_change(self, state_change: str) -> None:
 		start_time = time.time()
+		self.token_counter.reset_counts()
 		log = [f"STATE CHANGE: {state_change}"]
 
 		if self.use_rag:
@@ -352,7 +356,7 @@ class KGAgent(KGBaseAgent):
 		
 		def complete():
 			duration = time.time() - start_time
-			log.append(f"Processed state change in (total time) {duration:.2f} seconds")
+			log.append(f"Total time to processed state change: {duration:.2f} seconds\nPrompt tokens: {self.token_counter.prompt_llm_token_count} | Completion tokens: {self.token_counter.completion_llm_token_count} | Total tokens: {self.token_counter.total_llm_token_count}")
 			# log the state update
 			log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
 			with open(log_file, "w") as f:
@@ -378,6 +382,7 @@ class KGAgent(KGBaseAgent):
 	
 	def answer_planning_query(self, query: str, truth_graph_store: AgeGraphStore) -> list[str]:
 		start_time = time.time()
+		self.token_counter.reset_counts()
 		log = [f"PLAN QUERY: {query}"]
 		log_file = os.path.join(self.log_dir, f"{self.time:04d}_plan_query")
 		plan_file_name = self.log_dir + f"/{self.time:04d}_plan.pddl"
@@ -478,7 +483,7 @@ class KGAgent(KGBaseAgent):
 				curr_prompt = f"There was an error with your provided goal block, here is the planner output:\n```\n{planner_output}\n```\nPlease try again."
 		
 		duration = time.time() - start_time
-		log.append(f"Processed planning query in (total time) {duration:.2f} seconds")
+		log.append(f"Total time to process planning query: {duration:.2f} seconds\nPrompt tokens: {self.token_counter.prompt_llm_token_count} | Completion tokens: {self.token_counter.completion_llm_token_count} | Total tokens: {self.token_counter.total_llm_token_count}")
 		with open(f"{log_file}.log", "w") as f:
 			f.write("\n===================================\n".join(log))
 		self.time += 1
