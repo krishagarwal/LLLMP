@@ -1,11 +1,12 @@
 from __future__ import annotations
 import os
-from llama_index.core.indices.keyword_table.utils import extract_keywords_given_response
-from llama_index.core.prompts import PromptTemplate, PromptType
-from llama_index.core import ServiceContext
-from llama_index.core.llms.llm import LLM
+from pydantic import BaseModel
 import psycopg2
 from psycopg2 import sql
+
+from llama_index.core.indices.keyword_table.utils import extract_keywords_given_response
+from llama_index.core.prompts import PromptTemplate, PromptType
+from llama_index.core.llms.llm import LLM
 
 
 def reset_database(dbname, user, password, host, port, schema_file):
@@ -52,23 +53,23 @@ def get_prompt_template(filename: str, **kwargs) -> str:
         return contents
     return contents.format(**kwargs)
 
+class EntitySelection(BaseModel):
+    KEYWORDS: list[str]
+
 def extract_keywords(llm: LLM,
                      template: str,
                      query_str: str,
                      max_keywords: int = 10,
-                     result_start_token: str = "KEYWORDS:",
                      always_include: list[str] = []) -> list:
     ENTITY_SELECT_PROMPT = PromptTemplate(
         template,
         prompt_type=PromptType.QUERY_KEYWORD_EXTRACT,
     )
-    response = llm.predict(
+    response = llm.as_structured_llm(EntitySelection).predict( #type: ignore
         ENTITY_SELECT_PROMPT,
         max_keywords=max_keywords,
         question=query_str,
     )
-    extracted_entities = extract_keywords_given_response(
-        response, start_token=result_start_token, lowercase=False
-    )
+    extracted_entities = set(EntitySelection.model_validate_json(response).KEYWORDS)
     extracted_entities.update(always_include)
     return extracted_entities # type: ignore

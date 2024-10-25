@@ -1,19 +1,17 @@
 Given the robot task, select up to {{max_keywords}} entity names from the provided entity names.
-Focus on selecting the entities that might be relevant to the task.
-Here are the action rules in PDDL.
-{domain_pddl}
+Focus on selecting as few entities as possible while still including any that might be relevant to the task.
 
 Here is an example:
 ```
-PROVIDED ENTITY NAMES: Robot, PaperTowelRoll_baeb4260, SinkBasin_ad9ebd80, Tomato_9c51c4ef, GarbageCan_4f40ebba
+PROVIDED ENTITY NAMES: the_agent, paper_towel_roll, sink_basin, tomato, garbage_can
 ---------------------
 TASK: Bring me the tomato next to the paper towel roll.
 ---------------------
-KEYWORDS: Tomato_9c51c4ef, PaperTowelRoll_baeb4260, Robot
+KEYWORDS: tomato, paper_towel_roll, the_agent
 ---------------------
 TASK: Put a washed tomato on the plate.
 ---------------------
-KEYWORDS: Tomato_9c51c4ef, SinkBasin_ad9ebd80, Plate_24f0b140, Robot
+KEYWORDS: tomato, sink_basin, plate, the_agent
 ```
 
 Here is the real problem:
