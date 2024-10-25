@@ -19,12 +19,11 @@ from knowledge_graph.load_graph import load_graph
 from knowledge_graph.age import AgeGraphStore
 from knowledge_graph.utils import reset_database
 
-from llama_index.core import ServiceContext
 from llama_index.core.storage.storage_context import StorageContext
 from llama_index.llms.openai import OpenAI
 from llama_index.core.retrievers import KnowledgeGraphRAGRetriever
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.llms.openai.base import ChatMessage
+from llama_index.core.chat_engine import ContextChatEngine
+from llama_index.core.llms import ChatMessage, MessageRole
 
 from .utils import get_prompt_template, extract_keywords
 from .chat_mem_buffer import TripletTrimBuffer
@@ -63,6 +62,7 @@ class UpdateResponse(BaseModel):
 
 class KGAgent(KGBaseAgent):
 	MAX_RETRY_STATE_CHANGE = 5
+	MAX_RETRY_GOAL = 5
 
 	def __init__(self, log_dir: str, use_rag: bool, use_verifier: bool, model: str = "gpt-4o") -> None:
 		self.log_dir = log_dir
@@ -88,14 +88,10 @@ class KGAgent(KGBaseAgent):
 		# process the changes and commit to knowledge graph
 		try:
 			start_idx = json_str.index("{")
-		except ValueError:
-			return ["Your response was not in the correct JSON format"], None
-		
-		try:
 			end_idx = json_str.rindex("}")
 		except ValueError:
 			return ["Your response was not in the correct JSON format"], None
-		
+
 		json_str = json_str[start_idx : end_idx + 1]
 		try:
 			update_obj = UpdateResponse.model_validate_json(json_str)
@@ -220,10 +216,7 @@ class KGAgent(KGBaseAgent):
 		self.rag_plan_retriever._verbose = True
 		self.rag_plan_retriever._entity_extract_template = None # type: ignore
 		self.rag_plan_retriever._synonym_expand_template = None # type: ignore
-
-		self.query_engine = RetrieverQueryEngine.from_args(
-			self.rag_plan_retriever
-		)
+		self.chat_engine = ContextChatEngine.from_defaults(self.rag_plan_retriever, llm=self.llm)
 	
 	# format triplets from query output
 	@staticmethod
@@ -289,8 +282,7 @@ class KGAgent(KGBaseAgent):
 
 		while num_attempts < KGAgent.MAX_RETRY_STATE_CHANGE and (update_issues or num_attempts == 0):
 			if len(update_issues) > 0:
-				curr_message = ChatMessage()
-				curr_message.content = "There are some issues with your provided updates:\n * " + "\n * ".join(update_issues) + "\nPlease try again."
+				curr_message = ChatMessage.from_str("There are some issues with your provided updates:\n * " + "\n * ".join(update_issues) + "\nPlease try again.")
 				messages.append(curr_message)
 				log.append("UPDATE ISSUES:\n * " + "\n * ".join(update_issues))
 				with open(os.path.join(self.log_dir, f"{self.time:04d}_state_change.messages.{num_attempts}"), "w") as f:
@@ -304,7 +296,7 @@ class KGAgent(KGBaseAgent):
 			truncated_msgs = TripletTrimBuffer.from_defaults(messages, llm=self.llm, tokenizer_fn=tiktoken.encoding_for_model(self.llm.model).encode).get(triplet_update_prompt, triplets=extracted_triplets_str)
 			
 			curr_start_time = time.time()
-			curr_response = self.llm.chat(truncated_msgs).message
+			curr_response = self.update_llm.chat(truncated_msgs).message
 			duration = time.time() - curr_start_time
 			log.append(f"Got LLM response for attempt {num_attempts} in {duration:.2f} seconds")
 			
@@ -356,9 +348,19 @@ class KGAgent(KGBaseAgent):
 				if not self.graph_store.rel_exists(subj, rel, obj):
 					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
 					continue
+		
+		def complete():
+			duration = time.time() - start_time
+			log.append(f"Processed state change in (total time) {duration:.2f} seconds")
+			# log the state update
+			log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
+			with open(log_file, "w") as f:
+				f.write("\n===================================\n".join(log))
+			self.time += 1
 
 		if update_issues:
 			print("Could not resolve state change within maximum number of tries", KGAgent.MAX_RETRY_STATE_CHANGE)
+			complete()
 			return
 		
 		# add new triplets to graph
@@ -371,26 +373,20 @@ class KGAgent(KGBaseAgent):
 			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
 			self.graph_store.delete(subj, rel, obj)
 		
-		duration = time.time() - start_time
-		log.append(f"Processed state change in (total time) {duration:.2f} seconds")
-		
-		# log the state update
-		log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
-		with open(log_file, "w") as f:
-			f.write("\n===================================\n".join(log))
-		self.time += 1
+		complete()		
 	
 	def answer_planning_query(self, query: str, truth_graph_store: AgeGraphStore) -> list[str]:
 		start_time = time.time()
 		log = [f"PLAN QUERY: {query}"]
+		log_file = os.path.join(self.log_dir, f"{self.time:04d}_plan_query")
+		plan_file_name = self.log_dir + f"/{self.time:04d}_plan.pddl"
+		project_dir = Path(__file__).parent.parent.parent.as_posix()
 
 		# A. generate problem pddl file
-		log_file = os.path.join(self.log_dir, f"{self.time:04d}_plan_query")
-
 		with open(log_file + ".context.log", "w") as f:
 			f.write(query + "\n")
 			with redirect_stdout(f):
-				nodes = self.query_engine.retrieve("I have a task for the robot: " + query) # type: ignore
+				nodes = self.chat_engine._get_nodes("I have a task for the robot: " + query)
 		duration = time.time() - start_time
 		log.append(f"Completed RAG in {duration:.2f} seconds")
 
@@ -425,43 +421,75 @@ class KGAgent(KGBaseAgent):
 			objects_block += f"\t\t{obj} - {obj_type}\n"
 		objects_block += "\t)\n"
 
-		plan_query_prompt = self.PLAN_QUERY_TEMPLATE.format(task_nl=query)
-		goal_block = self.query_engine.synthesize(plan_query_prompt, nodes=nodes).response # type: ignore
+		curr_prompt = self.PLAN_QUERY_TEMPLATE.format(task_nl=query)
+		messages: list[ChatMessage] = []
+		num_attempts = 0
 
-		task_pddl_ = f"(define (problem p{self.time})\n" + \
+		while num_attempts < KGAgent.MAX_RETRY_GOAL and curr_prompt:
+			if num_attempts > 0:
+				log.append("GOAL BLOCK ISSUES:\n" + curr_prompt)
+			
+			num_attempts += 1
+			print("Attempting generating goal block...", num_attempts)
+			
+			curr_start_time = time.time()
+			goal_block = self.chat_engine._get_response_synthesizer(messages).synthesize(curr_prompt, nodes=nodes).response
+			duration = time.time() - curr_start_time
+			messages.append(ChatMessage.from_str(curr_prompt))
+			messages.append(ChatMessage.from_str(goal_block, role=MessageRole.ASSISTANT))
+			curr_prompt = ""
+			
+			log.append(f"ATTEMPT {num_attempts}\n{goal_block}\nGot LLM response for attempt in {duration:.2f} seconds")
+			
+			try:
+				start_idx = goal_block.index("(")
+				end_idx = goal_block.rindex(")")
+			except ValueError:
+				curr_prompt = "The goal block does not follow the proper syntax. Please try again."
+				continue
+			
+			goal_block = goal_block[start_idx : end_idx + 1]
+			task_pddl = f"(define (problem p{self.time})\n" + \
 					 f"\t(:domain simulation)\n" + \
 					 objects_block + \
 					 init_block + \
 					 f"\t{goal_block}\n)"
 
-		# B. write the problem file into the problem folder
-		task_pddl_file_name = os.path.join(self.log_dir, f"{self.time:04d}_problem.pddl")
-		with open(task_pddl_file_name, "w") as f:
-			f.write(task_pddl_)
-		time.sleep(1)
+			# B. write the problem file into the problem folder
+			task_pddl_file_name = os.path.join(self.log_dir, f"{self.time:04d}_problem.pddl")
+			with open(task_pddl_file_name, "w") as f:
+				f.write(task_pddl)
 
-		# C. run lapkt to plan
-		plan_file_name = self.log_dir + f"/{self.time:04d}_plan.pddl"
-
-		project_dir = Path(__file__).parent.parent.parent.as_posix()
-		os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
-				  f"--domain /root/experiments/{self.domain_path} " + \
-				  f"--problem /root/experiments/{task_pddl_file_name} " + \
-				  f"--output /root/experiments/{plan_file_name} " + \
-				  f"> {log_file}.pddl.log")
+			# C. run lapkt to plan
+			curr_start_time = time.time()
+			os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
+					f"--domain /root/experiments/{self.domain_path} " + \
+					f"--problem /root/experiments/{task_pddl_file_name} " + \
+					f"--output /root/experiments/{plan_file_name} " + \
+					f"> {log_file}.pddl.log.{num_attempts} 2>&1")
+			duration = time.time() - curr_start_time
+			log.append(f"Planner took {duration:.2f} seconds")
+			
+			with open(f"{log_file}.pddl.log.{num_attempts}") as f:
+				planner_output = f.read().strip()
+			
+			if "error" in planner_output.lower():
+				curr_prompt = f"There was an error with your provided goal block, here is the planner output:\n```\n{planner_output}\n```\nPlease try again."
 		
 		duration = time.time() - start_time
-
 		log.append(f"Processed planning query in (total time) {duration:.2f} seconds")
-		
 		with open(f"{log_file}.log", "w") as f:
 			f.write("\n===================================\n".join(log))
+		self.time += 1
+
+		if curr_prompt:
+			print("Could not resolve goal block within maximum number of tries", KGAgent.MAX_RETRY_GOAL)
+			return []
 		
 		with open(plan_file_name, "r") as f:
 			plan = f.read().splitlines()
 			self.process_plan(plan, truth_graph_store)
 
-		self.time += 1
 		return plan
 	
 	@staticmethod
