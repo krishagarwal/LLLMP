@@ -990,7 +990,7 @@ class Washer(Container):
 			"run_washer_cycle",
 			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
 			[Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")],
-			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (and (cloth_is_clean ?b) (not (cloth_is_dry ?b))))"]))
+			[f"forall (?d - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (and (cloth_is_clean ?d) (not (cloth_is_dry ?d))))"]))
 		return actions
 
 class Dryer(Container):
@@ -1016,7 +1016,7 @@ class Dryer(Container):
 			"run_dryer_cycle",
 			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
 			[Room.get_in_room_predicate("?b", "?a"), Agent.get_in_room_predicate("?c", "?b")],
-			[f"forall (?b - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (cloth_is_dry ?b))"]))
+			[f"forall (?d - {Cloth.get_type_name()}) (when ({cloth_preconditions}) (cloth_is_dry ?d))"]))
 		return actions
 
 class LaundryBasket(Container):
