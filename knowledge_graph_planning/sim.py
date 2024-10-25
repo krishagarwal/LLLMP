@@ -59,7 +59,7 @@ class KGSim:
 		) # type: ignore
 
 		def get_true_agent_loc(kg: AgeGraphStore) -> str:
-			return truth_graph_store.query(f"MATCH ({{name: '{AGENT_LABEL}'}})-[{AGENT_IN_ROOM}]->(V2) RETURN V2.name")[0][1:-1]
+			return kg.query(f"MATCH ({{name: '{AGENT_LABEL}'}})-[{AGENT_IN_ROOM}]->(V2) RETURN V2.name")[0][0][1:-1]
 
 		true_agent_loc = get_true_agent_loc(truth_graph_store)
 		previous_diff = []
