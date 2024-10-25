@@ -488,6 +488,10 @@ class KGAgent(KGBaseAgent):
 			f.write("\n===================================\n".join(log))
 		self.time += 1
 
+		# need to initialize new token counter or token counting doesn't work after this for some reason
+		self.token_counter = TokenCountingHandler(tokenizer=tiktoken.encoding_for_model(self.llm.model).encode)
+		self.llm.callback_manager = CallbackManager([self.token_counter])
+
 		if curr_prompt:
 			print("Could not resolve goal block within maximum number of tries", KGAgent.MAX_RETRY_GOAL)
 			return []
