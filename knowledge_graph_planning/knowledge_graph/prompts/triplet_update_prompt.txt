@@ -19,25 +19,19 @@ Here is the list of entities: {entity_names}
 Here is an example:
 ```
 ---------------------
-STATE CHANGE: John went to the Patrick's bedroom and picked up Brenda's phone.
+STATE CHANGE: John went to the Patrick's bedroom and turned off the overhead light.
 ---------------------
 RELEVANT RELATIONS:
-brenda_phone -> placed_at_shelf -> patrick_bedroom_shelf
-brenda_phone -> on_shelf_level -> level_8
-patrick_bedroom -> room_has -> patrick_bedroom_shelf
+patrick_bedroom -> room_has -> patrick_bedroom_light
+patrick_bedroom_light -> light_on -> false
 john -> person_in_room -> the_living_room
 ---------------------
 {{{{{{{{
     "REMOVE": [
         {{{{{{{{
-            "subject": "brenda_phone",
-            "relation": "placed_at_shelf",
-            "object": "patrick_bedroom_shelf"
-        }}}}}}}},
-        {{{{{{{{
-            "subject": "brenda_phone",
-            "relation": "on_shelf_level",
-            "object": "shelf_level_8"
+            "subject": "patrick_bedroom_light",
+            "relation": "light_on",
+            "object": "false"
         }}}}}}}},
         {{{{{{{{
             "subject": "john",
@@ -47,9 +41,9 @@ john -> person_in_room -> the_living_room
     ],
     "ADD": [
         {{{{{{{{
-            "subject": "brenda_phone",
-            "relation": "in_person_hand",
-            "object": "john"
+            "subject": "patrick_bedroom_light",
+            "relation": "light_on",
+            "object": "true"
         }}}}}}}},
         {{{{{{{{
             "subject": "john",
