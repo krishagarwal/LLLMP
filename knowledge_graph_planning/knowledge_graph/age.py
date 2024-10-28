@@ -63,12 +63,11 @@ class AgeGraphStore(GraphStore): # type: ignore
         subjs = [subj.lower().replace('"', '') for subj in subjs]
 
         # max 100 can be processed at a time by db
-        for j in range(0, len(subjs), 25):
-            subjs_str = '["' + '", "'.join(subjs[j:j+25]) + '"]'
-
-            for i in range(depth):
-                path = f"-[]-(:{self._node_label})" * i
-
+        for i in range(depth):
+            path = f"-[]-(:{self._node_label})" * i
+            per_iter = 50 // (2 ** i)
+            for j in range(0, len(subjs), per_iter):
+                subjs_str = '["' + '", "'.join(subjs[j:j+per_iter]) + '"]'
                 query = (f"SELECT * FROM ag_catalog.cypher('{self._graph_name}', $$ "
                         f"MATCH p=(n1:{self._node_label}){path}-[]-() "
                         f"WHERE n1.name IN {subjs_str} "
