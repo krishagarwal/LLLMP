@@ -985,7 +985,7 @@ class Washer(Container):
 	@classmethod
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		actions = super().get_pddl_domain_actions()
-		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
+		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?d", **cls.EXTRA_INFO))
 		actions.append(Action(
 			"run_washer_cycle",
 			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
@@ -1011,7 +1011,7 @@ class Dryer(Container):
 	@classmethod
 	def get_pddl_domain_actions(cls) -> list[Action]:
 		actions = super().get_pddl_domain_actions()
-		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?b", **cls.EXTRA_INFO))
+		cloth_preconditions = ") (".join(cls.get_contains_predicates("?a", "?d", **cls.EXTRA_INFO))
 		actions.append(Action(
 			"run_dryer_cycle",
 			[f"?a - {cls.get_type_name()}", f"?b - {Room.TYPE_NAME}", f"?c - {Agent.TYPE_NAME}"],
