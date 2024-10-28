@@ -80,6 +80,10 @@ class KGAgent(KGBaseAgent):
 		self.use_verifier = use_verifier
 		self.agent_label = agent_label
 
+		self.total_prompt_tokens = 0
+		self.total_completion_tokens = 0
+		self.total_llm_tokens = 0
+
 		openai_keys_file = os.path.join(os.path.dirname(__file__), "../../keys/openai_keys.txt")
 		with open(openai_keys_file, "r") as f:
 			keys = f.read()
@@ -356,6 +360,9 @@ class KGAgent(KGBaseAgent):
 		
 		def complete():
 			duration = time.time() - start_time
+			self.total_prompt_tokens += self.token_counter.prompt_llm_token_count
+			self.total_completion_tokens += self.token_counter.completion_llm_token_count
+			self.total_llm_tokens += self.token_counter.total_llm_token_count
 			log.append(f"Total time to processed state change: {duration:.2f} seconds\nPrompt tokens: {self.token_counter.prompt_llm_token_count} | Completion tokens: {self.token_counter.completion_llm_token_count} | Total tokens: {self.token_counter.total_llm_token_count}")
 			# log the state update
 			log_file = os.path.join(self.log_dir, f"{self.time:04d}_state_change.log")
@@ -483,6 +490,9 @@ class KGAgent(KGBaseAgent):
 				curr_prompt = f"There was an error with your provided goal block, here is the planner output:\n```\n{planner_output}\n```\nPlease try again."
 		
 		duration = time.time() - start_time
+		self.total_prompt_tokens += self.token_counter.prompt_llm_token_count
+		self.total_completion_tokens += self.token_counter.completion_llm_token_count
+		self.total_llm_tokens += self.token_counter.total_llm_token_count
 		log.append(f"Total time to process planning query: {duration:.2f} seconds\nPrompt tokens: {self.token_counter.prompt_llm_token_count} | Completion tokens: {self.token_counter.completion_llm_token_count} | Total tokens: {self.token_counter.total_llm_token_count}")
 		with open(f"{log_file}.log", "w") as f:
 			f.write("\n===================================\n".join(log))

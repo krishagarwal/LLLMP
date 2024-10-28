@@ -157,6 +157,7 @@ class KGSim:
 				self.report.append(Result(time_step["time"], "state", time_step["type"], True))
 				previous_diff = []
 				print("Update successful")
+			print(f"Total token usage: {self.agent.total_prompt_tokens} prompt tokens | {self.agent.total_completion_tokens} completion tokens | {self.agent.total_llm_tokens} total tokens")
 			
 		print("\nAll updates/goals processed")
 	
