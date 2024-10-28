@@ -486,9 +486,47 @@ class KGAgent(KGBaseAgent):
 			with open(f"{log_file}.pddl.log.{num_attempts}") as f:
 				planner_output = f.read().strip()
 			
-			if "error" in planner_output.lower():
+			if planner_output == "":
+				curr_prompt = "The planner crashed, so there is some error with your provided goal block. Please try again."
+			
+			if any(check_str in planner_output.lower() for check_str in ["error", "undeclared", "unknown"]):
 				curr_prompt = f"There was an error with your provided goal block, here is the planner output:\n```\n{planner_output}\n```\nPlease try again."
 		
+		if not curr_prompt and "simplified to false" in planner_output.lower():
+			# likely that RAG did not retrieve sufficient context, if so replan with full context
+			print("Retrying planner with full context in problem PDDL...")
+			init_block = "\t(:init\n"
+			for rel in self.get_all_relations():
+				rel_split = rel.split(" -> ")
+				arg1, predicate, arg2 = rel_split[0], rel_split[1], rel_split[2]
+				if self.get_relation_issues(arg1, predicate, arg2):
+					continue
+				elif arg2 == 'true':
+					init_block += f"\t\t({predicate} {arg1})\n"
+				elif arg2 == 'None' or arg2 == 'false':
+					continue
+				else:
+					init_block += f"\t\t({predicate} {arg1} {arg2})\n"
+			init_block += "\t)\n"
+			task_pddl = f"(define (problem p{self.time})\n" + \
+					 f"\t(:domain simulation)\n" + \
+					 objects_block + \
+					 init_block + \
+					 f"\t{goal_block}\n)"
+			
+			task_pddl_file_name = os.path.join(self.log_dir, f"{self.time:04d}_problem.pddl")
+			with open(task_pddl_file_name, "w") as f:
+				f.write(task_pddl)
+			
+			curr_start_time = time.time()
+			os.system(f"sudo docker run --rm -v {project_dir}:/root/experiments lapkt/lapkt-public ./siw-then-bfsf " + \
+					f"--domain /root/experiments/{self.domain_path} " + \
+					f"--problem /root/experiments/{task_pddl_file_name} " + \
+					f"--output /root/experiments/{plan_file_name} " + \
+					f"> {log_file}.pddl.log.{num_attempts + 1} 2>&1")
+			duration = time.time() - curr_start_time
+			log.append(f"Planner could not find solution, attempting last time with full context...\nPlanner took {duration:.2f} seconds")
+
 		duration = time.time() - start_time
 		self.total_prompt_tokens += self.token_counter.prompt_llm_token_count
 		self.total_completion_tokens += self.token_counter.completion_llm_token_count
@@ -598,13 +636,28 @@ class KGAgent(KGBaseAgent):
 			for token, name in zip(action.parameters, args):
 				param_names[token[0]] = name
 			
-			# check if action is able to succeed in real environment
-			if not (
-				all(KGAgent.is_condition_met(pos_prec, param_names, truth_graph_store) for pos_prec in action.positive_preconditions) and
-				all(KGAgent.is_condition_met(("not", neg_prec), param_names, truth_graph_store) for neg_prec in action.negative_preconditions)
-			):
-				print(f"Failure while processing plan at {item}")
-				return
+			# check if action is able to succeed in real environment, update graph based on observation
+			valid_step = True
+			for pos_prec in action.positive_preconditions:
+				if not KGAgent.is_condition_met(pos_prec, param_names, truth_graph_store):
+					valid_step = False
+					predicate, params = pos_prec[0], pos_prec[1:]
+					arg1, arg2 = param_names[params[0]], param_names[params[1]] if len(params) == 2 else "true"
+					self.graph_store.delete(arg1, predicate, arg2)
+					if arg2 == "true":
+						self.graph_store.upsert_triplet_bool(arg1, predicate, False)
+			for neg_prec in action.negative_preconditions:
+				if not KGAgent.is_condition_met(("not", neg_prec), param_names, truth_graph_store):
+					valid_step = False
+					predicate, params = neg_prec[0], neg_prec[1:]
+					arg1, arg2 = param_names[params[0]], param_names[params[1]] if len(params) == 2 else "true"
+					self.graph_store.upsert_triplet(arg1, predicate, arg2)
+					if arg2 == "true":
+						self.graph_store.delete(arg1, predicate, "false")
+
+			if not valid_step:
+				print(f"Failure processing step {item}")
+				continue
 			
 			for del_effect in action.del_effects:
 				self.process_effect(del_effect, param_names, truth_graph_store, remove=True)
