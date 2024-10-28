@@ -342,9 +342,8 @@ class KGAgent(KGBaseAgent):
 						if expected_remove not in remove_strs:
 							update_issues.append(f"Cannot add '{triplet_str}' without removing '{expected_remove}'")
 							continue
-
-				if self.graph_store.rel_exists(subj, rel, obj):
-					update_issues.append(f"Cannot add '{triplet_str}' because it already exists in the graph")
+					if self.graph_store.rel_exists(subj, rel, obj):
+						update_issues.append(f"Cannot add '{triplet_str}' because it already exists in the graph")
 				
 			for triplet, triplet_str in zip(remove, remove_strs):
 				subj, rel, obj = triplet.subject, triplet.relation, triplet.object
@@ -353,10 +352,9 @@ class KGAgent(KGBaseAgent):
 						expected_add = "{} -> {} -> {}".format(subj, rel, "true" if obj == "false" else "false")
 						if expected_add not in add_strs:
 							update_issues.append(f"Cannot remove '{triplet_str}' without adding '{expected_add}'")
-				
-				if not self.graph_store.rel_exists(subj, rel, obj):
-					update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
-					continue
+							continue
+					if not self.graph_store.rel_exists(subj, rel, obj):
+						update_issues.append(f"Cannot remove '{triplet_str}' because it does not exist in the graph")
 		
 		def complete():
 			duration = time.time() - start_time
@@ -378,12 +376,14 @@ class KGAgent(KGBaseAgent):
 		# add new triplets to graph
 		for triplet in add:
 			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
-			self.graph_store.upsert_triplet(subj, rel, obj)
+			if self.use_verifier or not self.graph_store.rel_exists(subj, rel, obj):
+				self.graph_store.upsert_triplet(subj, rel, obj)
 			
 		# delete triplets from graph
 		for triplet in remove:
 			subj, rel, obj = triplet.subject, triplet.relation, triplet.object
-			self.graph_store.delete(subj, rel, obj)
+			if self.use_verifier or self.graph_store.rel_exists(subj, rel, obj):
+				self.graph_store.delete(subj, rel, obj)
 		
 		complete()		
 	
